@@ -35,6 +35,12 @@ export const getMe = async (req, res, next) => {
         id: true,
         name: true,
         email: true,
+        avatarUrl: true,
+        phone: true,
+        city: true,
+        country: true,
+        bio: true,
+        currency: true,
         createdAt: true,
         updatedAt: true
       }
@@ -55,7 +61,7 @@ export const getMe = async (req, res, next) => {
 
 export const signup = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, avatarUrl, phone, city, country } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -91,7 +97,11 @@ export const signup = async (req, res, next) => {
       data: {
         name: name.trim(),
         email: normalizedEmail,
-        passwordHash
+        passwordHash,
+        avatarUrl,
+        phone,
+        city,
+        country
       }
     });
 
@@ -104,7 +114,13 @@ export const signup = async (req, res, next) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        phone: user.phone,
+        city: user.city,
+        country: user.country,
+        bio: user.bio,
+        currency: user.currency
       }
     });
   } catch (error) {
@@ -153,7 +169,50 @@ export const login = async (req, res, next) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        phone: user.phone,
+        city: user.city,
+        country: user.country,
+        bio: user.bio,
+        currency: user.currency
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMe = async (req, res, next) => {
+  try {
+    const { name, avatarUrl, phone, city, country, bio, currency } = req.body;
+    const userId = req.user.userId;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name && { name: name.trim() }),
+        ...(avatarUrl && { avatarUrl }),
+        ...(phone && { phone }),
+        ...(city && { city }),
+        ...(country && { country }),
+        ...(bio && { bio }),
+        ...(currency && { currency })
+      }
+    });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatarUrl: updatedUser.avatarUrl,
+        phone: updatedUser.phone,
+        city: updatedUser.city,
+        country: updatedUser.country,
+        bio: updatedUser.bio,
+        currency: updatedUser.currency
       }
     });
   } catch (error) {

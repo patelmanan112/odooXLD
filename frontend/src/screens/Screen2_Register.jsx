@@ -14,7 +14,8 @@ export const Screen2_Register = () => {
     city: 'Mumbai',
     country: 'India',
     password: 'password123',
-    confirmPassword: 'password123'
+    confirmPassword: 'password123',
+      avatarUrl: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +28,24 @@ export const Screen2_Register = () => {
   }, [prefilledEmail]);
 
   const travelStyles = ['Backpacker', 'Luxury', 'Adventure', 'Culture', 'Family', 'Solo', 'Budget'];
+
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 1024 * 1024) {
+      showToast('Image must be less than 1MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, avatarUrl: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   const toggleStyle = (style) => {
     setSelectedStyles(prev => 
@@ -48,7 +67,15 @@ export const Screen2_Register = () => {
 
     setIsSubmitting(true);
     const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-    const result = await signupUser(fullName, formData.email, formData.password);
+    const result = await signupUser({ 
+        name: fullName, 
+        email: formData.email, 
+        password: formData.password,
+        avatarUrl: formData.avatarUrl,
+        phone: formData.phone,
+        city: formData.city,
+        country: formData.country
+      });
     setIsSubmitting(false);
   };
 
@@ -89,13 +116,14 @@ export const Screen2_Register = () => {
           }}>
             <div style={{ position: 'relative' }}>
               <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" 
+                src={formData.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"} 
                 alt="Profile Preview" 
                 style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #064e3b' }}
               />
+              <input type="file" accept="image/*" onChange={handleImageUpload} style={{ opacity: 0, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 10 }} />
               <button 
                 type="button"
-                onClick={() => showToast('Photo uploaded successfully!')}
+                onClick={() => {}}
                 style={{
                   position: 'absolute',
                   bottom: 0,

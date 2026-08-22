@@ -4,8 +4,9 @@ import { User, Mail, Phone, MapPin, Globe, Shield, Bell, Heart, Award, Camera, S
 import { useApp } from '../context/AppContext';
 
 export const Screen7_ProfileSettings = () => {
-  const { user, setUser, destinations, setCurrentScreen, showToast } = useApp();
+  const { user, setUser, destinations, setCurrentScreen, showToast, updateUser } = useApp();
   const [activeTab, setActiveTab] = useState('Profile');
+  const [avatar, setAvatar] = useState(user.avatarUrl || user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80');
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
@@ -42,12 +43,14 @@ export const Screen7_ProfileSettings = () => {
       <div className="glass-card" style={{ padding: '28px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', gap: '24px' }}>
         <div style={{ position: 'relative' }}>
           <img 
-            src={user.avatar} 
+            src={avatar} 
             alt={user.name} 
             style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #064e3b' }} 
           />
+          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ opacity: 0, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 10 }} />
           <button 
-            onClick={() => showToast('Avatar updated!')}
+            type="button"
+            onClick={() => {}}
             style={{ position: 'absolute', bottom: 0, right: 0, width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#064e3b', color: '#ffffff', border: '2px solid #ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             <Camera size={14} />
