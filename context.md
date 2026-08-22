@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 15:02 | Khush | Enforced automatic live Render API URL (`https://wanderly-backend-m65m.onrender.com`) whenever `window.location.hostname !== 'localhost'` in `frontend/src/utils/api.js`. |
 | 2026-08-22 14:56 | Khush | Fixed Vercel backend connection by adding explicit production mode fallback to `https://wanderly-backend-m65m.onrender.com` in `frontend/src/utils/api.js`. |
 | 2026-08-22 14:52 | Khush | Configured frontend to connect to deployed Render backend (`https://wanderly-backend-m65m.onrender.com`), updated `frontend/.env` with `VITE_API_BASE_URL`, and sanitized URL formatting in `api.js`. |
 | 2026-08-22 14:00 | Khush | Configured frontend for production deployment: updated `frontend/src/utils/api.js` to dynamically use `VITE_API_BASE_URL`, added `frontend/vercel.json` SPA rewrite rules, and prepared deployment guide for Render (Backend) and Vercel (Frontend). |
