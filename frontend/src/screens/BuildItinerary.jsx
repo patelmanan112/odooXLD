@@ -67,11 +67,20 @@ export const BuildItinerary = () => {
   const [formCost, setFormCost] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
+  /* ── Robust Cost Parser ── */
+  const parseCost = (val) => {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    const cleaned = String(val).replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  };
+
   const activeDay = days[activeDayIndex] || days[0];
 
   /* ── Cost calculations ── */
   const totalCost = days.reduce((sum, day) => {
-    return sum + (day.activities || []).reduce((s, act) => s + (Number(act.cost) || 0), 0);
+    return sum + (day.activities || []).reduce((s, act) => s + parseCost(act.cost), 0);
   }, 0);
 
   const budgetRemaining = tripBudget - totalCost;
@@ -136,7 +145,7 @@ export const BuildItinerary = () => {
       time: formTime,
       title: formTitle,
       category: formCategory,
-      cost: Number(formCost) || 0,
+      cost: parseCost(formCost),
       notes: formNotes
     };
 
@@ -176,29 +185,50 @@ export const BuildItinerary = () => {
 
   /* ── Save & View Final Itinerary ── */
   const handleSaveAndFinish = () => {
-    // Build category breakdown
-    const categoryBreakdown = {};
+    const categoryBreakdown = {
+      flights: 0,
+      hotels: 0,
+      stay: 0,
+      food: 0,
+      activities: 0,
+      transport: 0,
+      sightseeing: 0
+    };
+
     days.forEach(day => {
       (day.activities || []).forEach(act => {
-        const catKey = (act.category || 'other').toLowerCase();
-        categoryBreakdown[catKey] = (categoryBreakdown[catKey] || 0) + (Number(act.cost) || 0);
+        const catKey = (act.category || 'activities').toLowerCase();
+        const cost = parseCost(act.cost);
+        categoryBreakdown[catKey] = (categoryBreakdown[catKey] || 0) + cost;
       });
     });
 
+    const tripId = selectedTrip?.id || `trip-${Date.now()}`;
+
     const updatedTrip = {
-      ...(selectedTrip || {}),
-      id: selectedTrip?.id || 'demo-trip-1',
-      name: selectedTrip?.name || `Trip to ${destName}`,
+      id: tripId,
+      name: selectedTrip?.name || selectedTrip?.title || `Trip to ${destName}`,
+      title: selectedTrip?.title || selectedTrip?.name || `Trip to ${destName}`,
       destination: destName,
+      startDate: selectedTrip?.startDate || (days[0]?.date || new Date().toISOString().split('T')[0]),
+      endDate: selectedTrip?.endDate || (days[days.length - 1]?.date || new Date().toISOString().split('T')[0]),
+      dates: selectedTrip?.dates || `${days[0]?.date || 'Day 1'} - ${days[days.length - 1]?.date || 'Day N'}`,
+      durationDays: days.length,
       days: days,
       spentBudget: totalCost,
       estimatedBudget: tripBudget,
-      categoryBreakdown
+      coverPhoto: selectedTrip?.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+      categoryBreakdown,
+      status: selectedTrip?.status || 'Upcoming'
     };
 
-    if (updateTrip) updateTrip(updatedTrip);
+    if (updateTrip) {
+      updateTrip(updatedTrip);
+    }
     showToast('Itinerary saved successfully!');
-    navigate('/itinerary/view');
+    setTimeout(() => {
+      navigate('/itinerary/view');
+    }, 50);
   };
 
   return (

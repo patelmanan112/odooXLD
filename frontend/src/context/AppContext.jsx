@@ -327,7 +327,14 @@ export const AppProvider = ({ children }) => {
 
 
   const updateTrip = (updatedTrip) => {
-    setTrips(prev => prev.map(t => (t.id === updatedTrip.id ? { ...t, ...updatedTrip } : t)));
+    setTrips(prev => {
+      const exists = prev.some(t => t.id === updatedTrip.id);
+      if (exists) {
+        return prev.map(t => (t.id === updatedTrip.id ? { ...t, ...updatedTrip } : t));
+      } else {
+        return [updatedTrip, ...prev];
+      }
+    });
     setSelectedTripId(updatedTrip.id);
   };
 
