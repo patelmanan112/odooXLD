@@ -8,6 +8,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 - **App Name**: Wanderly (Personalized Intelligent Travel Planning Platform)
 - **Goal**: End-to-end multi-city travel planning, day-by-day itinerary builder, automated budget estimator, calendar timeline visualizer, community sharing, and admin analytics dashboard.
+- **Git Repository**: `https://github.com/patelmanan112/odooXLD`
 - **Tech Stack**:
   - **Framework**: React 19 + Vite
   - **Animations**: Framer Motion (`framer-motion`)
@@ -49,47 +50,24 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 ---
 
-## 📦 File & Component Architecture
-
-```
-CodeBase/
-├── index.html                 # App entry html with Google Fonts
-├── package.json               # Dependencies & scripts
-├── vite.config.js             # Vite configuration
-├── context.md                 # Team context & changelog document
-└── src/
-    ├── main.jsx               # React entry point
-    ├── index.css              # Global design system & utility classes
-    ├── App.jsx                # Core shell container & state router
-    ├── context/
-    │   └── AppContext.jsx     # App state (currentScreen, user, trips, destinations, toast)
-    ├── components/
-    │   ├── Sidebar.jsx        # Left fixed navigation bar
-    │   ├── Header.jsx         # Top search, + New Trip CTA, user menu
-    │   └── DemoSwitcher.jsx   # Floating hackathon 12-screen toolbar
-    └── screens/
-        ├── Screen1_Login.jsx
-        ├── Screen2_Register.jsx
-        ├── Screen3_Dashboard.jsx
-        ├── Screen4_CreateTrip.jsx
-        ├── Screen5_BuildItinerary.jsx
-        ├── Screen6_TripListing.jsx
-        ├── Screen7_ProfileSettings.jsx
-        ├── Screen8_SearchExplorer.jsx
-        ├── Screen9_ItineraryViewBudget.jsx
-        ├── Screen10_Community.jsx
-        ├── Screen11_CalendarView.jsx
-        └── Screen12_AdminAnalytics.jsx
-```
-
----
-
 ## 📝 Team Changelog
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
-| 2026-08-22 09:50 | Antigravity AI | Updated context.md prior to git push to `https://github.com/patelmanan112/odooXLD`. Completed all 12 screens and configured git remote. |
-| 2026-08-22 04:12 | Antigravity AI | Project setup with Vite + React + Framer Motion. Implemented global design system (`index.css`), `AppContext.jsx`, `Sidebar.jsx`, `Header.jsx`, `DemoSwitcher.jsx`, and all 12 requested screens (`Screen1_Login` to `Screen12_AdminAnalytics`). Created `context.md` for shared team context. |
+| 2026-08-22 10:26 | Khush | Implemented Screen 12 (Admin Panel & Analytics Dashboard) with KPI metric cards, user management table, popular cities trend list, and connected main App.jsx router shell. |
+| 2026-08-22 10:24 | Khush | Implemented Screen 11 (Calendar & Timeline View) with month/week grid, color-coded trip event chips (Flights in blue, Hotels in purple, Tours in green), and day agenda side panel. |
+| 2026-08-22 10:22 | Khush | Implemented Screen 10 (Community Tab & Shared Trips) with public travel stories feed, "Copy Trip" cloning feature, and share trip modal. |
+| 2026-08-22 10:20 | Khush | Implemented Screen 9 (Itinerary View & Budget Breakdown) with day-by-day activity physical effort ratings, financial category donut/bar charts, daily cost calculator, and overbudget alert system. |
+| 2026-08-22 10:18 | Khush | Built Screen 8 (Activity & City Search Explorer) with live autocomplete search, category tags (Adventure, Food, Water Sports, Culture), activity details modal, and "Add to Trip" buttons. |
+| 2026-08-22 10:16 | Khush | Implemented Screen 7 (User Profile & Settings) with profile stats, badges, preplanned trip archives, saved destinations, currency selector, and privacy settings. |
+| 2026-08-22 10:14 | Khush | Built Screen 6 (User Trip Listing / My Trips) with search bar, status filter tabs (Ongoing, Upcoming, Completed), sort dropdown, and action menus. |
+| 2026-08-22 10:12 | Khush | Implemented Screen 4 (Create Trip Wizard with section manager) and Screen 5 (Build Itinerary builder with drag/reorder activities and date ranges). |
+| 2026-08-22 10:10 | Khush | Built Screen 3 (Main Dashboard) featuring hero banner, multi-city step node graph, interactive route map preview, budget category bars, AI planner widget, and top destination filter tabs. |
+| 2026-08-22 10:08 | Khush | Implemented Screen 1 (Login) and Screen 2 (User Registration) with validation, avatar preview, and Framer Motion transitions. |
+| 2026-08-22 10:06 | Khush | Built navigation Sidebar, Header bar with search and CTA, and floating Hackathon 12-Screen Demo Switcher drawer. |
+| 2026-08-22 10:04 | Khush | Implemented AppContext global state container for trips data, user profiles, destination catalogs, and toast notification alerts. |
+| 2026-08-22 10:02 | Khush | Configured Vite + React 19 framework, installed Framer Motion & Lucide icons, created global CSS design system with emerald tokens and typography. |
+| 2026-08-22 10:00 | Khush | Initialized repository documentation, PRD specifications, Excalidraw mockups, and team alignment context file. |
 
 ---
 
