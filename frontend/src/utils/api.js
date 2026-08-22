@@ -1,8 +1,6 @@
 const API_BASE_URL = 'https://wanderly-backend-m65m.onrender.com';
 
 
-
-
 export const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('wanderly_token');
 
