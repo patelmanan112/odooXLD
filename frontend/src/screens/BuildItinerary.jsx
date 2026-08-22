@@ -275,14 +275,16 @@ export const BuildItinerary = () => {
 
         {/* Financial Counter & CTA */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '0.72rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
-              Spent / Budget
-            </p>
-            <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#1A1A2E', margin: 0 }}>
-              ₹{totalCost.toLocaleString('en-IN')}
-              <span style={{ fontSize: '0.85rem', color: '#9CA3AF', fontWeight: 500 }}> / ₹{tripBudget.toLocaleString('en-IN')}</span>
-            </p>
+          <div style={{ display: 'flex', gap: '16px', backgroundColor: '#FAFAF8', border: '1px solid #EDE9E2', padding: '8px 16px', borderRadius: '12px' }}>
+            <div>
+              <p style={{ fontSize: '0.68rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 2px' }}>Total Spent</p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: 800, color: '#1A1A2E', margin: 0 }}>₹{totalCost.toLocaleString('en-IN')}</p>
+            </div>
+            <div style={{ width: '1px', backgroundColor: '#EDE9E2' }} />
+            <div>
+              <p style={{ fontSize: '0.68rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 2px' }}>Remaining</p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: 800, color: budgetRemaining >= 0 ? '#059669' : '#EF4444', margin: 0 }}>₹{Math.abs(budgetRemaining).toLocaleString('en-IN')}</p>
+            </div>
           </div>
 
           <button
@@ -392,21 +394,45 @@ export const BuildItinerary = () => {
           </button>
 
           {/* Budget tracker box */}
-          <div style={{ marginTop: '8px', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
+          <div style={{ marginTop: '12px', paddingTop: '16px', borderTop: '1px solid #EDE9E2', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1A1A2E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Budget Overview
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+              <span style={{ color: '#6B7280', fontWeight: 600 }}>Total Spent</span>
+              <span style={{ fontWeight: 800, color: '#1A1A2E' }}>
+                ₹{totalCost.toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+              <span style={{ color: '#6B7280', fontWeight: 600 }}>Trip Budget</span>
+              <span style={{ fontWeight: 700, color: '#6B7280' }}>
+                ₹{tripBudget.toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', paddingTop: '6px', borderTop: '1px dashed #EDE9E2' }}>
               <span style={{ color: '#6B7280', fontWeight: 600 }}>Remaining</span>
               <span style={{ fontWeight: 800, color: budgetRemaining >= 0 ? '#059669' : '#EF4444' }}>
                 ₹{Math.abs(budgetRemaining).toLocaleString('en-IN')} {budgetRemaining < 0 ? 'over' : ''}
               </span>
             </div>
-            <div style={{ height: '6px', backgroundColor: '#F3F4F6', borderRadius: '9999px', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, (totalCost / tripBudget) * 100)}%`,
-                backgroundColor: budgetRemaining < 0 ? '#EF4444' : '#E85D26',
-                borderRadius: '9999px',
-                transition: 'width 0.4s ease'
-              }} />
+
+            <div>
+              <div style={{ height: '7px', backgroundColor: '#F3F4F6', borderRadius: '9999px', overflow: 'hidden', marginBottom: '4px' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min(100, (totalCost / (tripBudget || 1)) * 100)}%`,
+                  backgroundColor: budgetRemaining < 0 ? '#EF4444' : '#E85D26',
+                  borderRadius: '9999px',
+                  transition: 'width 0.4s ease'
+                }} />
+              </div>
+              <div style={{ fontSize: '0.72rem', color: '#9CA3AF', textAlign: 'right' }}>
+                {Math.round((totalCost / (tripBudget || 1)) * 100)}% used
+              </div>
             </div>
           </div>
         </div>
