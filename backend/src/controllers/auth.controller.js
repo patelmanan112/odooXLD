@@ -2,6 +2,57 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
 
+export const checkEmail = async (req, res, next) => {
+  try {
+    const { email } = req.query;
+
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Email query parameter is required.'
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    return res.status(200).json({
+      exists: !!user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMe = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User account not found.'
+      });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const signup = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;

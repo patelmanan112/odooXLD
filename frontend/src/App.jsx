@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { DemoSwitcher } from './components/DemoSwitcher';
+import { Loader, Plane } from 'lucide-react';
 
 import { Screen1_Login } from './screens/Screen1_Login';
 import { Screen2_Register } from './screens/Screen2_Register';
@@ -19,7 +20,55 @@ import { Screen11_CalendarView } from './screens/Screen11_CalendarView';
 import { Screen12_AdminAnalytics } from './screens/Screen12_AdminAnalytics';
 
 const AppContent = () => {
-  const { currentScreen, toastMessage } = useApp();
+  const { currentScreen, setCurrentScreen, isAuthenticated, authLoading, toastMessage } = useApp();
+
+  // Route Protection & Auto-Redirection Effect
+  useEffect(() => {
+    if (authLoading) return;
+
+    const isAuthScreen = currentScreen === 1 || currentScreen === 2;
+
+    if (!isAuthenticated && !isAuthScreen) {
+      // Unauthenticated user trying to access protected route -> redirect to Login
+      setCurrentScreen(1);
+    } else if (isAuthenticated && isAuthScreen) {
+      // Authenticated user trying to access Login/Register -> redirect to Dashboard
+      setCurrentScreen(3);
+    }
+  }, [currentScreen, isAuthenticated, authLoading, setCurrentScreen]);
+
+  if (authLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f8fafc',
+        fontFamily: 'Plus Jakarta Sans, sans-serif'
+      }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '20px',
+          backgroundColor: '#064e3b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          marginBottom: '20px',
+          boxShadow: '0 10px 25px rgba(6, 78, 59, 0.3)'
+        }}>
+          <Plane size={32} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#064e3b', fontWeight: 700, fontSize: '1.1rem' }}>
+          <Loader className="spin" size={20} />
+          <span>Verifying authentication...</span>
+        </div>
+      </div>
+    );
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -35,11 +84,10 @@ const AppContent = () => {
       case 10: return <Screen10_Community key="s10" />;
       case 11: return <Screen11_CalendarView key="s11" />;
       case 12: return <Screen12_AdminAnalytics key="s12" />;
-      default: return <Screen3_Dashboard key="s3" />;
+      default: return isAuthenticated ? <Screen3_Dashboard key="s3" /> : <Screen1_Login key="s1" />;
     }
   };
 
-  // Auth screens (1 & 2) render full-page without sidebar/header for immersive auth design
   const isAuthScreen = currentScreen === 1 || currentScreen === 2;
 
   return (
