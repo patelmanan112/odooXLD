@@ -9,11 +9,38 @@ export const Community = () => {
     showToast?.(`Cloned "${title}" to your trips!`);
   };
 
-  const regularPosts = [
-    { id: 1, author: 'Alex Chen', avatar: 'https://i.pravatar.cc/150?img=11', title: 'Hidden Gems of Kyoto in Autumn', desc: 'A 5-day itinerary focusing on lesser-known temples and local matcha houses.', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80', likes: 120, comments: 14, budget: '¥85,000' },
-    { id: 2, author: 'Priya Sharma', avatar: 'https://i.pravatar.cc/150?img=5', title: 'South Goa Cafe Hopping', desc: 'The ultimate guide to the best aesthetic cafes and workspaces in South Goa.', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=80', likes: 342, comments: 56, budget: '₹12,000' },
-    { id: 3, author: 'Rohan Gupta', avatar: 'https://i.pravatar.cc/150?img=8', title: 'Manali Winter Expedition', desc: 'Trekking routes, igloo stays, and survival tips for a snow-filled adventure.', image: 'https://images.unsplash.com/photo-1605649487212-4d63b211261d?w=800&q=80', likes: 89, comments: 5, budget: '₹25,000' }
-  ];
+  const [publicTrips, setPublicTrips] = React.useState([]);
+
+  React.useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const { apiFetch } = await import('../utils/api.js');
+        const res = await apiFetch('/api/community/trips');
+        if (res.data) setPublicTrips(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTrips();
+  }, []);
+
+  const featuredPost = publicTrips.length > 0 ? publicTrips[0] : {
+    title: 'Swiss Alps Backpacking',
+    description: 'Discover how to experience the majestic views.',
+    estimatedBudget: 75000,
+    coverPhoto: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1000&q=80',
+    user: { name: 'Sarah Jenkins', avatarUrl: 'https://i.pravatar.cc/150?img=44' }
+  };
+  
+  const regularPosts = publicTrips.length > 1 ? publicTrips.slice(1).map(p => ({
+    id: p.id,
+    author: p.user?.name || 'User',
+    avatar: p.user?.avatarUrl || 'https://i.pravatar.cc/150?img=11',
+    title: p.title,
+    desc: p.description || 'Awesome trip.',
+    image: p.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+    likes: 120, comments: 14, budget: `₹${p.estimatedBudget || 50000}`
+  })) : [];
 
   return (
     <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', padding: '40px', boxSizing: 'border-box' }}>
@@ -24,30 +51,30 @@ export const Community = () => {
           
           {/* FEATURED POST */}
           <div style={{ backgroundColor: '#fff', borderRadius: '24px', display: 'flex', overflow: 'hidden', marginBottom: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <img 
-              src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1000&q=80" 
-              alt="Featured" 
-              style={{ width: '60%', height: '350px', objectFit: 'cover' }} 
-            />
-            <div style={{ width: '40%', padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <img src="https://i.pravatar.cc/150?img=44" alt="Sarah" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-                <div>
-                  <div style={{ fontWeight: 'bold', color: '#1A1A2E', fontSize: '0.9rem' }}>Sarah Jenkins</div>
-                  <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>2 days ago</div>
+              <img 
+                src={featuredPost.coverPhoto || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1000&q=80"} 
+                alt="Featured" 
+                style={{ width: '60%', height: '350px', objectFit: 'cover' }} 
+              />
+              <div style={{ width: '40%', padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <img src={featuredPost.user?.avatarUrl || "https://i.pravatar.cc/150?img=44"} alt="Author" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#1A1A2E', fontSize: '0.9rem' }}>{featuredPost.user?.name || "User"}</div>
+                    <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>2 days ago</div>
+                  </div>
                 </div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1A1A2E', margin: '0 0 12px', lineHeight: '1.2' }}>{featuredPost.title}</h2>
+                <p style={{ color: '#4B5563', margin: '0 0 24px', fontSize: '0.95rem', lineHeight: '1.5' }}>{featuredPost.description || 'Check out this amazing itinerary.'}</p>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', fontSize: '0.9rem', color: '#4B5563', fontWeight: '500' }}>
+                  <span>❤️ 240</span>
+                  <span>💬 42</span>
+                  <span style={{ paddingLeft: '16px', borderLeft: '1px solid #E5E7EB' }}>Budget: ₹{featuredPost.estimatedBudget || 75000}</span>
+                </div>
+                
+                <button onClick={() => handleClone(featuredPost.title)} style={{ backgroundColor: '#E85D26', color: '#fff', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', textAlign: 'center' }}>Clone This Itinerary</button>
               </div>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1A1A2E', margin: '0 0 12px', lineHeight: '1.2' }}>Backpacking through the Swiss Alps on a Budget</h2>
-              <p style={{ color: '#4B5563', margin: '0 0 24px', fontSize: '0.95rem', lineHeight: '1.5' }}>Discover how to experience the majestic views, scenic trains, and cozy hostels without breaking the bank.</p>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', fontSize: '0.9rem', color: '#4B5563', fontWeight: '500' }}>
-                <span>Likes: 240</span>
-                <span>Comments: 42</span>
-                <span style={{ paddingLeft: '16px', borderLeft: '1px solid #E5E7EB' }}>Budget: ₹75,000</span>
-              </div>
-              
-              <button onClick={() => handleClone('Swiss Alps Backpacking')} style={{ backgroundColor: '#E85D26', color: '#fff', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', textAlign: 'center' }}>Clone This Itinerary</button>
-            </div>
           </div>
 
           {/* FILTER PILLS */}

@@ -1,20 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Star, Plus, RotateCcw, Filter } from 'lucide-react';
-
-const INITIAL_ACTIVITIES = [
-  { id: 1, title: 'Scuba Diving at Grande Island', location: 'Goa, India', rating: 4.8, category: 'Water Sports', desc: 'Explore vibrant underwater marine life and historic shipwrecks with certified PADI divers.', price: 2500, priceDisplay: '₹2,500', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
-  { id: 2, title: 'Old Goa Heritage Walk', location: 'Goa, India', rating: 4.5, category: 'Culture', desc: 'Discover ancient churches, cathedrals, and classic Portuguese colonial architecture.', price: 800, priceDisplay: '₹800', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80' },
-  { id: 3, title: 'Dudhsagar Waterfalls Trekking', location: 'Goa, India', rating: 4.9, category: 'Adventure', desc: 'Trek through lush Western Ghats tropical forests to the majestic four-tiered waterfall.', price: 1500, priceDisplay: '₹1,500', duration: 'Full Day', image: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&q=80' },
-  { id: 4, title: 'Tropical Spice Plantation & Culinary Lunch', location: 'Goa, India', rating: 4.6, category: 'Food', desc: 'Guided aromatic spice garden walk followed by an authentic traditional buffet lunch.', price: 1200, priceDisplay: '₹1,200', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1596423735880-5f2a689b903e?w=800&q=80' },
-  { id: 5, title: 'Paragliding in Solang Valley', location: 'Manali, India', rating: 4.9, category: 'Adventure', desc: 'Soar through Himalayan mountain air with experienced tandem paragliding pilots.', price: 3500, priceDisplay: '₹3,500', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80' },
-  { id: 6, title: 'Shibuya Night Street Food & Ramen Tour', location: 'Tokyo, Japan', rating: 4.8, category: 'Food', desc: 'Guided night walking tour tasting authentic tonkotsu ramen, yakitori, and matcha.', price: 4500, priceDisplay: '₹4,500', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&q=80' },
-  { id: 7, title: 'Fushimi Inari Torii Shrine Sunrise Hike', location: 'Kyoto, Japan', rating: 5.0, category: 'Sightseeing', desc: 'Hike through thousands of vibrant red torii gates up the sacred Inari mountain.', price: 0, priceDisplay: 'Free', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80' },
-  { id: 8, title: 'Eiffel Tower Summit Access & Seine River Cruise', location: 'Paris, France', rating: 4.9, category: 'Sightseeing', desc: 'Panoramic views from the Eiffel Tower summit combined with a scenic 1-hour river cruise.', price: 5800, priceDisplay: '₹5,800', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80' },
-  { id: 9, title: 'Mount Batur Sunrise Volcano Trek', location: 'Bali, Indonesia', rating: 4.7, category: 'Adventure', desc: 'Early morning guided trek up an active volcano to watch the sunrise above cloud level.', price: 2200, priceDisplay: '₹2,200', duration: 'Full Day', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80' },
-  { id: 10, title: 'Traditional Tea Ceremony & Geisha District Walk', location: 'Kyoto, Japan', rating: 4.7, category: 'Culture', desc: 'Immerse in Japanese tea art in a historic Gion teahouse with traditional sweets.', price: 3200, priceDisplay: '₹3,200', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1578469550956-0e16b69c6a3d?w=800&q=80' },
-];
 
 const CATEGORIES = ['Adventure', 'Food', 'Water Sports', 'Sightseeing', 'Culture'];
 const DURATIONS = ['All', 'Under 2hrs', 'Half Day', 'Full Day'];

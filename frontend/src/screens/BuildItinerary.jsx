@@ -15,27 +15,18 @@ export const BuildItinerary = () => {
   const { selectedTrip, showToast } = useApp();
   const navigate = useNavigate();
 
-  // Mock data if selectedTrip doesn't have sections
-  const initialSections = selectedTrip?.sections?.length > 0 ? selectedTrip.sections : [
+  const destName = selectedTrip?.destination || selectedTrip?.name || selectedTrip?.title || 'Your Destination';
+  
+  const initialSections = selectedTrip?.days?.length > 0 ? selectedTrip.days : [
     {
       id: 's1',
       title: 'Day 1: Arrival & Explorer',
-      date: '2024-06-10',
-      budget: 200,
+      date: selectedTrip?.startDate ? new Date(selectedTrip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      budget: selectedTrip?.estimatedBudget ? Math.floor(selectedTrip.estimatedBudget / (selectedTrip.durationDays || 5)) : 200,
       activities: [
-        { id: 'a1', category: 'Flight', time: '10:00 AM', name: 'Flight to Paris', cost: 450 },
-        { id: 'a2', category: 'Hotel', time: '02:00 PM', name: 'Check-in at Le Meurice', cost: 0 },
-        { id: 'a3', category: 'Sightseeing', time: '04:00 PM', name: 'Eiffel Tower Tour', cost: 35 },
-      ]
-    },
-    {
-      id: 's2',
-      title: 'Day 2: Museum Hopping',
-      date: '2024-06-11',
-      budget: 150,
-      activities: [
-        { id: 'a4', category: 'Food', time: '09:00 AM', name: 'Breakfast at Café de Flore', cost: 25 },
-        { id: 'a5', category: 'Sightseeing', time: '11:00 AM', name: 'Louvre Museum', cost: 20 },
+        { id: 'a1', category: 'Flight', time: '10:00 AM', name: `Flight to ${destName}`, cost: 0 },
+        { id: 'a2', category: 'Hotel', time: '02:00 PM', name: `Check-in at Hotel in ${destName}`, cost: 0 },
+        { id: 'a3', category: 'Sightseeing', time: '04:00 PM', name: 'Explore the city', cost: 0 },
       ]
     }
   ];
