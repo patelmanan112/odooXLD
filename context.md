@@ -54,6 +54,8 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 13:48 | Khush | Configured native Google OAuth 2.0 Client ID (`420013239750-em7u4bcf5crpdgj4mljqv5u467eqf8sm.apps.googleusercontent.com`), installed `@react-oauth/google`, wrapped `main.jsx` with `<GoogleOAuthProvider>`, connected `useGoogleLogin` popup account selector on `Screen1_Login.jsx` & `Screen2_Register.jsx`, and synced backend JWT authentication. |
+| 2026-08-22 13:38 | Khush | Implemented Google Sign-In authentication: created `POST /api/auth/google` endpoint in Express backend, added `googleLoginUser` in `AppContext.jsx`, connected Google Auth buttons on `Screen1_Login.jsx` & `Screen2_Register.jsx`, and synced live database. |
 | 2026-08-22 11:54 | Khush | Replaced Home root route to explicitly target `/dashboard`, added auto-redirection from `/` to `/dashboard`, and updated `AppContext.jsx` route mappings. |
 | 2026-08-22 11:52 | Khush | Connected backend to live Aiven Cloud PostgreSQL database (`wanderly-db-wanderly.k.aivencloud.com:20017`), pushed Prisma schema, executed seed script for 10 cities and 20+ activities, and restarted development servers. |
 | 2026-08-22 11:48 | Khush | Freed port 5000 and restarted fresh backend (`http://localhost:5000`) and frontend (`http://localhost:3000`) development servers. |
