@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 16:06 | Khush | Started frontend Vite development server (`http://localhost:3000`) connected to live Render backend (`https://wanderly-backend-m65m.onrender.com`). |
 | 2026-08-22 15:52 | Khush | Merged latest remote `main` branch updates into `Khush` branch, updated screen file structure, and verified production API routing. |
 | 2026-08-22 15:12 | Khush | Updated `frontend/src/utils/api.js` to default directly to live Render backend (`https://wanderly-backend-m65m.onrender.com`), ensuring all Google Auth and API calls target Render in all environments. |
 | 2026-08-22 15:02 | Khush | Enforced automatic live Render API URL (`https://wanderly-backend-m65m.onrender.com`) whenever `window.location.hostname !== 'localhost'` in `frontend/src/utils/api.js`. |
