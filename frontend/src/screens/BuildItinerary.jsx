@@ -11,7 +11,7 @@ const CATEGORY_COLORS = {
   Sightseeing: '#F97316' // orange
 };
 
-export const Screen5_BuildItinerary = () => {
+export const BuildItinerary = () => {
   const { selectedTrip, showToast } = useApp();
   const navigate = useNavigate();
 

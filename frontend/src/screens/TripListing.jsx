@@ -288,7 +288,7 @@ const TripRow = ({ trip, index, onView, onEdit, onDelete }) => {
 /* ═══════════════════════════════════════════
    MAIN SCREEN
 ═══════════════════════════════════════════ */
-export const Screen6_TripListing = () => {
+export const TripListing = () => {
   const { trips, setTrips, setSelectedTripId, showToast } = useApp();
   const navigate = useNavigate();
 

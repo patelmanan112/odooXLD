@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 
-export const Screen7_ProfileSettings = () => {
+export const ProfileSettings = () => {
   const { user, setUser, trips, setSelectedTripId, showToast, updateUser } = useApp();
   const navigate = useNavigate();
   

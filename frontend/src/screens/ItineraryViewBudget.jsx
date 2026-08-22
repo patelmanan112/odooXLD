@@ -35,7 +35,7 @@ const Dot = ({ color }) => (
   }} />
 );
 
-export const Screen9_ItineraryViewBudget = () => {
+export const ItineraryViewBudget = () => {
   const { selectedTrip, showToast, setCurrentScreen } = useApp();
   const navigate = useNavigate();
 

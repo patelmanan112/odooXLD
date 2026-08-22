@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock } from 'lucide-react';
 
-export const Screen11_CalendarView = () => {
+export const CalendarView = () => {
   const { selectedTrip, showToast } = useApp();
   const [selectedDay, setSelectedDay] = useState(16);
 

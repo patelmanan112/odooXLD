@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Shield, LayoutDashboard, Users, Map, Activity, BarChart2, Download, TrendingUp, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const Screen12_AdminAnalytics = () => {
+export const AdminAnalytics = () => {
   const { showToast } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');

@@ -25,7 +25,7 @@ const RATINGS = [
   { label: '4.8+ Stars', val: 4.8 },
 ];
 
-export const Screen8_SearchExplorer = () => {
+export const SearchExplorer = () => {
   const { showToast } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');

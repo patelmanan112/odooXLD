@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Image as ImageIcon, Check } from 'lucide-react';
 
-export const Screen4_CreateTrip = () => {
+export const CreateTrip = () => {
   const { addTrip, setSelectedTripId, destinations, showToast } = useApp();
   const navigate = useNavigate();
 

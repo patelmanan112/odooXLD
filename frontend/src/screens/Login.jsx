@@ -16,7 +16,7 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
 };
 
-export const Screen1_Login = () => {
+export const Login = () => {
   const { showToast, loginUser, googleLoginUser, checkEmailExist, setPrefilledEmail } = useApp();
   const navigate = useNavigate();
 

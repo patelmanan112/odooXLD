@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 
-export const Screen10_Community = () => {
+export const Community = () => {
   const { addTrip, showToast } = useApp();
 
   const handleClone = (title) => {

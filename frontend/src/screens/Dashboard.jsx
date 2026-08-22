@@ -41,7 +41,7 @@ const Chip = ({ children, color = '#E85D26', bg = '#FEF0E7' }) => (
 /* ═══════════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════════ */
-export const Screen3_Dashboard = () => {
+export const Dashboard = () => {
   const { user, trips, destinations, toggleSaveDestination, setSelectedTripId, showToast } = useApp();
   const navigate = useNavigate();
   const [aiPrompt, setAiPrompt] = useState('');

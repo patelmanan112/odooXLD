@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Navigation, Calendar, Clock, ArrowRight, Train, Plane, Bus, Compass } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-export const Screen13_JourneyView = () => {
+export const JourneyView = () => {
   const { selectedTrip } = useApp();
 
   const stops = selectedTrip?.stops || ['Mumbai', 'Tokyo', 'Kyoto', 'Osaka', 'Tokyo'];
