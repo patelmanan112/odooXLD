@@ -36,16 +36,16 @@ export const Screen12_AdminAnalytics = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.35 }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
         <div>
           <span className="badge badge-emerald">Screen 12: Admin & Analytics Panel</span>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 800, color: '#064e3b', marginTop: '4px' }}>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 800, color: '#064e3b', marginTop: '4px' }}>
             Admin Dashboard & Analytics 📊
           </h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
-            Platform health, user management, popular city trends, and activity metrics
+          <p style={{ color: '#64748b', fontSize: '0.86rem' }}>
+            Platform metrics, user management, and popular city trends
           </p>
         </div>
       </div>
@@ -60,33 +60,34 @@ export const Screen12_AdminAnalytics = () => {
         ].map((m, i) => {
           const Icon = m.icon;
           return (
-            <div key={i} className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>{m.label}</span>
-                <Icon size={20} color={m.color} />
+            <div key={i} className="glass-card" style={{ padding: '16px', backgroundColor: '#ffffff' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b' }}>{m.label}</span>
+                <Icon size={18} color={m.color} />
               </div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{m.val}</div>
-              <div style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 700, marginTop: '4px' }}>{m.sub}</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{m.val}</div>
+              <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700, marginTop: '2px' }}>{m.sub}</div>
             </div>
           );
         })}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+      <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['Overview', 'Manage Users', 'Popular Cities', 'Popular Activities'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             style={{
-              padding: '8px 16px',
+              padding: '6px 14px',
               borderRadius: '9999px',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               fontWeight: activeTab === tab ? 700 : 500,
               backgroundColor: activeTab === tab ? '#064e3b' : 'transparent',
               color: activeTab === tab ? '#ffffff' : '#64748b',
               border: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
             {tab}
@@ -96,34 +97,34 @@ export const Screen12_AdminAnalytics = () => {
 
       {/* Manage Users Table */}
       {(activeTab === 'Overview' || activeTab === 'Manage Users') && (
-        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#064e3b', marginBottom: '16px' }}>Manage Registered Users</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left' }}>
+        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Manage Registered Users</h3>
+          <div className="table-responsive-container">
+            <table style={{ width: '100%', minWidth: '580px', borderCollapse: 'collapse', fontSize: '0.84rem', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '12px' }}>User</th>
-                  <th style={{ padding: '12px' }}>Email</th>
-                  <th style={{ padding: '12px' }}>Joined Date</th>
-                  <th style={{ padding: '12px' }}>Trips Count</th>
-                  <th style={{ padding: '12px' }}>Status</th>
-                  <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                  <th style={{ padding: '10px' }}>User</th>
+                  <th style={{ padding: '10px' }}>Email</th>
+                  <th style={{ padding: '10px' }}>Joined Date</th>
+                  <th style={{ padding: '10px' }}>Trips Count</th>
+                  <th style={{ padding: '10px' }}>Status</th>
+                  <th style={{ padding: '10px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {usersList.map(u => (
                   <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px', fontWeight: 700, color: '#0f172a' }}>{u.name}</td>
-                    <td style={{ padding: '12px', color: '#64748b' }}>{u.email}</td>
-                    <td style={{ padding: '12px', color: '#64748b' }}>{u.joined}</td>
-                    <td style={{ padding: '12px', fontWeight: 700, color: '#064e3b' }}>{u.tripsCount} Trips</td>
-                    <td style={{ padding: '12px' }}>
-                      <span className={`badge ${u.status === 'Active' ? 'badge-emerald' : 'badge-gold'}`}>
+                    <td style={{ padding: '10px', fontWeight: 700, color: '#0f172a' }}>{u.name}</td>
+                    <td style={{ padding: '10px', color: '#64748b' }}>{u.email}</td>
+                    <td style={{ padding: '10px', color: '#64748b' }}>{u.joined}</td>
+                    <td style={{ padding: '10px', fontWeight: 700, color: '#064e3b' }}>{u.tripsCount} Trips</td>
+                    <td style={{ padding: '10px' }}>
+                      <span className={`badge ${u.status === 'Active' ? 'badge-emerald' : 'badge-gold'}`} style={{ fontSize: '0.7rem' }}>
                         {u.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      <button onClick={() => showToast(`Inspecting trips for ${u.name}`)} className="btn btn-outline" style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
+                    <td style={{ padding: '10px', textAlign: 'right' }}>
+                      <button onClick={() => showToast(`Inspecting trips for ${u.name}`)} className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>
                         View Trips
                       </button>
                     </td>
@@ -136,16 +137,16 @@ export const Screen12_AdminAnalytics = () => {
       )}
 
       {/* Popular Cities & Activities Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="admin-grid-two">
         
         {/* Popular Cities */}
-        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#064e3b', marginBottom: '16px' }}>Popular Destinations & Cities</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Popular Destinations & Cities</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {popularCities.map((c, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>#{i+1} {c.city}</span>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.84rem' }}>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.86rem' }}>#{i+1} {c.city}</span>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '0.8rem' }}>
                   <span style={{ color: '#047857', fontWeight: 700 }}>{c.trips} Trips</span>
                   <span style={{ color: '#10b981', fontWeight: 800 }}>{c.growth}</span>
                 </div>
@@ -155,16 +156,16 @@ export const Screen12_AdminAnalytics = () => {
         </div>
 
         {/* Popular Activities */}
-        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#064e3b', marginBottom: '16px' }}>Popular Activities & Trends</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Popular Activities & Trends</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {popularActivities.map((a, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>{a.name}</div>
-                  <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{a.category}</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.86rem' }}>{a.name}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{a.category}</div>
                 </div>
-                <span style={{ fontWeight: 800, color: '#064e3b', fontSize: '0.88rem' }}>{a.bookings} Bookings</span>
+                <span style={{ fontWeight: 800, color: '#064e3b', fontSize: '0.82rem' }}>{a.bookings} Bookings</span>
               </div>
             ))}
           </div>

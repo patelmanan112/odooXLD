@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/Sidebar';
@@ -19,23 +20,32 @@ import { Screen10_Community } from './screens/Screen10_Community';
 import { Screen11_CalendarView } from './screens/Screen11_CalendarView';
 import { Screen12_AdminAnalytics } from './screens/Screen12_AdminAnalytics';
 
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, authLoading } = useApp();
+
+  if (authLoading) return null;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, authLoading } = useApp();
+
+  if (authLoading) return null;
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
 const AppContent = () => {
-  const { currentScreen, setCurrentScreen, isAuthenticated, authLoading, toastMessage } = useApp();
+  const { authLoading, toastMessage } = useApp();
+  const [isOpenMobile, setIsOpenMobile] = useState(false);
+  const location = useLocation();
 
-  // Route Protection & Auto-Redirection Effect
-  useEffect(() => {
-    if (authLoading) return;
-
-    const isAuthScreen = currentScreen === 1 || currentScreen === 2;
-
-    if (!isAuthenticated && !isAuthScreen) {
-      // Unauthenticated user trying to access protected route -> redirect to Login
-      setCurrentScreen(1);
-    } else if (isAuthenticated && isAuthScreen) {
-      // Authenticated user trying to access Login/Register -> redirect to Dashboard
-      setCurrentScreen(3);
-    }
-  }, [currentScreen, isAuthenticated, authLoading, setCurrentScreen]);
+  const isAuthScreen = location.pathname === '/login' || location.pathname === '/register';
 
   if (authLoading) {
     return (
@@ -70,28 +80,8 @@ const AppContent = () => {
     );
   }
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 1: return <Screen1_Login key="s1" />;
-      case 2: return <Screen2_Register key="s2" />;
-      case 3: return <Screen3_Dashboard key="s3" />;
-      case 4: return <Screen4_CreateTrip key="s4" />;
-      case 5: return <Screen5_BuildItinerary key="s5" />;
-      case 6: return <Screen6_TripListing key="s6" />;
-      case 7: return <Screen7_ProfileSettings key="s7" />;
-      case 8: return <Screen8_SearchExplorer key="s8" />;
-      case 9: return <Screen9_ItineraryViewBudget key="s9" />;
-      case 10: return <Screen10_Community key="s10" />;
-      case 11: return <Screen11_CalendarView key="s11" />;
-      case 12: return <Screen12_AdminAnalytics key="s12" />;
-      default: return isAuthenticated ? <Screen3_Dashboard key="s3" /> : <Screen1_Login key="s1" />;
-    }
-  };
-
-  const isAuthScreen = currentScreen === 1 || currentScreen === 2;
-
   return (
-    <div className="app-container">
+    <div className={`app-container ${isOpenMobile ? 'mobile-menu-active' : ''}`}>
       {/* Toast Notification Banner */}
       {toastMessage && (
         <div style={{
@@ -112,14 +102,43 @@ const AppContent = () => {
         </div>
       )}
 
-      {!isAuthScreen && <Sidebar />}
+      {!isAuthScreen && (
+        <Sidebar 
+          isOpenMobile={isOpenMobile} 
+          setIsOpenMobile={setIsOpenMobile} 
+        />
+      )}
 
       <div className="main-content">
-        {!isAuthScreen && <Header />}
+        {!isAuthScreen && (
+          <Header 
+            onMenuToggle={() => setIsOpenMobile(!isOpenMobile)} 
+          />
+        )}
         
         <main className="screen-wrapper">
           <AnimatePresence mode="wait">
-            {renderScreen()}
+            <Routes location={location} key={location.pathname}>
+              <Route path="/login" element={<PublicRoute><Screen1_Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Screen2_Register /></PublicRoute>} />
+              
+              <Route path="/" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
+              <Route path="/trips/new" element={<ProtectedRoute><Screen4_CreateTrip /></ProtectedRoute>} />
+              <Route path="/itinerary/builder" element={<ProtectedRoute><Screen5_BuildItinerary /></ProtectedRoute>} />
+              <Route path="/trips" element={<ProtectedRoute><Screen6_TripListing /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Screen7_ProfileSettings /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Screen7_ProfileSettings /></ProtectedRoute>} />
+              <Route path="/explore" element={<ProtectedRoute><Screen8_SearchExplorer /></ProtectedRoute>} />
+              <Route path="/itinerary/view" element={<ProtectedRoute><Screen9_ItineraryViewBudget /></ProtectedRoute>} />
+              <Route path="/journal" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
+              <Route path="/community" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Screen11_CalendarView /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><Screen12_AdminAnalytics /></ProtectedRoute>} />
+              
+              {/* Fallback route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </AnimatePresence>
         </main>
       </div>

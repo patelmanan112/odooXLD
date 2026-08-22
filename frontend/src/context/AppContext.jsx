@@ -1,7 +1,41 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 
 const AppContext = createContext();
+
+export const ROUTE_MAP = {
+  1: '/login',
+  2: '/register',
+  3: '/',
+  4: '/trips/new',
+  5: '/itinerary/builder',
+  6: '/trips',
+  7: '/profile',
+  8: '/explore',
+  9: '/itinerary/view',
+  10: '/journal',
+  11: '/calendar',
+  12: '/admin'
+};
+
+export const PATH_TO_SCREEN = {
+  '/login': 1,
+  '/register': 2,
+  '/': 3,
+  '/dashboard': 3,
+  '/trips/new': 4,
+  '/itinerary/builder': 5,
+  '/trips': 6,
+  '/profile': 7,
+  '/settings': 7,
+  '/explore': 8,
+  '/itinerary/view': 9,
+  '/journal': 10,
+  '/community': 10,
+  '/calendar': 11,
+  '/admin': 12
+};
 
 export const initialTrips = [
   {
@@ -125,106 +159,88 @@ export const initialDestinations = [
 ];
 
 export const AppProvider = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState(1); // Screen 1 (Login) by default until auth check
-  const [token, setToken] = useState(() => localStorage.getItem('wanderly_token') || null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auth State
+  const [token, setToken] = useState(() => localStorage.getItem('wanderly_token'));
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('wanderly_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    const cached = localStorage.getItem('wanderly_user');
+    return cached ? JSON.parse(cached) : null;
   });
   const [authLoading, setAuthLoading] = useState(true);
+  const [prefilledEmail, setPrefilledEmail] = useState('');
+
+  // Active Screen mapped to URL
+  const currentScreen = PATH_TO_SCREEN[location.pathname] || 3;
+
+  const setCurrentScreen = (screenIdOrPath) => {
+    if (typeof screenIdOrPath === 'number') {
+      const targetPath = ROUTE_MAP[screenIdOrPath] || '/';
+      navigate(targetPath);
+    } else if (typeof screenIdOrPath === 'string') {
+      navigate(screenIdOrPath);
+    }
+  };
+
+  const isAuthenticated = !!token && !!user;
+
+  // Persistent Token Verification on Mount
+  useEffect(() => {
+    const verifySession = async () => {
+      const storedToken = localStorage.getItem('wanderly_token');
+      if (!storedToken) {
+        setAuthLoading(false);
+        return;
+      }
+      try {
+        const data = await apiFetch('/api/auth/me');
+        if (data && data.user) {
+          setUser(data.user);
+        }
+      } catch (err) {
+        localStorage.removeItem('wanderly_token');
+        localStorage.removeItem('wanderly_user');
+        setToken(null);
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    verifySession();
+  }, []);
 
   const [trips, setTrips] = useState(initialTrips);
   const [destinations, setDestinations] = useState(initialDestinations);
   const [selectedTripId, setSelectedTripId] = useState('trip-1');
   const [toastMessage, setToastMessage] = useState(null);
-  const [prefilledEmail, setPrefilledEmail] = useState('');
-
-  const isAuthenticated = !!token && !!user;
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Verify stored token on startup
-  useEffect(() => {
-    const verifyToken = async () => {
-      const storedToken = localStorage.getItem('wanderly_token');
-      if (!storedToken) {
-        setToken(null);
-        setUser(null);
-        setAuthLoading(false);
-        return;
-      }
-
-      try {
-        const data = await apiFetch('/auth/me');
-        if (data && data.user) {
-          const formattedUser = {
-            id: data.user.id,
-            name: data.user.name,
-            email: data.user.email,
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-            currency: '₹',
-            totalBudget: 50000,
-            usedBudget: 35000
-          };
-          setUser(formattedUser);
-          setToken(storedToken);
-          localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
-          setCurrentScreen(3); // Go to Dashboard on verified session
-        } else {
-          throw new Error('Invalid user payload');
-        }
-      } catch (err) {
-        console.error('Session verification failed:', err);
-        localStorage.removeItem('wanderly_token');
-        localStorage.removeItem('wanderly_user');
-        setToken(null);
-        setUser(null);
-        setCurrentScreen(1); // Redirect to Login
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    verifyToken();
-
-    const handleUnauthorized = () => {
-      logout(false);
-    };
-
-    window.addEventListener('wanderly_auth_unauthorized', handleUnauthorized);
-    return () => {
-      window.removeEventListener('wanderly_auth_unauthorized', handleUnauthorized);
-    };
-  }, []);
-
   const checkEmailExist = async (email) => {
     try {
-      const data = await apiFetch(`/auth/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
-      return data.exists;
+      const data = await apiFetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+      return data;
     } catch (err) {
-      console.error('Check email failed:', err);
-      return false;
+      showToast(err.message || 'Error checking email.');
+      return { exists: false };
     }
   };
 
   const loginUser = async (email, password) => {
     try {
-      const data = await apiFetch('/auth/login', {
+      const data = await apiFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
 
       const formattedUser = {
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-        currency: '₹',
-        totalBudget: 50000,
-        usedBudget: 35000
+        ...data.user,
+        currency: data.user.currency || '₹',
+        avatar: data.user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
       };
 
       localStorage.setItem('wanderly_token', data.token);
@@ -233,7 +249,7 @@ export const AppProvider = ({ children }) => {
       setToken(data.token);
       setUser(formattedUser);
       showToast('Logged in successfully! Welcome back.');
-      setCurrentScreen(3); // Dashboard
+      navigate('/');
       return { success: true };
     } catch (err) {
       showToast(err.message || 'Login failed. Please check your credentials.');
@@ -241,21 +257,17 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const signupUser = async (name, email, password) => {
+  const signupUser = async (signupData) => {
     try {
-      const data = await apiFetch('/auth/signup', {
+      const data = await apiFetch('/api/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify(signupData)
       });
 
       const formattedUser = {
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-        currency: '₹',
-        totalBudget: 50000,
-        usedBudget: 35000
+        ...data.user,
+        currency: data.user.currency || '₹',
+        avatar: data.user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
       };
 
       localStorage.setItem('wanderly_token', data.token);
@@ -264,7 +276,7 @@ export const AppProvider = ({ children }) => {
       setToken(data.token);
       setUser(formattedUser);
       showToast('Account created successfully! Welcome to Wanderly.');
-      setCurrentScreen(3); // Dashboard
+      navigate('/');
       return { success: true };
     } catch (err) {
       showToast(err.message || 'Registration failed. Please try again.');
@@ -277,7 +289,7 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('wanderly_user');
     setToken(null);
     setUser(null);
-    setCurrentScreen(1); // Login
+    navigate('/login');
     if (showNotification) {
       showToast('Logged out successfully.');
     }

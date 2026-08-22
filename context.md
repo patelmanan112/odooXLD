@@ -54,6 +54,8 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 11:25 | Khush | Installed `react-router-dom`, implemented explicit URL routes (`/login`, `/register`, `/`, `/trips/new`, `/itinerary/builder`, `/trips`, `/profile`, `/explore`, `/itinerary/view`, `/journal`, `/calendar`, `/admin`), updated `main.jsx` and `AppContext.jsx` to map URL locations, and implemented full backend TripStop, TripActivity, and Budget calculation APIs. |
+| 2026-08-22 11:20 | Khush | Implemented mobile & tablet responsive navigation drawer, hamburger menu toggle, mobile header layout, 0px horizontal scroll fixes, and Journal wireframe layout across all 12 screens. |
 | 2026-08-22 10:50 | Manan | Implemented complete JWT authentication flow on frontend & backend: added `GET /api/auth/check-email` & `GET /api/auth/me`, centralized `apiFetch` with 401 interception, persistent `localStorage` session verification, route guard protection in `App.jsx`, connected `Screen1_Login` & `Screen2_Register`, and Header logout integration. |
 | 2026-08-22 10:15 | Manan | Implemented Node.js/Express backend microservice with Prisma ORM & PostgreSQL. Added authentication, full Trip CRUD APIs with ownership isolation, read endpoints for Cities & Activities, 6 shared Prisma models/relations, and executed migration. |
 | 2026-08-22 10:26 | Khush | Implemented Screen 12 (Admin Panel & Analytics Dashboard) with KPI metric cards, user management table, popular cities trend list, and connected main App.jsx router shell. |
