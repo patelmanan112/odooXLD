@@ -304,6 +304,8 @@ export const AppProvider = ({ children }) => {
       showToast(error.message || 'Failed to update profile');
       return false;
     }
+  };
+
   const logout = (showNotification = true) => {
     localStorage.removeItem('wanderly_token');
     localStorage.removeItem('wanderly_user');
