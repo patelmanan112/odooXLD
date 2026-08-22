@@ -5,7 +5,10 @@ import {
   getTripById,
   updateTrip,
   deleteTrip,
-  addTripStop,
+  createTripStop,
+  getTripStops,
+  getSingleTripStop,
+  updateTripStop,
   deleteTripStop,
   reorderTripStops,
   assignActivityToStop,
@@ -24,10 +27,16 @@ router.get('/:id', getTripById);
 router.put('/:id', updateTrip);
 router.delete('/:id', deleteTrip);
 
-/* Stops & Budget */
-router.post('/:id/stops', addTripStop);
-router.delete('/:id/stops/:stopId', deleteTripStop);
+/* Trip Stops Management */
+router.post('/:id/stops', createTripStop);
+router.get('/:id/stops', getTripStops);
+router.put('/:id/stops/reorder', reorderTripStops);
 router.patch('/:id/stops/reorder', reorderTripStops);
+router.get('/:id/stops/:stopId', getSingleTripStop);
+router.put('/:id/stops/:stopId', updateTripStop);
+router.delete('/:id/stops/:stopId', deleteTripStop);
+
+/* Budget Calculation */
 router.get('/:id/budget', getTripBudget);
 
 /* Trip Activities */
