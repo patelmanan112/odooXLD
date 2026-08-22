@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 10:24 | Khush | Implemented Screen 11 (Calendar & Timeline View) with month/week grid, color-coded trip event chips (Flights in blue, Hotels in purple, Tours in green), and day agenda side panel. |
 | 2026-08-22 10:22 | Khush | Implemented Screen 10 (Community Tab & Shared Trips) with public travel stories feed, "Copy Trip" cloning feature, and share trip modal. |
 | 2026-08-22 10:20 | Khush | Implemented Screen 9 (Itinerary View & Budget Breakdown) with day-by-day activity physical effort ratings, financial category donut/bar charts, daily cost calculator, and overbudget alert system. |
 | 2026-08-22 10:18 | Khush | Built Screen 8 (Activity & City Search Explorer) with live autocomplete search, category tags (Adventure, Food, Water Sports, Culture), activity details modal, and "Add to Trip" buttons. |
