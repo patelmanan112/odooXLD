@@ -326,6 +326,11 @@ export const AppProvider = ({ children }) => {
   };
 
 
+  const updateTrip = (updatedTrip) => {
+    setTrips(prev => prev.map(t => (t.id === updatedTrip.id ? { ...t, ...updatedTrip } : t)));
+    setSelectedTripId(updatedTrip.id);
+  };
+
   const selectedTrip = trips.find(t => t.id === selectedTripId) || trips[0];
 
   return (
@@ -351,6 +356,7 @@ export const AppProvider = ({ children }) => {
       selectedTrip,
       setSelectedTripId,
       addTrip,
+      updateTrip,
       showToast,
       toastMessage
     }}>
