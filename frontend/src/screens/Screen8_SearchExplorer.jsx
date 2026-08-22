@@ -5,7 +5,7 @@ import { Search, MapPin, Star, Plus, RotateCcw, Filter } from 'lucide-react';
 
 const INITIAL_ACTIVITIES = [
   { id: 1, title: 'Scuba Diving at Grande Island', location: 'Goa, India', rating: 4.8, category: 'Water Sports', desc: 'Explore vibrant underwater marine life and historic shipwrecks with certified PADI divers.', price: 2500, priceDisplay: '₹2,500', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
-  { id: 2, title: 'Old Goa Heritage Walk', location: 'Goa, India', rating: 4.5, category: 'Culture', desc: 'Discover ancient churches, cathedrals, and classic Portuguese colonial architecture.', price: 800, priceDisplay: '₹800', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f7415e?w=800&q=80' },
+  { id: 2, title: 'Old Goa Heritage Walk', location: 'Goa, India', rating: 4.5, category: 'Culture', desc: 'Discover ancient churches, cathedrals, and classic Portuguese colonial architecture.', price: 800, priceDisplay: '₹800', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80' },
   { id: 3, title: 'Dudhsagar Waterfalls Trekking', location: 'Goa, India', rating: 4.9, category: 'Adventure', desc: 'Trek through lush Western Ghats tropical forests to the majestic four-tiered waterfall.', price: 1500, priceDisplay: '₹1,500', duration: 'Full Day', image: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&q=80' },
   { id: 4, title: 'Tropical Spice Plantation & Culinary Lunch', location: 'Goa, India', rating: 4.6, category: 'Food', desc: 'Guided aromatic spice garden walk followed by an authentic traditional buffet lunch.', price: 1200, priceDisplay: '₹1,200', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1596423735880-5f2a689b903e?w=800&q=80' },
   { id: 5, title: 'Paragliding in Solang Valley', location: 'Manali, India', rating: 4.9, category: 'Adventure', desc: 'Soar through Himalayan mountain air with experienced tandem paragliding pilots.', price: 3500, priceDisplay: '₹3,500', duration: 'Under 2hrs', image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80' },
@@ -95,16 +95,14 @@ export const Screen8_SearchExplorer = () => {
     <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', padding: '32px 24px 60px', boxSizing: 'border-box' }}>
       <div style={{ maxWidth: '1320px', margin: '0 auto', position: 'relative' }}>
 
-        {/* ── LEFT SIDEBAR FILTERS (PERMANENTLY FIXED AT TOP 84px) ── */}
+        {/* ── LEFT SIDEBAR FILTERS (NON-SCROLLABLE FIXED) ── */}
         <div style={{
           position: 'fixed',
           top: '84px',
           width: '260px',
-          maxHeight: 'calc(100vh - 104px)',
-          overflowY: 'auto',
           backgroundColor: '#FFFFFF',
           borderRadius: '20px',
-          padding: '24px',
+          padding: '20px',
           zIndex: 50,
           border: '1px solid #EDE9E2',
           boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
