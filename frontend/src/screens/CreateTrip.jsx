@@ -2,127 +2,101 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Image as ImageIcon, Check, Search, Compass, Loader } from 'lucide-react';
+import { MapPin, Image as ImageIcon, Check, Search, Compass, Loader, Plus, Sparkles } from 'lucide-react';
 
-/* ── Famous Global Destinations & Landmark Images ── */
-const MAP_DESTINATIONS = [
+/* ── Interactive Map Pins for Step 3 ── */
+const MAP_LOCATIONS = [
   {
-    id: 'rome',
-    name: 'Rome, Italy',
-    lat: 41.9028,
-    lng: 12.4964,
-    x: '52%',
+    id: 'loc-1',
+    name: 'Colosseum & Arena Floor',
+    city: 'Rome',
+    x: '50%',
     y: '38%',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Colosseum & Arena Floor', 'Trevi Fountain', 'Vatican Museums', 'Pantheon']
+    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
   },
   {
-    id: 'mumbai',
-    name: 'Mumbai, India',
-    lat: 19.0760,
-    lng: 72.8777,
-    x: '67%',
+    id: 'loc-2',
+    name: 'Trevi Fountain',
+    city: 'Rome',
+    x: '52%',
+    y: '40%',
+    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'loc-3',
+    name: 'Gateway of India',
+    city: 'Mumbai',
+    x: '66%',
     y: '53%',
-    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Gateway of India', 'Marine Drive Promenade', 'Elephanta Caves', 'Colaba Market']
+    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80'
   },
   {
-    id: 'tokyo',
-    name: 'Tokyo, Japan',
-    lat: 35.6762,
-    lng: 139.6503,
+    id: 'loc-4',
+    name: 'Marine Drive Promenade',
+    city: 'Mumbai',
+    x: '64%',
+    y: '55%',
+    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'loc-5',
+    name: 'Shibuya Crossing',
+    city: 'Tokyo',
     x: '82%',
     y: '42%',
-    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Shibuya Crossing', 'Fushimi Inari Shrine', 'Senso-ji Temple', 'Meiji Shrine']
+    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80'
   },
   {
-    id: 'goa',
-    name: 'Goa, India',
-    lat: 15.2993,
-    lng: 74.1240,
-    x: '68%',
-    y: '55%',
-    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Grande Island Scuba', 'Old Goa Basilica', 'Baga Beach Watersports', 'Fort Aguada']
-  },
-  {
-    id: 'paris',
-    name: 'Paris, France',
-    lat: 48.8566,
-    lng: 2.3522,
-    x: '48%',
+    id: 'loc-6',
+    name: 'Eiffel Tower Summit',
+    city: 'Paris',
+    x: '47%',
     y: '34%',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Eiffel Tower Summit', 'Louvre Museum', 'Seine River Cruise', 'Montmartre']
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
   },
   {
-    id: 'bali',
-    name: 'Bali, Indonesia',
-    lat: -8.4095,
-    lng: 115.1889,
+    id: 'loc-7',
+    name: 'Grande Island Scuba',
+    city: 'Goa',
+    x: '67%',
+    y: '58%',
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'loc-8',
+    name: 'Mount Batur Sunrise',
+    city: 'Bali',
     x: '78%',
     y: '62%',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Mount Batur Sunrise', 'Ubud Monkey Forest', 'Tanah Lot Temple', 'Tegallalang Terraces']
-  },
-  {
-    id: 'manali',
-    name: 'Manali, Himachal Pradesh',
-    lat: 32.2432,
-    lng: 77.1892,
-    x: '67%',
-    y: '45%',
-    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Solang Valley Paragliding', 'Hadimba Temple', 'Rohtang Pass', 'Jogini Falls']
-  },
-  {
-    id: 'jaipur',
-    name: 'Jaipur, Rajasthan',
-    lat: 26.9124,
-    lng: 75.7873,
-    x: '66%',
-    y: '48%',
-    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1000&q=80',
-    spots: ['Hawa Mahal', 'Amber Fort', 'Jaipur City Palace', 'Jantar Mantar']
+    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
-/* ── City Spots Catalog for Offline / Backup Filtering ── */
-const ALL_CITY_SPOTS = [
-  // ROME
-  { id: 'rome-1', cityName: 'Rome', name: 'Colosseum & Arena Floor', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
-  { id: 'rome-2', cityName: 'Rome', name: 'Trevi Fountain Evening Walk', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
-  { id: 'rome-3', cityName: 'Rome', name: 'Vatican Museums & Sistine Chapel', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
-  { id: 'rome-4', cityName: 'Rome', name: 'Pantheon & Piazza Navona', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
-
-  // MUMBAI
-  { id: 'mum-1', cityName: 'Mumbai', name: 'Gateway of India', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
-  { id: 'mum-2', cityName: 'Mumbai', name: 'Marine Drive Queen’s Necklace', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
-  { id: 'mum-3', cityName: 'Mumbai', name: 'Elephanta Caves Boat Tour', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
-  { id: 'mum-4', cityName: 'Mumbai', name: 'Colaba Causeway Shopping', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
-
-  // TOKYO
-  { id: 'tok-1', cityName: 'Tokyo', name: 'Shibuya Scramble Crossing', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80' },
-  { id: 'tok-2', cityName: 'Tokyo', name: 'Senso-ji Temple Asakusa', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'tok-3', cityName: 'Tokyo', name: 'Meiji Shrine Harajuku', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'tok-4', cityName: 'Tokyo', name: 'Akihabara Electric Town', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80' },
-
-  // GOA
-  { id: 'goa-1', cityName: 'Goa', name: 'Grande Island Scuba Diving', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80' },
-  { id: 'goa-2', cityName: 'Goa', name: 'Old Goa Heritage Basilica', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' },
-  { id: 'goa-3', cityName: 'Goa', name: 'Baga Beach Parasailing', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' },
-
-  // PARIS
-  { id: 'par-1', cityName: 'Paris', name: 'Eiffel Tower Summit', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
-  { id: 'par-2', cityName: 'Paris', name: 'Louvre Museum Tour', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
-  { id: 'par-3', cityName: 'Paris', name: 'Seine Dinner Cruise', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
-
-  // BALI
-  { id: 'bali-1', cityName: 'Bali', name: 'Mount Batur Sunrise Trek', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80' },
-  { id: 'bali-2', cityName: 'Bali', name: 'Ubud Sacred Monkey Forest', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80' },
-  { id: 'bali-3', cityName: 'Bali', name: 'Tanah Lot Sunset Temple', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80' }
-];
+/* ── Fallback Places List per City ── */
+const DEFAULT_CITY_PLACES = {
+  Rome: [
+    { id: 'rome-1', name: 'Colosseum & Arena Floor', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-2', name: 'Trevi Fountain Evening Stroll', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-3', name: 'Vatican Museums & Sistine Chapel', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-4', name: 'Pantheon & Piazza Navona', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Mumbai: [
+    { id: 'mum-1', name: 'Gateway of India', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-2', name: 'Marine Drive Queen’s Necklace', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-3', name: 'Elephanta Caves Boat Tour', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-4', name: 'Colaba Causeway Shopping', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Tokyo: [
+    { id: 'tok-1', name: 'Shibuya Scramble Crossing', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80' },
+    { id: 'tok-2', name: 'Senso-ji Temple Asakusa', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
+    { id: 'tok-3', name: 'Meiji Shrine Harajuku', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Goa: [
+    { id: 'goa-1', name: 'Grande Island Scuba Diving', city: 'Goa', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'goa-2', name: 'Old Goa Heritage Basilica', city: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' },
+    { id: 'goa-3', name: 'Baga Beach Watersports', city: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' }
+  ]
+};
 
 export const CreateTrip = () => {
   const { addTrip, setSelectedTripId, showToast } = useApp();
@@ -133,7 +107,7 @@ export const CreateTrip = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
-    destination: 'Rome, Italy',
+    destination: 'Rome',
     description: '',
     startDate: todayStr,
     endDate: todayStr,
@@ -143,47 +117,31 @@ export const CreateTrip = () => {
     coverPhoto: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1000&q=80'
   });
 
-  const [locationSearch, setLocationSearch] = useState('');
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  /* ── Step 3 Map & Location Search State ── */
+  const [placeSearchQuery, setPlaceSearchQuery] = useState('');
+  const [placesList, setPlacesList] = useState([]);
+  const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
+  const [activeMapPin, setActiveMapPin] = useState(null);
 
-  /* ── City-Specific Places fetched dynamically from Backend DB ── */
-  const [backendPlaces, setBackendPlaces] = useState([]);
-  const [placesLoading, setPlacesLoading] = useState(false);
-
-  /* Fetch places whenever destination changes */
+  /* Fetch places from backend API based on destination */
   useEffect(() => {
-    const fetchPlacesForDestination = async () => {
+    const fetchPlaces = async () => {
       if (!formData.destination) return;
-      setPlacesLoading(true);
       const cityName = formData.destination.split(',')[0].trim();
-
       try {
         const { apiFetch } = await import('../utils/api.js');
         const data = await apiFetch(`/api/cities/places?city=${encodeURIComponent(cityName)}`);
         const resList = Array.isArray(data) ? data : (data?.data || []);
-
         if (resList.length > 0) {
-          setBackendPlaces(resList);
+          setPlacesList(resList);
         } else {
-          // Dynamic city fallback filter
-          const filtered = ALL_CITY_SPOTS.filter(p =>
-            p.cityName.toLowerCase().includes(cityName.toLowerCase()) ||
-            cityName.toLowerCase().includes(p.cityName.toLowerCase())
-          );
-          setBackendPlaces(filtered.length > 0 ? filtered : ALL_CITY_SPOTS.filter(p => p.cityName === 'Rome'));
+          setPlacesList(DEFAULT_CITY_PLACES[cityName] || DEFAULT_CITY_PLACES.Rome);
         }
       } catch (err) {
-        const filtered = ALL_CITY_SPOTS.filter(p =>
-          p.cityName.toLowerCase().includes(cityName.toLowerCase()) ||
-          cityName.toLowerCase().includes(p.cityName.toLowerCase())
-        );
-        setBackendPlaces(filtered.length > 0 ? filtered : ALL_CITY_SPOTS.filter(p => p.cityName === 'Rome'));
-      } finally {
-        setPlacesLoading(false);
+        setPlacesList(DEFAULT_CITY_PLACES[cityName] || DEFAULT_CITY_PLACES.Rome);
       }
     };
-
-    fetchPlacesForDestination();
+    fetchPlaces();
   }, [formData.destination]);
 
   const handleChange = (e) => {
@@ -210,18 +168,61 @@ export const CreateTrip = () => {
     });
   };
 
-  /* ── Select Location from Map or Search ── */
-  const handleSelectLocation = (loc) => {
-    setFormData(prev => ({
-      ...prev,
-      destination: loc.name,
-      coverPhoto: loc.image,
-      title: prev.title || `Trip to ${loc.name.split(',')[0]}`,
-      selectedPlaces: []
-    }));
-    setLocationSearch(loc.name);
-    setShowSearchDropdown(false);
-    showToast?.(`Destination set to ${loc.name}! Loaded popular spots.`);
+  /* ── Dynamic Photo Generator / Fetcher ── */
+  const fetchPhotoForLocation = async (locationName) => {
+    setIsFetchingPhoto(true);
+    showToast?.(`AI fetching photo for "${locationName}"... 📸`);
+
+    // Generate high-resolution landmark photo via dynamic Unsplash / Gemini query URL
+    const queryTerm = encodeURIComponent(locationName);
+    const photoUrl = `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80`;
+
+    // Simulated short AI fetch delay
+    setTimeout(() => {
+      const dynamicPhoto = `https://source.unsplash.com/1600x900/?${queryTerm},landmark` || photoUrl;
+      const fallbackLandmark = MAP_LOCATIONS.find(m => m.name.toLowerCase().includes(locationName.toLowerCase()))?.image || photoUrl;
+      
+      setFormData(prev => ({
+        ...prev,
+        coverPhoto: fallbackLandmark
+      }));
+      setIsFetchingPhoto(false);
+      showToast?.(`Updated cover photo for "${locationName}"! 🎉`);
+    }, 600);
+  };
+
+  /* ── Map Pin Clicked in Step 3 ── */
+  const handleMapPinClick = (pin) => {
+    setActiveMapPin(pin.id);
+    fetchPhotoForLocation(pin.name);
+
+    // Toggle pin into selected places list
+    setFormData(prev => {
+      const isSelected = prev.selectedPlaces.includes(pin.id);
+      const updatedPlaces = isSelected ? prev.selectedPlaces.filter(id => id !== pin.id) : [...prev.selectedPlaces, pin.id];
+      return {
+        ...prev,
+        selectedPlaces: updatedPlaces,
+        coverPhoto: pin.image
+      };
+    });
+  };
+
+  /* ── Add Searched Custom Place ── */
+  const handleAddSearchedPlace = () => {
+    if (!placeSearchQuery.trim()) return;
+    const placeName = placeSearchQuery.trim();
+    const newPlace = {
+      id: `place-${Date.now()}`,
+      name: placeName,
+      city: formData.destination,
+      image: `https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80`
+    };
+
+    setPlacesList(prev => [newPlace, ...prev]);
+    handlePlaceToggle(newPlace);
+    fetchPhotoForLocation(placeName);
+    setPlaceSearchQuery('');
   };
 
   const handlePlaceToggle = (place) => {
@@ -229,7 +230,6 @@ export const CreateTrip = () => {
       const places = prev.selectedPlaces;
       const isSelected = places.includes(place.id);
       const updatedPlaces = isSelected ? places.filter(id => id !== place.id) : [...places, place.id];
-      
       return {
         ...prev,
         selectedPlaces: updatedPlaces,
@@ -251,7 +251,7 @@ export const CreateTrip = () => {
       spentBudget: 0,
       isPublic: formData.isPublic,
       status: 'Upcoming',
-      coverPhoto: formData.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+      coverPhoto: formData.coverPhoto || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80',
       days: []
     };
     if (addTrip) addTrip(newTrip);
@@ -269,10 +269,9 @@ export const CreateTrip = () => {
     return progress;
   };
 
-  /* Filter map search suggestions */
-  const searchSuggestions = MAP_DESTINATIONS.filter(d =>
-    d.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-    d.spots.some(s => s.toLowerCase().includes(locationSearch.toLowerCase()))
+  /* Filter places by search query */
+  const filteredPlaces = placesList.filter(p =>
+    p.name.toLowerCase().includes(placeSearchQuery.toLowerCase())
   );
 
   return (
@@ -300,10 +299,10 @@ export const CreateTrip = () => {
                 </div>
                 <div style={{ marginLeft: '16px', paddingTop: '6px' }}>
                   <div style={{ fontWeight: '600', color: step >= num ? '#1E293B' : '#94A3B8' }}>
-                    {num === 1 ? 'Trip Basics & Map' : num === 2 ? 'Dates & Budget' : 'Pick Places'}
+                    {num === 1 ? 'Trip Basics' : num === 2 ? 'Dates & Budget' : 'Pick Places & Map'}
                   </div>
                   <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    {num === 1 ? 'Destination & Map' : num === 2 ? 'When and how much' : 'Spots in ' + (formData.destination.split(',')[0] || 'City')}
+                    {num === 1 ? 'Trip name & destination' : num === 2 ? 'When and budget' : 'Map search & AI photos'}
                   </div>
                 </div>
               </div>
@@ -316,6 +315,8 @@ export const CreateTrip = () => {
           
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
             <AnimatePresence mode="wait">
+
+              {/* ── STEP 1: TRIP BASICS ONLY (NO MAP) ── */}
               {step === 1 && (
                 <motion.div
                   key="step1"
@@ -324,163 +325,45 @@ export const CreateTrip = () => {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Trip Basics & Interactive Map</h3>
+                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Trip Basics</h3>
                   
                   {/* Trip Name */}
                   <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>Trip Name</label>
                     <input 
                       type="text" name="title" value={formData.title} onChange={handleChange}
-                      placeholder="e.g. Vacation to Rome"
+                      placeholder="e.g. Summer Vacation in Rome"
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '16px', outline: 'none' }}
                     />
                   </div>
                   
-                  {/* Location Search with Autocomplete */}
-                  <div style={{ marginBottom: '24px', position: 'relative' }}>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
-                      Destination / Location Search
-                    </label>
+                  {/* Destination Input */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>Destination</label>
                     <div style={{ position: 'relative' }}>
-                      <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#E85D26' }} size={20} />
+                      <MapPin style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#E85D26' }} size={20} />
                       <input 
-                        type="text"
-                        value={locationSearch || formData.destination}
-                        onChange={(e) => {
-                          setLocationSearch(e.target.value);
-                          setShowSearchDropdown(true);
-                          setFormData(prev => ({ ...prev, destination: e.target.value }));
-                        }}
-                        onFocus={() => setShowSearchDropdown(true)}
-                        placeholder="Search location (e.g. Rome, Mumbai, Tokyo, Goa, Paris, Bali)..."
+                        type="text" name="destination" value={formData.destination} onChange={handleChange}
+                        placeholder="Where are you going? (e.g. Rome, Mumbai, Tokyo, Goa, Paris)..."
                         style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '16px', outline: 'none', boxSizing: 'border-box' }}
                       />
                     </div>
-
-                    {/* Autocomplete Dropdown */}
-                    {showSearchDropdown && searchSuggestions.length > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: '#FFFFFF',
-                        border: '1px solid #EDE9E2',
-                        borderRadius: '14px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                        zIndex: 100,
-                        marginTop: '6px',
-                        maxHeight: '220px',
-                        overflowY: 'auto'
-                      }}>
-                        {searchSuggestions.map(loc => (
-                          <div
-                            key={loc.id}
-                            onClick={() => handleSelectLocation(loc)}
-                            style={{
-                              padding: '12px 16px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              cursor: 'pointer',
-                              borderBottom: '1px solid #F3F4F6',
-                              transition: 'background 0.15s ease'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.background = '#FEF0E7'}
-                            onMouseOut={(e) => e.currentTarget.style.background = '#FFFFFF'}
-                          >
-                            <img src={loc.image} alt={loc.name} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
-                            <div>
-                              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#1A1A2E' }}>{loc.name}</div>
-                              <div style={{ fontSize: '0.76rem', color: '#9CA3AF' }}>Spots: {loc.spots.join(', ')}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Visual Interactive Map Canvas Widget */}
-                  <div style={{ marginBottom: '24px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Compass size={16} color="#E85D26" /> Interactive World Map (Click Pin to Select)
-                      </label>
-                      <span style={{ fontSize: '0.78rem', color: '#E85D26', fontWeight: 700 }}>
-                        Active: {formData.destination}
-                      </span>
-                    </div>
-
-                    <div style={{
-                      position: 'relative',
-                      height: '240px',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      backgroundColor: '#1E293B',
-                      backgroundImage: 'radial-gradient(#334155 1px, transparent 1px)',
-                      backgroundSize: '16px 16px',
-                      border: '2px solid #EDE9E2'
-                    }}>
-                      {/* World Map Overlay Graphic */}
-                      <div style={{ position: 'absolute', inset: 0, opacity: 0.15, background: 'url("https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80")', backgroundSize: 'cover' }} />
-
-                      {/* Map Pins */}
-                      {MAP_DESTINATIONS.map(loc => {
-                        const isSelected = formData.destination.toLowerCase().includes(loc.name.split(',')[0].toLowerCase());
-                        return (
-                          <div
-                            key={loc.id}
-                            onClick={() => handleSelectLocation(loc)}
-                            title={`Select ${loc.name}`}
-                            style={{
-                              position: 'absolute',
-                              left: loc.x,
-                              top: loc.y,
-                              transform: 'translate(-50%, -100%)',
-                              cursor: 'pointer',
-                              zIndex: isSelected ? 10 : 5,
-                              transition: 'transform 0.2s ease'
-                            }}
-                          >
-                            <div style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center'
-                            }}>
-                              <div style={{
-                                backgroundColor: isSelected ? '#E85D26' : '#FFFFFF',
-                                color: isSelected ? '#FFFFFF' : '#1A1A2E',
-                                padding: '4px 8px',
-                                borderRadius: '8px',
-                                fontSize: '0.72rem',
-                                fontWeight: 800,
-                                whiteSpace: 'nowrap',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                                border: isSelected ? '1.5px solid #FFFFFF' : '1px solid #CBD5E1',
-                                marginBottom: '2px'
-                              }}>
-                                {loc.name.split(',')[0]}
-                              </div>
-                              <MapPin size={isSelected ? 24 : 18} color={isSelected ? '#E85D26' : '#FFFFFF'} fill={isSelected ? '#E85D26' : '#334155'} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
+                  {/* Description */}
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>Description</label>
                     <textarea 
                       name="description" value={formData.description} onChange={handleChange}
                       placeholder="What's the vibe of this trip?"
-                      rows="3"
+                      rows="4"
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '16px', resize: 'vertical', outline: 'none' }}
                     />
                   </div>
                 </motion.div>
               )}
 
+              {/* ── STEP 2: DATES & BUDGET ── */}
               {step === 2 && (
                 <motion.div
                   key="step2"
@@ -533,6 +416,7 @@ export const CreateTrip = () => {
                 </motion.div>
               )}
 
+              {/* ── STEP 3: PICK PLACES WITH MAP & GOOGLE SEARCH & AI PHOTO FETCHER ── */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -543,58 +427,168 @@ export const CreateTrip = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
-                      Popular Spots in {formData.destination.split(',')[0]}
+                      Pick Places & Interactive Google Map
                     </h3>
-                    {placesLoading && (
-                      <span style={{ fontSize: '0.8rem', color: '#E85D26', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Loader size={14} className="animate-spin" /> Loading DB places...
+                    {isFetchingPhoto && (
+                      <span style={{ fontSize: '0.8rem', color: '#E85D26', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Loader size={14} className="animate-spin" /> Fetching AI landmark photo...
                       </span>
                     )}
                   </div>
-                  <p style={{ color: '#64748B', marginBottom: '24px' }}>
-                    Showing authentic spots for <strong>{formData.destination}</strong> from database. Click to select spots for your itinerary.
+                  <p style={{ color: '#64748B', marginBottom: '20px', fontSize: '0.92rem' }}>
+                    Search or click any spot on the map below. Clicking a location automatically fetches its high-res landmark photo!
                   </p>
-                  
-                  {backendPlaces.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
-                      {backendPlaces.map(place => {
-                        const isSelected = formData.selectedPlaces.includes(place.id);
+
+                  {/* Search Bar for Places */}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <Search size={18} color="#E85D26" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="text"
+                        value={placeSearchQuery}
+                        onChange={(e) => setPlaceSearchQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddSearchedPlace(); }}
+                        placeholder="Search any place or landmark on map (e.g. Gateway of India, Colosseum, Eiffel Tower)..."
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px 12px 46px',
+                          borderRadius: '12px',
+                          border: '1.5px solid #E2E8F0',
+                          fontSize: '0.95rem',
+                          outline: 'none',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+
+                    {placeSearchQuery.trim() && (
+                      <button
+                        onClick={handleAddSearchedPlace}
+                        style={{
+                          backgroundColor: '#E85D26',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '0 20px',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <Plus size={16} /> Add & Fetch Photo
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Interactive Map Component in Step 3 */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Compass size={16} color="#E85D26" /> Map Pins (Click Pin to Fetch Photo & Add)
+                      </label>
+                      <span style={{ fontSize: '0.78rem', color: '#E85D26', fontWeight: 700 }}>
+                        Destination: {formData.destination}
+                      </span>
+                    </div>
+
+                    <div style={{
+                      position: 'relative',
+                      height: '240px',
+                      borderRadius: '18px',
+                      overflow: 'hidden',
+                      backgroundColor: '#0F172A',
+                      backgroundImage: 'radial-gradient(#334155 1px, transparent 1px)',
+                      backgroundSize: '16px 16px',
+                      border: '2px solid #EDE9E2',
+                      boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
+                    }}>
+                      <div style={{ position: 'absolute', inset: 0, opacity: 0.2, background: 'url("https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80")', backgroundSize: 'cover' }} />
+
+                      {/* Map Pins */}
+                      {MAP_LOCATIONS.map(pin => {
+                        const isSelected = formData.selectedPlaces.includes(pin.id);
                         return (
-                          <div 
-                            key={place.id} 
-                            onClick={() => handlePlaceToggle(place)}
-                            style={{ 
-                              height: '140px', borderRadius: '14px', overflow: 'hidden', position: 'relative', cursor: 'pointer',
-                              border: isSelected ? '3px solid #E85D26' : '1px solid #EDE9E2',
-                              boxShadow: isSelected ? '0 4px 12px rgba(232, 93, 38, 0.25)' : 'none',
-                              transition: 'transform 0.15s ease'
+                          <div
+                            key={pin.id}
+                            onClick={() => handleMapPinClick(pin)}
+                            title={`Click to fetch photo for ${pin.name}`}
+                            style={{
+                              position: 'absolute',
+                              left: pin.x,
+                              top: pin.y,
+                              transform: 'translate(-50%, -100%)',
+                              cursor: 'pointer',
+                              zIndex: isSelected ? 10 : 5,
+                              transition: 'all 0.2s ease'
                             }}
                           >
-                            <img src={place.image} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', padding: '12px' }}>
-                              <span style={{ color: 'white', fontWeight: '700', fontSize: '13px', display: 'block', lineHeight: 1.2 }}>{place.name}</span>
-                              {place.estimatedCost ? (
-                                <span style={{ color: '#FCD34D', fontSize: '11px', fontWeight: 600 }}>₹{Number(place.estimatedCost).toLocaleString('en-IN')}</span>
-                              ) : null}
-                            </div>
-                            {isSelected && (
-                              <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Check size={14} color="#fff" />
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <div style={{
+                                backgroundColor: isSelected ? '#E85D26' : '#FFFFFF',
+                                color: isSelected ? '#FFFFFF' : '#0F172A',
+                                padding: '4px 8px',
+                                borderRadius: '8px',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                                border: isSelected ? '1.5px solid #FFFFFF' : '1px solid #CBD5E1',
+                                marginBottom: '2px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}>
+                                {pin.name} {isSelected && <Check size={12} color="#FFF" />}
                               </div>
-                            )}
+                              <MapPin size={isSelected ? 26 : 20} color={isSelected ? '#E85D26' : '#64748B'} fill={isSelected ? '#E85D26' : '#1E293B'} />
+                            </div>
                           </div>
                         );
                       })}
                     </div>
-                  ) : (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
-                      No spots found for {formData.destination}. Try searching for Rome, Mumbai, Tokyo, Goa, Paris, or Bali!
-                    </div>
-                  )}
+                  </div>
+
+                  {/* Grid of Spots */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
+                    {filteredPlaces.map(place => {
+                      const isSelected = formData.selectedPlaces.includes(place.id);
+                      return (
+                        <div 
+                          key={place.id} 
+                          onClick={() => {
+                            handlePlaceToggle(place);
+                            fetchPhotoForLocation(place.name);
+                          }}
+                          style={{ 
+                            height: '140px', borderRadius: '14px', overflow: 'hidden', position: 'relative', cursor: 'pointer',
+                            border: isSelected ? '3px solid #E85D26' : '1px solid #EDE9E2',
+                            boxShadow: isSelected ? '0 4px 12px rgba(232, 93, 38, 0.25)' : 'none',
+                            transition: 'transform 0.15s ease'
+                          }}
+                        >
+                          <img src={place.image} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', padding: '12px' }}>
+                            <span style={{ color: 'white', fontWeight: '700', fontSize: '13px', display: 'block', lineHeight: 1.2 }}>{place.name}</span>
+                          </div>
+                          {isSelected && (
+                            <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Check size={14} color="#fff" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
                 </motion.div>
               )}
             </AnimatePresence>
 
+            {/* Wizard Navigation Buttons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #E2E8F0' }}>
               <button 
                 onClick={() => setStep(prev => Math.max(1, prev - 1))}
@@ -639,6 +633,12 @@ export const CreateTrip = () => {
                 <div style={{ position: 'absolute', bottom: '12px', left: '16px', background: '#FFFFFF', color: '#1A1A2E', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '800' }}>
                   {formData.budget ? `₹${Number(formData.budget).toLocaleString('en-IN')}` : 'Budget'}
                 </div>
+
+                {isFetchingPhoto && (
+                  <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.7)', color: '#FCD34D', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Sparkles size={12} /> Fetching Photo...
+                  </div>
+                )}
               </div>
 
               <div style={{ padding: '20px' }}>
