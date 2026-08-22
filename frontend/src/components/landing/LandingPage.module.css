@@ -1,0 +1,1207 @@
+/* ============================================================
+   WANDERLY — LANDING PAGE DESIGN SYSTEM
+   Premium Cinematic Travel Editorial
+   ============================================================ */
+
+/* ---------- CSS VARIABLES ---------- */
+:root {
+  --lp-bg: #faf8f4;
+  --lp-bg-dark: #0e0e0c;
+  --lp-surface: #f3ede4;
+  --lp-surface-dark: #1a1a17;
+  --lp-text: #1a1714;
+  --lp-text-light: #ffffff;
+  --lp-muted: #7a7065;
+  --lp-muted-light: rgba(255,255,255,0.55);
+  --lp-accent: #c8622a;
+  --lp-accent-light: #e8855a;
+  --lp-accent-pale: #f5e6da;
+  --lp-border: rgba(26,23,20,0.1);
+  --lp-border-light: rgba(255,255,255,0.12);
+  --lp-radius: 4px;
+  --lp-radius-md: 12px;
+  --lp-radius-lg: 20px;
+  --lp-shadow: 0 4px 32px rgba(26,23,20,0.08);
+  --lp-shadow-strong: 0 16px 64px rgba(26,23,20,0.18);
+}
+
+/* ---------- BASE RESET FOR LANDING ---------- */
+.landingRoot {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  background-color: var(--lp-bg);
+  color: var(--lp-text);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+.displayXl {
+  font-family: 'Outfit', Georgia, serif;
+  font-size: clamp(3.2rem, 8vw, 9rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--lp-text);
+}
+
+.displayLg {
+  font-family: 'Outfit', Georgia, serif;
+  font-size: clamp(2.4rem, 5vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.displayMd {
+  font-family: 'Outfit', Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+}
+
+.labelLight {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+
+.bodyText {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  line-height: 1.7;
+  color: var(--lp-muted);
+}
+
+/* ---------- BUTTONS ---------- */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: var(--lp-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.btnPrimary:hover {
+  background-color: var(--lp-accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200, 98, 42, 0.35);
+}
+
+.btnPrimary svg {
+  transition: transform 0.2s ease;
+}
+
+.btnPrimary:hover svg {
+  transform: translateX(4px);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: transparent;
+  color: var(--lp-text);
+  border: 1.5px solid var(--lp-border);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  text-decoration: none;
+}
+
+.btnSecondary:hover {
+  border-color: var(--lp-accent);
+  color: var(--lp-accent);
+  transform: translateY(-2px);
+}
+
+.btnLight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: #ffffff;
+  color: var(--lp-text);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.btnLight:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* ---------- SECTION WRAPPER ---------- */
+.section {
+  padding: clamp(64px, 10vw, 120px) clamp(20px, 5vw, 80px);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.sectionFull {
+  padding: clamp(64px, 10vw, 120px) clamp(20px, 5vw, 80px);
+}
+
+.sectionDark {
+  background-color: var(--lp-bg-dark);
+  color: var(--lp-text-light);
+}
+
+.sectionWarm {
+  background-color: var(--lp-surface);
+}
+
+/* ---------- NAVBAR ---------- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px clamp(20px, 5vw, 60px);
+  transition: background 0.3s ease, padding 0.3s ease, border-color 0.3s ease;
+}
+
+.navbarScrolled {
+  background: rgba(250, 248, 244, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--lp-border);
+  padding: 14px clamp(20px, 5vw, 60px);
+}
+
+.navLogo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--lp-text);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.navLogo span {
+  color: var(--lp-accent);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.navLink {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--lp-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.navLink:hover {
+  color: var(--lp-text);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navLoginBtn {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  text-decoration: none;
+  padding: 8px 16px;
+  transition: color 0.2s ease;
+}
+
+.navLoginBtn:hover {
+  color: var(--lp-accent);
+}
+
+.navCTA {
+  padding: 9px 20px;
+  font-size: 0.85rem;
+}
+
+.mobileMenuBtn {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.mobileMenuLine {
+  width: 22px;
+  height: 2px;
+  background-color: var(--lp-text);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+/* ---------- HERO ---------- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 0 clamp(20px, 5vw, 80px);
+  overflow: hidden;
+  background-color: var(--lp-bg);
+}
+
+.heroLeft {
+  position: relative;
+  z-index: 2;
+  padding-top: 100px;
+  padding-bottom: 60px;
+  padding-right: 40px;
+}
+
+.heroRight {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroHeadline {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3.8rem, 7vw, 8.5rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--lp-text);
+  margin: 16px 0 28px;
+}
+
+.heroHeadline em {
+  font-style: normal;
+  color: var(--lp-accent);
+}
+
+.heroCopy {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  color: var(--lp-muted);
+  line-height: 1.7;
+  max-width: 440px;
+  margin-bottom: 40px;
+}
+
+.heroCTAs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.heroImageContainer {
+  position: relative;
+  width: 100%;
+  height: 75vh;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.heroImageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(14,14,12,0.2) 0%, transparent 60%);
+}
+
+.heroFloatingCard {
+  position: absolute;
+  bottom: 32px;
+  left: -24px;
+  background: rgba(250,248,244,0.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  min-width: 220px;
+  box-shadow: var(--lp-shadow-strong);
+}
+
+.heroFloatingCardTitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+  margin-bottom: 8px;
+}
+
+.heroFloatingCardCity {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--lp-text);
+  margin-bottom: 2px;
+}
+
+.heroFloatingCardDates {
+  font-size: 0.8rem;
+  color: var(--lp-muted);
+  margin-bottom: 12px;
+}
+
+.heroFloatingCardMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--lp-muted);
+  padding-top: 10px;
+  border-top: 1px solid var(--lp-border);
+}
+
+.heroFloatingCardMeta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.heroActivityCard {
+  position: absolute;
+  top: 32px;
+  right: -20px;
+  background: var(--lp-bg-dark);
+  border-radius: 12px;
+  padding: 14px 18px;
+  min-width: 180px;
+  box-shadow: var(--lp-shadow-strong);
+}
+
+.heroActivityTitle {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.45);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.heroActivityItems {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.heroActivityItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+.heroActivityDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--lp-accent);
+  flex-shrink: 0;
+}
+
+.scrollIndicator {
+  position: absolute;
+  bottom: 32px;
+  left: clamp(20px, 5vw, 80px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--lp-muted);
+  text-transform: uppercase;
+}
+
+.scrollLine {
+  width: 32px;
+  height: 1px;
+  background-color: var(--lp-muted);
+}
+
+/* ---------- DESTINATIONS ---------- */
+.destinationGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 260px 240px;
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.destCard {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.destCard:first-child {
+  grid-row: 1 / 3;
+}
+
+.destImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.destCard:hover .destImage {
+  transform: scale(1.05);
+}
+
+.destOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14,14,12,0.75) 0%, transparent 50%);
+  transition: opacity 0.3s ease;
+}
+
+.destInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+}
+
+.destCity {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.destCountry {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.65);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.destTag {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 10px;
+  background: rgba(200, 98, 42, 0.85);
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+/* ---------- PROBLEM ---------- */
+.problemGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.tabChaos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid var(--lp-border);
+  border-radius: 10px;
+  box-shadow: var(--lp-shadow);
+  opacity: 0.7;
+}
+
+.tabItemIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--lp-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tabItemText {
+  flex: 1;
+}
+
+.tabItemTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.tabItemSub {
+  font-size: 0.72rem;
+  color: var(--lp-muted);
+}
+
+/* ---------- HOW IT WORKS ---------- */
+.stepsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  margin-top: 60px;
+  position: relative;
+}
+
+.stepsRow::before {
+  content: '';
+  position: absolute;
+  top: 32px;
+  left: calc(16% + 20px);
+  right: calc(16% + 20px);
+  height: 1px;
+  background: linear-gradient(to right, var(--lp-accent), transparent, var(--lp-accent));
+  opacity: 0.3;
+}
+
+.step {
+  padding: 32px 24px;
+  position: relative;
+}
+
+.stepNumber {
+  font-family: 'Outfit', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--lp-accent);
+  opacity: 0.15;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.stepIcon {
+  width: 56px;
+  height: 56px;
+  background: var(--lp-accent-pale);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-accent);
+  margin-bottom: 20px;
+}
+
+.stepTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--lp-text);
+  margin-bottom: 10px;
+}
+
+.stepDesc {
+  font-size: 0.9rem;
+  color: var(--lp-muted);
+  line-height: 1.65;
+}
+
+/* ---------- ITINERARY ---------- */
+.itineraryShowcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.itineraryPanel {
+  background: var(--lp-bg-dark);
+  border-radius: 20px;
+  padding: 32px;
+  color: var(--lp-text-light);
+}
+
+.itineraryHeader {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.itineraryTripName {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.itineraryDates {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
+  letter-spacing: 0.08em;
+}
+
+.itineraryDayBlock {
+  margin-bottom: 24px;
+}
+
+.itineraryDayLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+  margin-bottom: 4px;
+}
+
+.itineraryCityName {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.itineraryTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itineraryActivity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.itineraryActivity.highlight {
+  border-left-color: var(--lp-accent);
+  background: rgba(200,98,42,0.08);
+}
+
+.activityTime {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.activityDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+
+.activityName {
+  flex: 1;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+
+.activityCost {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  font-weight: 600;
+}
+
+/* ---------- JOURNEY MAP ---------- */
+.mapContainer {
+  position: relative;
+  padding: 40px;
+  background: var(--lp-surface);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.mapSvg {
+  width: 100%;
+  height: 320px;
+}
+
+.cityMarker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cityDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--lp-accent);
+  border: 2px solid var(--lp-bg);
+  box-shadow: 0 0 0 2px var(--lp-accent);
+  flex-shrink: 0;
+}
+
+.cityLabel {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.cityDistance {
+  font-size: 0.72rem;
+  color: var(--lp-muted);
+}
+
+/* ---------- BUDGET ---------- */
+.budgetPanel {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: var(--lp-shadow);
+  border: 1px solid var(--lp-border);
+}
+
+.budgetTotal {
+  margin-bottom: 28px;
+}
+
+.budgetTotalLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+  margin-bottom: 6px;
+}
+
+.budgetTotalAmount {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--lp-text);
+  letter-spacing: -0.03em;
+}
+
+.budgetItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.budgetItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.budgetItemLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.budgetItemAmount {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.budgetBar {
+  height: 6px;
+  background: var(--lp-surface);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.budgetBarFill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--lp-accent);
+  transition: width 1s ease;
+}
+
+/* ---------- COMMUNITY ---------- */
+.communityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.communityCard {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--lp-border);
+  box-shadow: var(--lp-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.communityCard:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--lp-shadow-strong);
+}
+
+.communityImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.communityCardBody {
+  padding: 20px;
+}
+
+.communityCardQuote {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--lp-text);
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.communityCardAuthor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.communityAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.communityAuthorName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.communityAuthorTrip {
+  font-size: 0.72rem;
+  color: var(--lp-muted);
+}
+
+/* ---------- FINAL CTA ---------- */
+.finalCTASection {
+  background: var(--lp-bg-dark);
+  padding: clamp(80px, 12vw, 160px) clamp(20px, 5vw, 80px);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.finalCTABg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(200,98,42,0.15) 0%, transparent 70%);
+}
+
+.finalCTAContent {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.finalCTAHeadline {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3rem, 7vw, 8rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  margin-bottom: 24px;
+}
+
+.finalCTAHeadline em {
+  color: var(--lp-accent);
+  font-style: normal;
+}
+
+.finalCTACopy {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  color: rgba(255,255,255,0.5);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto 40px;
+}
+
+.finalCTABtns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btnDark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: transparent;
+  color: rgba(255,255,255,0.6);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+}
+
+.btnDark:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.9);
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+  background: var(--lp-bg-dark);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 40px clamp(20px, 5vw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footerLogo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.8);
+}
+
+.footerLogo span {
+  color: var(--lp-accent);
+}
+
+.footerCopy {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ---------- SCROLL PROGRESS ---------- */
+.scrollProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--lp-accent);
+  z-index: 999;
+  transform-origin: left;
+}
+
+/* ---------- DIVIDER ---------- */
+.divider {
+  width: 48px;
+  height: 2px;
+  background: var(--lp-accent);
+  margin: 20px 0;
+}
+
+.dividerCenter {
+  margin: 20px auto;
+}
+
+/* ---------- STATS ROW ---------- */
+.statsRow {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  padding-top: 48px;
+  border-top: 1px solid var(--lp-border);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.statNumber {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--lp-text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--lp-muted);
+  margin-top: 4px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 100px;
+    padding-bottom: 60px;
+  }
+
+  .heroRight {
+    height: 50vw;
+    min-height: 320px;
+  }
+
+  .heroLeft {
+    padding-right: 0;
+    padding-top: 0;
+  }
+
+  .heroFloatingCard {
+    left: auto;
+    right: 0;
+    bottom: 20px;
+  }
+
+  .heroActivityCard {
+    display: none;
+  }
+
+  .destinationGrid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+
+  .destCard:first-child {
+    grid-column: 1 / 3;
+    grid-row: auto;
+    height: 240px;
+  }
+
+  .problemGrid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .stepsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .stepsRow::before {
+    display: none;
+  }
+
+  .itineraryShowcase {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .communityGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .navLinks {
+    display: none;
+  }
+
+  .mobileMenuBtn {
+    display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .destinationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .destCard:first-child {
+    grid-column: auto;
+  }
+
+  .communityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .finalCTABtns {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .statsRow {
+    gap: 28px;
+  }
+
+  .heroHeadline {
+    font-size: clamp(2.8rem, 11vw, 5rem);
+  }
+}
+
+/* ---------- REDUCED MOTION ---------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
