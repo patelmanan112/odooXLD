@@ -284,6 +284,28 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  
+  const updateUser = async (updateData) => {
+    try {
+      const data = await apiFetch('/api/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
+      const formattedUser = {
+        ...data.user,
+        currency: data.user.currency || ',1',
+        avatar: data.user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+      };
+      setUser(prev => ({ ...prev, ...formattedUser }));
+      localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
+      showToast('Profile updated successfully!');
+      return true;
+    } catch (error) {
+      showToast(error.message || 'Failed to update profile');
+      return false;
+    }
+  };
+
   const logout = (showNotification = true) => {
     localStorage.removeItem('wanderly_token');
     localStorage.removeItem('wanderly_user');

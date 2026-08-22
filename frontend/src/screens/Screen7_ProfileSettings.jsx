@@ -1,24 +1,43 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Globe, Shield, Bell, Heart, Award, Camera, Save } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Screen7_ProfileSettings = () => {
-  const { user, setUser, destinations, setCurrentScreen, showToast } = useApp();
+  const { user, setUser, destinations, showToast, updateUser } = useApp();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Profile');
+  const [avatar, setAvatar] = useState(user?.avatarUrl || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80');
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    city: user.city,
-    country: user.country,
-    currency: user.currency || '₹'
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    city: user?.city || '',
+    country: user?.country || '',
+    currency: user?.currency || '₹'
   });
 
-  const handleSave = (e) => {
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      showToast('Image must be less than 1MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatar(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    setUser({ ...user, ...formData });
-    showToast('Profile settings saved successfully!');
+    if (updateUser) {
+      await updateUser({ ...formData, avatarUrl: avatar });
+    } else {
+      setUser({ ...user, ...formData });
+      showToast('Profile settings saved successfully!');
+    }
   };
 
   return (
@@ -42,12 +61,14 @@ export const Screen7_ProfileSettings = () => {
       <div className="glass-card" style={{ padding: '28px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', gap: '24px' }}>
         <div style={{ position: 'relative' }}>
           <img 
-            src={user.avatar} 
+            src={avatar} 
             alt={user.name} 
             style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #064e3b' }} 
           />
+          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ opacity: 0, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 10 }} />
           <button 
-            onClick={() => showToast('Avatar updated!')}
+            type="button"
+            onClick={() => {}}
             style={{ position: 'absolute', bottom: 0, right: 0, width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#064e3b', color: '#ffffff', border: '2px solid #ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             <Camera size={14} />
@@ -159,7 +180,7 @@ export const Screen7_ProfileSettings = () => {
         <div className="glass-card" style={{ padding: '28px', backgroundColor: '#ffffff' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>Preplanned & Past Travel Archives</h4>
           <p style={{ color: '#64748b', fontSize: '0.88rem' }}>Access all completed trip logs, photo journals, and expense receipts.</p>
-          <button onClick={() => setCurrentScreen(6)} className="btn btn-secondary" style={{ marginTop: '16px' }}>
+          <button onClick={() => navigate('/trips')} className="btn btn-secondary" style={{ marginTop: '16px' }}>
             Go to My Trips
           </button>
         </div>
