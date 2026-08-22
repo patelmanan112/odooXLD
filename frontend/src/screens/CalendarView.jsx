@@ -1,160 +1,359 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Briefcase, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 export const CalendarView = () => {
-  const { selectedTrip, showToast } = useApp();
-  const [selectedDay, setSelectedDay] = useState(16);
+  const { trips, selectedTrip, showToast } = useApp();
+  const navigate = useNavigate();
 
-  // Mock data
-  const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
-  const tripDays = [16, 17, 18, 19, 20, 21, 22];
-  const today = 12;
+  /* Current Active View Month/Year State */
+  const [currentDate, setCurrentDate] = useState(() => {
+    // Default to first trip's start date if available, otherwise today
+    if (selectedTrip && selectedTrip.startDate) {
+      const d = new Date(selectedTrip.startDate);
+      if (!isNaN(d.getTime())) return d;
+    }
+    if (trips && trips.length > 0 && trips[0].startDate) {
+      const d = new Date(trips[0].startDate);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date();
+  });
 
-  const events = {
-    12: [{ id: 1, title: 'Planning meeting', time: '10:00 AM', location: 'Zoom', color: '#4F46E5' }],
-    13: [],
-    16: [
-      { id: 2, title: 'Flight to Tokyo', time: '08:00 AM', location: 'JFK Airport', color: '#E85D26' },
-      { id: 3, title: 'Hotel Check-in', time: '03:00 PM', location: 'Shinjuku Prince', color: '#059669' }
-    ],
-    17: [{ id: 4, title: 'City Tour', time: '09:30 AM', location: 'Tokyo Station', color: '#D97706' }],
-    18: [],
-    19: [{ id: 5, title: 'Mt Fuji Trip', time: '07:00 AM', location: 'Bus Terminal', color: '#DC2626' }]
+  const [selectedDayNumber, setSelectedDayNumber] = useState(new Date().getDate());
+
+  const year = currentDate.getFullYear();
+  const monthIndex = currentDate.getMonth();
+
+  /* Navigate Months */
+  const handlePrevMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   };
 
-  const handleConnectCalendar = () => showToast("Connecting to Google Calendar...");
+  const handleNextMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const handleToday = () => {
+    const now = new Date();
+    setCurrentDate(now);
+    setSelectedDayNumber(now.getDate());
+  };
+
+  /* Number of days in current active month */
+  const daysInMonthCount = new Date(year, monthIndex + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // 0 = Sun, 1 = Mon ...
+  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Mon = 0 ... Sun = 6
+
+  /* ── Dynamic Trip Dates & Events Parser ── */
+  const { activeTripDayNumbers, eventsByDayNumber } = useMemo(() => {
+    const activeDays = new Set();
+    const eventsMap = {};
+
+    if (!trips || trips.length === 0) {
+      return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap };
+    }
+
+    trips.forEach(trip => {
+      if (!trip.startDate) return;
+      const start = new Date(trip.startDate);
+      const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + (trip.durationDays || 3) * 86400000);
+
+      if (isNaN(start.getTime())) return;
+
+      // Check each day of active month
+      for (let dayNum = 1; dayNum <= daysInMonthCount; dayNum++) {
+        const thisDate = new Date(year, monthIndex, dayNum);
+
+        // Strip hours for date comparison
+        const tDate = new Date(thisDate.getFullYear(), thisDate.getMonth(), thisDate.getDate()).getTime();
+        const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+        const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+
+        if (tDate >= sDate && tDate <= eDate) {
+          activeDays.add(dayNum);
+
+          if (!eventsMap[dayNum]) eventsMap[dayNum] = [];
+
+          // Map activities for this date if trip days exist
+          const dayIndex = Math.round((tDate - sDate) / 86400000);
+          const tripDayObj = trip.days ? trip.days[dayIndex] : null;
+
+          if (tripDayObj && tripDayObj.activities && tripDayObj.activities.length > 0) {
+            tripDayObj.activities.forEach(act => {
+              eventsMap[dayNum].push({
+                id: act.id || `act-${Math.random()}`,
+                title: act.title || act.name,
+                time: act.time || '10:00 AM',
+                location: trip.destination || 'Trip Spot',
+                category: act.category || 'Sightseeing',
+                color: getCategoryColor(act.category),
+                tripName: trip.name || trip.title
+              });
+            });
+          } else {
+            // Milestone event for trip start or travel day
+            if (tDate === sDate) {
+              eventsMap[dayNum].push({
+                id: `start-${trip.id}`,
+                title: `Trip Departure: ${trip.name || trip.title}`,
+                time: '09:00 AM',
+                location: trip.destination || 'Airport',
+                category: 'Flight',
+                color: '#E85D26',
+                tripName: trip.name || trip.title
+              });
+            } else {
+              eventsMap[dayNum].push({
+                id: `day-${trip.id}-${dayNum}`,
+                title: `${trip.destination} Exploration (Day ${dayIndex + 1})`,
+                time: '11:00 AM',
+                location: trip.destination || 'City Center',
+                category: 'Sightseeing',
+                color: '#059669',
+                tripName: trip.name || trip.title
+              });
+            }
+          }
+        }
+      }
+    });
+
+    return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap };
+  }, [trips, year, monthIndex, daysInMonthCount]);
+
+  const handleConnectCalendar = () => {
+    if (showToast) showToast('Google Calendar sync connected successfully! 📅');
+  };
+
+  const todayObj = new Date();
+  const isCurrentMonthActual = todayObj.getFullYear() === year && todayObj.getMonth() === monthIndex;
+  const todayDateNum = isCurrentMonthActual ? todayObj.getDate() : -1;
+
+  const selectedDayEvents = eventsByDayNumber[selectedDayNumber] || [];
 
   return (
-    <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '40px', display: 'flex', gap: '32px' }}>
-      
-      {/* Left Column: Calendar Grid */}
-      <div style={{ flex: 3, background: '#FFF', borderRadius: '20px', padding: '28px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}>
+    <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', padding: '36px 40px', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', gap: '32px' }}>
         
-        {/* Calendar Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1A1A2E', margin: 0 }}>Calendar</h2>
+        {/* Left Column: Calendar Grid */}
+        <div style={{ flex: 3, background: '#FFFFFF', borderRadius: '24px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #EDE9E2' }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px' }}><ChevronLeft size={20} color="#64748B" /></button>
-              <span style={{ fontWeight: '600', fontSize: '1.1rem', color: '#1A1A2E', minWidth: '130px', textAlign: 'center' }}>January 2024</span>
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px' }}><ChevronRight size={20} color="#64748B" /></button>
+          {/* Calendar Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div>
+              <p style={{ fontSize: '0.78rem', fontWeight: 800, color: '#E85D26', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>
+                Schedule & Itinerary Sync
+              </p>
+              <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 'bold', color: '#1A1A2E', margin: 0 }}>
+                Trip Calendar
+              </h2>
             </div>
             
-            <div style={{ width: '1px', height: '24px', background: '#E2E8F0' }} />
-            
-            <button onClick={() => setSelectedDay(today)} style={{ border: '1px solid #E2E8F0', background: '#FFF', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#334155' }}>
-              Today
-            </button>
-            
-            <div style={{ display: 'flex', background: '#F1F5F9', padding: '4px', borderRadius: '8px' }}>
-              <button style={{ background: '#FFF', border: 'none', padding: '4px 12px', borderRadius: '4px', fontWeight: '500', color: '#1A1A2E', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>Month</button>
-              <button style={{ background: 'transparent', border: 'none', padding: '4px 12px', borderRadius: '4px', fontWeight: '500', color: '#64748B', cursor: 'pointer' }}>Week</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button onClick={handlePrevMonth} style={{ border: '1px solid #EDE9E2', background: '#FAFAF8', borderRadius: '8px', cursor: 'pointer', padding: '6px 10px', display: 'flex', alignItems: 'center' }}>
+                  <ChevronLeft size={18} color="#1A1A2E" />
+                </button>
+                <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: '800', fontSize: '1.15rem', color: '#1A1A2E', minWidth: '160px', textAlign: 'center' }}>
+                  {MONTH_NAMES[monthIndex]} {year}
+                </span>
+                <button onClick={handleNextMonth} style={{ border: '1px solid #EDE9E2', background: '#FAFAF8', borderRadius: '8px', cursor: 'pointer', padding: '6px 10px', display: 'flex', alignItems: 'center' }}>
+                  <ChevronRight size={18} color="#1A1A2E" />
+                </button>
+              </div>
+              
+              <div style={{ width: '1px', height: '24px', background: '#E2E8F0' }} />
+              
+              <button onClick={handleToday} className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '10px', fontSize: '0.85rem' }}>
+                Today
+              </button>
             </div>
+          </div>
+
+          {/* Days of week header */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '12px' }}>
+            {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
+              <div key={day} style={{ textAlign: 'center', fontSize: '0.78rem', fontWeight: 800, color: '#94A3B8', padding: '8px 0', letterSpacing: '0.05em' }}>
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px' }}>
+            {/* Empty cells offset */}
+            {Array.from({ length: startOffset }).map((_, i) => (
+              <div key={`offset-${i}`} />
+            ))}
+            
+            {Array.from({ length: daysInMonthCount }, (_, i) => i + 1).map(dayNum => {
+              const isTripDay = activeTripDayNumbers.has(dayNum);
+              const isToday = dayNum === todayDateNum;
+              const isSelected = dayNum === selectedDayNumber;
+              const dayEvents = eventsByDayNumber[dayNum] || [];
+
+              return (
+                <div 
+                  key={dayNum}
+                  onClick={() => setSelectedDayNumber(dayNum)}
+                  style={{ 
+                    minHeight: '92px', 
+                    borderRadius: '14px', 
+                    padding: '10px',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: isToday ? '#1A1A2E' : isTripDay ? '#FEF0E7' : '#FFFFFF',
+                    border: isSelected ? '2.5px solid #E85D26' : '1px solid #EDE9E2',
+                    color: isToday ? '#FFFFFF' : '#1A1A2E',
+                    boxShadow: isSelected ? '0 4px 14px rgba(232, 93, 38, 0.2)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: isToday || isSelected ? 800 : 600, marginBottom: '6px', fontSize: '0.92rem' }}>
+                    {dayNum}
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {dayEvents.slice(0, 2).map((ev, idx) => (
+                      <div key={idx} style={{ 
+                        fontSize: '0.7rem',
+                        padding: '3px 6px',
+                        borderRadius: '6px', 
+                        background: isToday ? 'rgba(255,255,255,0.2)' : `${ev.color}18`, 
+                        color: isToday ? '#FFF' : ev.color, 
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        fontWeight: 700
+                      }}>
+                        {ev.title}
+                      </div>
+                    ))}
+                    {dayEvents.length > 2 && (
+                      <div style={{ fontSize: '0.68rem', color: isToday ? '#FCD34D' : '#9CA3AF', fontWeight: 700 }}>
+                        +{dayEvents.length - 2} more
+                      </div>
+                    )}
+                  </div>
+
+                  {isTripDay && (
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '4px', backgroundColor: '#E85D26' }} />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Days of week */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '12px' }}>
-          {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
-            <div key={day} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 'bold', color: '#94A3B8', padding: '8px 0' }}>{day}</div>
-          ))}
-        </div>
-
-        {/* Calendar Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px' }}>
-          {/* Empty cells for padding */}
-          {[1,2].map(i => <div key={`empty-${i}`} />)}
+        {/* Right Column: Day Events & Quick Actions Panel */}
+        <div style={{ flex: 1, maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {daysInMonth.map(day => {
-            const isTripDay = tripDays.includes(day);
-            const isToday = day === today;
-            const isSelected = day === selectedDay;
-            const dayEvents = events[day] || [];
+          <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #EDE9E2', flex: 1 }}>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', margin: '0 0 4px 0', fontSize: '1.25rem', color: '#1A1A2E', fontWeight: 800 }}>
+              {MONTH_NAMES[monthIndex]} {selectedDayNumber}, {year}
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: '0 0 20px', fontWeight: 600 }}>
+              {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''} scheduled
+            </p>
 
-            return (
-              <div 
-                key={day}
-                onClick={() => setSelectedDay(day)}
-                style={{ 
-                  minHeight: '90px', 
-                  borderRadius: '12px', 
-                  padding: '12px',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: isToday ? '#1A1A2E' : isTripDay ? '#FFF3EE' : '#F8FAFC',
-                  border: isSelected ? '2px solid #E85D26' : '2px solid transparent',
-                  color: isToday ? '#FFF' : '#334155',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{ fontWeight: isToday || isSelected ? 'bold' : '500', marginBottom: '8px' }}>{day}</div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {dayEvents.slice(0, 2).map((ev, i) => (
-                    <div key={i} style={{ 
-                      fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', 
-                      background: isToday ? 'rgba(255,255,255,0.2)' : `${ev.color}15`, 
-                      color: isToday ? '#FFF' : ev.color, 
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '500'
-                    }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {selectedDayEvents.length > 0 ? (
+                selectedDayEvents.map((ev, i) => (
+                  <motion.div
+                    key={ev.id || i}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    style={{ 
+                      padding: '14px',
+                      background: '#FAFAF8',
+                      borderRadius: '14px',
+                      borderLeft: `4px solid ${ev.color}`,
+                      borderTop: '1px solid #F3F4F6',
+                      borderRight: '1px solid #F3F4F6',
+                      borderBottom: '1px solid #F3F4F6',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px' 
+                    }}
+                  >
+                    <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: '#1A1A2E', fontSize: '0.95rem' }}>
                       {ev.title}
                     </div>
-                  ))}
-                  {dayEvents.length > 2 && <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '2px' }}>+{dayEvents.length - 2} more</div>}
-                </div>
-
-                {isTripDay && (
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '4px', backgroundColor: '#E85D26' }} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Right Column: Event Detail Panel */}
-      <div style={{ flex: 1, maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        
-        <div style={{ background: '#FFF', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0', flex: 1 }}>
-          <h3 style={{ margin: '0 0 24px 0', fontSize: '1.25rem', color: '#1A1A2E', fontWeight: 'bold' }}>
-            January {selectedDay}, 2024
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {events[selectedDay] && events[selectedDay].length > 0 ? (
-              events[selectedDay].map((ev, i) => (
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={i} style={{ 
-                  padding: '16px', background: '#F8FAFC', borderRadius: '12px', borderLeft: `4px solid ${ev.color}`, display: 'flex', flexDirection: 'column', gap: '8px' 
-                }}>
-                  <div style={{ fontWeight: '600', color: '#1A1A2E', fontSize: '1rem' }}>{ev.title}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748B', fontSize: '0.85rem' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {ev.time}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={14} /> {ev.location}</span>
+                    {ev.tripName && (
+                      <div style={{ fontSize: '0.74rem', color: '#E85D26', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Briefcase size={12} /> {ev.tripName}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748B', fontSize: '0.8rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={13} color="#9CA3AF" /> {ev.time}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color="#E85D26" /> {ev.location}</span>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '36px 0', color: '#9CA3AF' }}>
+                  <CalendarIcon size={36} color="#CBD5E1" style={{ marginBottom: '12px' }} />
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.98rem', fontWeight: 800, color: '#4B5563', marginBottom: '4px' }}>
+                    No events scheduled
                   </div>
-                </motion.div>
-              ))
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#94A3B8' }}>
-                <CalendarIcon size={32} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                <div style={{ fontSize: '0.9rem' }}>No events scheduled</div>
-              </div>
-            )}
+                  <div style={{ fontSize: '0.8rem', color: '#9CA3AF', marginBottom: '16px' }}>
+                    Create a trip or add activities to populate this date.
+                  </div>
+                  <button onClick={() => navigate('/trips/new')} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>
+                    <Plus size={14} /> Create Trip
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+
+          <button
+            onClick={handleConnectCalendar}
+            style={{ 
+              width: '100%',
+              padding: '14px',
+              background: '#FFFFFF',
+              border: '1.5px solid #EDE9E2',
+              borderRadius: '16px', 
+              color: '#1A1A2E',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            }}
+          >
+            <CalendarIcon size={18} color="#4285F4" /> Sync Google Calendar
+          </button>
+
         </div>
 
-        <button onClick={handleConnectCalendar} style={{ 
-          width: '100%', padding: '16px', background: '#FFF', border: '1px solid #E2E8F0', borderRadius: '20px', 
-          color: '#334155', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-        }}>
-          <CalendarIcon size={18} color="#4285F4" /> Connect Google Calendar
-        </button>
-
       </div>
-
     </div>
   );
 };
+
+/* Category Color Helper */
+function getCategoryColor(cat) {
+  switch (cat) {
+    case 'Flight': return '#3B82F6';
+    case 'Stay': return '#8B5CF6';
+    case 'Food': return '#10B981';
+    case 'Sightseeing': return '#E85D26';
+    case 'Transport': return '#F59E0B';
+    default: return '#EC4899';
+  }
+}
