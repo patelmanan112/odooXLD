@@ -308,20 +308,50 @@ export const AppProvider = ({ children }) => {
 
   
   const addTrip = async (newTrip) => {
-    try {
-      const payload = {
-        title: newTrip.name || newTrip.title || 'New Trip',
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 5*24*60*60*1000).toISOString(),
-        estimatedBudget: newTrip.estimatedBudget || 50000,
-        status: (newTrip.status || 'DRAFT').toUpperCase(),
-        coverPhoto: newTrip.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80'
-      };
-      const data = await apiFetch('/api/trips', { method: 'POST', body: JSON.stringify(payload) });
-      showToast(`Trip "${payload.title}" created successfully! 🎉`);
-      fetchBackendData();
-    } catch (err) {
-      showToast('Error creating trip: ' + err.message);
+    const formattedTrip = {
+      id: newTrip.id || `trip-${Date.now()}`,
+      name: newTrip.name || newTrip.title || 'New Trip',
+      title: newTrip.title || newTrip.name || 'New Trip',
+      destination: newTrip.destination || newTrip.name || newTrip.title || 'Destination',
+      startDate: newTrip.startDate || new Date().toISOString().split('T')[0],
+      endDate: newTrip.endDate || new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+      dates: newTrip.dates || `${newTrip.startDate || 'Today'} - ${newTrip.endDate || 'Next Week'}`,
+      durationDays: newTrip.durationDays || 5,
+      status: newTrip.status || 'Upcoming',
+      progressPct: 20,
+      estimatedBudget: Number(newTrip.estimatedBudget || newTrip.budget) || 50000,
+      spentBudget: Number(newTrip.spentBudget) || 0,
+      coverPhoto: newTrip.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+      stops: newTrip.selectedPlaces || newTrip.stops || [],
+      categoryBreakdown: newTrip.categoryBreakdown || { flights: 0, hotels: 0, food: 0, activities: 0, transport: 0 },
+      days: newTrip.days || []
+    };
+
+    // 1. Update local state immediately so trip appears in My Trips
+    setTrips(prev => [formattedTrip, ...prev]);
+    setSelectedTripId(formattedTrip.id);
+    if (showToast) showToast(`Trip "${formattedTrip.name}" created!`);
+
+    // 2. Sync to backend if authenticated
+    if (token) {
+      try {
+        const payload = {
+          title: formattedTrip.title,
+          startDate: new Date(formattedTrip.startDate).toISOString(),
+          endDate: new Date(formattedTrip.endDate).toISOString(),
+          estimatedBudget: formattedTrip.estimatedBudget,
+          status: (formattedTrip.status || 'DRAFT').toUpperCase(),
+          coverPhoto: formattedTrip.coverPhoto
+        };
+        const data = await apiFetch('/api/trips', { method: 'POST', body: JSON.stringify(payload) });
+        if (data && (data.id || data.data?.id)) {
+          const dbId = data.id || data.data?.id;
+          setTrips(prev => prev.map(t => (t.id === formattedTrip.id ? { ...t, id: dbId } : t)));
+          setSelectedTripId(dbId);
+        }
+      } catch (err) {
+        console.warn('Backend sync failed, keeping local trip:', err);
+      }
     }
   };
 
