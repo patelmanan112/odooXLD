@@ -54,17 +54,18 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
-| 2026-08-22 10:20 | Antigravity AI | Implemented Screen 9 (Itinerary View & Budget Breakdown) with day-by-day activity physical effort ratings, financial category donut/bar charts, daily cost calculator, and overbudget alert system. |
-| 2026-08-22 10:18 | Antigravity AI | Built Screen 8 (Activity & City Search Explorer) with live autocomplete search, category tags (Adventure, Food, Water Sports, Culture), activity details modal, and "Add to Trip" buttons. |
-| 2026-08-22 10:16 | Antigravity AI | Implemented Screen 7 (User Profile & Settings) with profile stats, badges, preplanned trip archives, saved destinations, currency selector, and privacy settings. |
-| 2026-08-22 10:14 | Antigravity AI | Built Screen 6 (User Trip Listing / My Trips) with search bar, status filter tabs (Ongoing, Upcoming, Completed), sort dropdown, and action menus. |
-| 2026-08-22 10:12 | Antigravity AI | Implemented Screen 4 (Create Trip Wizard with section manager) and Screen 5 (Build Itinerary builder with drag/reorder activities and date ranges). |
-| 2026-08-22 10:10 | Antigravity AI | Built Screen 3 (Main Dashboard) featuring hero banner, multi-city step node graph, interactive route map preview, budget category bars, AI planner widget, and top destination filter tabs. |
-| 2026-08-22 10:08 | Antigravity AI | Implemented Screen 1 (Login) and Screen 2 (User Registration) with validation, avatar preview, and Framer Motion transitions. |
-| 2026-08-22 10:06 | Antigravity AI | Built navigation Sidebar, Header bar with search and CTA, and floating Hackathon 12-Screen Demo Switcher drawer. |
-| 2026-08-22 10:04 | Antigravity AI | Implemented AppContext global state container for trips data, user profiles, destination catalogs, and toast notification alerts. |
-| 2026-08-22 10:02 | Antigravity AI | Configured Vite + React 19 framework, installed Framer Motion & Lucide icons, created global CSS design system with emerald tokens and typography. |
-| 2026-08-22 10:00 | Antigravity AI | Initialized repository documentation, PRD specifications, Excalidraw mockups, and team alignment context file. |
+| 2026-08-22 10:22 | Khush | Implemented Screen 10 (Community Tab & Shared Trips) with public travel stories feed, "Copy Trip" cloning feature, and share trip modal. |
+| 2026-08-22 10:20 | Khush | Implemented Screen 9 (Itinerary View & Budget Breakdown) with day-by-day activity physical effort ratings, financial category donut/bar charts, daily cost calculator, and overbudget alert system. |
+| 2026-08-22 10:18 | Khush | Built Screen 8 (Activity & City Search Explorer) with live autocomplete search, category tags (Adventure, Food, Water Sports, Culture), activity details modal, and "Add to Trip" buttons. |
+| 2026-08-22 10:16 | Khush | Implemented Screen 7 (User Profile & Settings) with profile stats, badges, preplanned trip archives, saved destinations, currency selector, and privacy settings. |
+| 2026-08-22 10:14 | Khush | Built Screen 6 (User Trip Listing / My Trips) with search bar, status filter tabs (Ongoing, Upcoming, Completed), sort dropdown, and action menus. |
+| 2026-08-22 10:12 | Khush | Implemented Screen 4 (Create Trip Wizard with section manager) and Screen 5 (Build Itinerary builder with drag/reorder activities and date ranges). |
+| 2026-08-22 10:10 | Khush | Built Screen 3 (Main Dashboard) featuring hero banner, multi-city step node graph, interactive route map preview, budget category bars, AI planner widget, and top destination filter tabs. |
+| 2026-08-22 10:08 | Khush | Implemented Screen 1 (Login) and Screen 2 (User Registration) with validation, avatar preview, and Framer Motion transitions. |
+| 2026-08-22 10:06 | Khush | Built navigation Sidebar, Header bar with search and CTA, and floating Hackathon 12-Screen Demo Switcher drawer. |
+| 2026-08-22 10:04 | Khush | Implemented AppContext global state container for trips data, user profiles, destination catalogs, and toast notification alerts. |
+| 2026-08-22 10:02 | Khush | Configured Vite + React 19 framework, installed Framer Motion & Lucide icons, created global CSS design system with emerald tokens and typography. |
+| 2026-08-22 10:00 | Khush | Initialized repository documentation, PRD specifications, Excalidraw mockups, and team alignment context file. |
 
 ---
 
