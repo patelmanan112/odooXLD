@@ -261,13 +261,14 @@ export const TripNavigation = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 16px',
+              padding: '8px 18px',
               borderRadius: '12px',
               fontSize: '0.86rem',
-              fontWeight: isMoreActive ? 700 : 600,
-              color: isMoreActive ? '#c8622a' : '#64748b',
-              backgroundColor: isMoreActive ? '#f5e6da' : '#f8fafc',
-              border: isMoreActive ? '1px solid #c8622a' : '1px solid #e2e8f0',
+              fontWeight: 800,
+              color: isMoreActive ? '#ffffff' : '#c8622a',
+              backgroundColor: isMoreActive ? '#c8622a' : '#f5e6da',
+              border: '1.5px solid #c8622a',
+              boxShadow: '0 2px 8px rgba(200, 98, 42, 0.15)',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               fontFamily: 'inherit',
@@ -277,7 +278,7 @@ export const TripNavigation = () => {
             aria-label="More navigation options"
           >
             <span>More</span>
-            <ChevronDown size={14} style={{ transform: showMoreMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+            <ChevronDown size={15} color={isMoreActive ? '#ffffff' : '#c8622a'} style={{ transform: showMoreMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
           </button>
 
           {/* More Menu Popover */}
