@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Briefcase, Plus, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Briefcase, Plus, Plane } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MONTH_NAMES = [
@@ -32,7 +32,7 @@ export const CalendarView = () => {
 
   const [selectedDayNumber, setSelectedDayNumber] = useState(new Date().getDate());
 
-  /* If trips change and currentDate isn't aligned, auto-align to trip month */
+  /* Auto-align to active trip month */
   useEffect(() => {
     const activeTrip = selectedTrip || (trips && trips.length > 0 ? trips[0] : null);
     if (activeTrip && activeTrip.startDate) {
@@ -113,6 +113,7 @@ export const CalendarView = () => {
 
           // Calculate day index within trip
           const dayIndex = Math.round((tTime - sTime) / 86400000);
+          const isStartDay = tTime === sTime;
           const tripDayObj = trip.days ? trip.days[dayIndex] : null;
 
           if (tripDayObj && tripDayObj.activities && tripDayObj.activities.length > 0) {
@@ -124,19 +125,21 @@ export const CalendarView = () => {
                 location: trip.destination || 'Spot',
                 category: act.category || 'Sightseeing',
                 color: getCategoryColor(act.category),
-                tripName: trip.name || trip.title
+                tripName: trip.name || trip.title,
+                isStartDay
               });
             });
           } else {
-            // Main Trip Bar Event
+            // Main Trip Badge Event under Start Date
             eventsMap[dayNum].push({
               id: `trip-${trip.id}-${dayNum}`,
-              title: `${trip.name || trip.title} (Day ${dayIndex + 1})`,
+              title: isStartDay ? `✈️ ${trip.name || trip.title}` : `${trip.name || trip.title} (Day ${dayIndex + 1})`,
               time: 'All Day',
               location: trip.destination || 'Destination',
               category: 'Trip',
               color: '#E85D26',
-              tripName: trip.name || trip.title
+              tripName: trip.name || trip.title,
+              isStartDay
             });
           }
         }
@@ -214,7 +217,7 @@ export const CalendarView = () => {
                 }}
                 style={{ background: 'none', border: 'none', color: '#E85D26', fontSize: '0.78rem', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer' }}
               >
-                Jump to Trip Dates
+                Jump to Trip Start Date
               </button>
             </div>
           )}
@@ -246,7 +249,7 @@ export const CalendarView = () => {
                   key={dayNum}
                   onClick={() => setSelectedDayNumber(dayNum)}
                   style={{ 
-                    minHeight: '96px', 
+                    minHeight: '100px', 
                     borderRadius: '14px', 
                     padding: '10px',
                     cursor: 'pointer',
@@ -263,19 +266,20 @@ export const CalendarView = () => {
                     {dayNum}
                   </div>
                   
-                  {/* Event Badges inside Date Cells */}
+                  {/* Trip Name & Event Badges inside Date Cells */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {dayEvents.slice(0, 2).map((ev, idx) => (
                       <div key={idx} style={{ 
-                        fontSize: '0.7rem',
-                        padding: '3px 6px',
+                        fontSize: '0.71rem',
+                        padding: '4px 6px',
                         borderRadius: '6px', 
-                        background: isToday ? 'rgba(255,255,255,0.25)' : (ev.category === 'Trip' ? '#E85D26' : `${ev.color}20`), 
-                        color: (isToday || ev.category === 'Trip') ? '#FFFFFF' : ev.color, 
+                        backgroundColor: ev.isStartDay ? '#E85D26' : (isToday ? 'rgba(255,255,255,0.25)' : '#1A1A2E'),
+                        color: '#FFFFFF', 
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        fontWeight: 800
+                        fontWeight: 800,
+                        boxShadow: ev.isStartDay ? '0 2px 6px rgba(232, 93, 38, 0.3)' : 'none'
                       }}>
                         {ev.title}
                       </div>
