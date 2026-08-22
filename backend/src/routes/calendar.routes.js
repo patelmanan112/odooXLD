@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -7,8 +7,8 @@ const router = express.Router();
 const userCalendarTokens = new Map();
 
 // GET /api/calendar/google/status
-router.get('/google/status', authenticate, (req, res) => {
-  const userId = req.user.id;
+router.get('/google/status', authMiddleware, (req, res) => {
+  const userId = req.user.userId;
   const isConnected = userCalendarTokens.has(userId);
   res.json({
     connected: isConnected,
@@ -17,12 +17,12 @@ router.get('/google/status', authenticate, (req, res) => {
 });
 
 // GET /api/calendar/google/connect
-router.get('/google/connect', authenticate, (req, res) => {
+router.get('/google/connect', authMiddleware, (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID || 'DEMO_GOOGLE_CLIENT_ID';
   const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/calendar/google/callback`;
   const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly');
   
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&access_type=offline&prompt=consent&state=${req.user.id}`;
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&access_type=offline&prompt=consent&state=${req.user.userId}`;
   
   res.json({ url: authUrl, configured: Boolean(process.env.GOOGLE_CLIENT_ID) });
 });
@@ -84,8 +84,8 @@ router.get('/google/callback', async (req, res) => {
 });
 
 // GET /api/calendar/google/events
-router.get('/google/events', authenticate, async (req, res) => {
-  const userId = req.user.id;
+router.get('/google/events', authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
   const tokenData = userCalendarTokens.get(userId) || userCalendarTokens.get('default');
 
   if (!tokenData) {
@@ -149,8 +149,8 @@ router.get('/google/events', authenticate, async (req, res) => {
 });
 
 // POST /api/calendar/google/disconnect
-router.post('/google/disconnect', authenticate, (req, res) => {
-  userCalendarTokens.delete(req.user.id);
+router.post('/google/disconnect', authMiddleware, (req, res) => {
+  userCalendarTokens.delete(req.user.userId);
   userCalendarTokens.delete('default');
   res.json({ connected: false, message: 'Google Calendar disconnected.' });
 });
