@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
 
 const AppContext = createContext();
 
@@ -124,27 +125,162 @@ export const initialDestinations = [
 ];
 
 export const AppProvider = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState(3); // Default Screen 3 (Dashboard)
-  const [user, setUser] = useState({
-    name: 'Khush Patel',
-    email: 'khush.patel@wanderly.com',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    phone: '+91 98765 43210',
-    city: 'Mumbai',
-    country: 'India',
-    currency: '₹',
-    totalBudget: 50000,
-    usedBudget: 35000
+  const [currentScreen, setCurrentScreen] = useState(1); // Screen 1 (Login) by default until auth check
+  const [token, setToken] = useState(() => localStorage.getItem('wanderly_token') || null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('wanderly_user');
+    return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [trips, setTrips] = useState(initialTrips);
   const [destinations, setDestinations] = useState(initialDestinations);
   const [selectedTripId, setSelectedTripId] = useState('trip-1');
   const [toastMessage, setToastMessage] = useState(null);
+  const [prefilledEmail, setPrefilledEmail] = useState('');
+
+  const isAuthenticated = !!token && !!user;
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Verify stored token on startup
+  useEffect(() => {
+    const verifyToken = async () => {
+      const storedToken = localStorage.getItem('wanderly_token');
+      if (!storedToken) {
+        setToken(null);
+        setUser(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const data = await apiFetch('/auth/me');
+        if (data && data.user) {
+          const formattedUser = {
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            currency: '₹',
+            totalBudget: 50000,
+            usedBudget: 35000
+          };
+          setUser(formattedUser);
+          setToken(storedToken);
+          localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
+          setCurrentScreen(3); // Go to Dashboard on verified session
+        } else {
+          throw new Error('Invalid user payload');
+        }
+      } catch (err) {
+        console.error('Session verification failed:', err);
+        localStorage.removeItem('wanderly_token');
+        localStorage.removeItem('wanderly_user');
+        setToken(null);
+        setUser(null);
+        setCurrentScreen(1); // Redirect to Login
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    verifyToken();
+
+    const handleUnauthorized = () => {
+      logout(false);
+    };
+
+    window.addEventListener('wanderly_auth_unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('wanderly_auth_unauthorized', handleUnauthorized);
+    };
+  }, []);
+
+  const checkEmailExist = async (email) => {
+    try {
+      const data = await apiFetch(`/auth/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+      return data.exists;
+    } catch (err) {
+      console.error('Check email failed:', err);
+      return false;
+    }
+  };
+
+  const loginUser = async (email, password) => {
+    try {
+      const data = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+
+      const formattedUser = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        currency: '₹',
+        totalBudget: 50000,
+        usedBudget: 35000
+      };
+
+      localStorage.setItem('wanderly_token', data.token);
+      localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
+
+      setToken(data.token);
+      setUser(formattedUser);
+      showToast('Logged in successfully! Welcome back.');
+      setCurrentScreen(3); // Dashboard
+      return { success: true };
+    } catch (err) {
+      showToast(err.message || 'Login failed. Please check your credentials.');
+      return { success: false, error: err.message };
+    }
+  };
+
+  const signupUser = async (name, email, password) => {
+    try {
+      const data = await apiFetch('/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const formattedUser = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        currency: '₹',
+        totalBudget: 50000,
+        usedBudget: 35000
+      };
+
+      localStorage.setItem('wanderly_token', data.token);
+      localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
+
+      setToken(data.token);
+      setUser(formattedUser);
+      showToast('Account created successfully! Welcome to Wanderly.');
+      setCurrentScreen(3); // Dashboard
+      return { success: true };
+    } catch (err) {
+      showToast(err.message || 'Registration failed. Please try again.');
+      return { success: false, error: err.message };
+    }
+  };
+
+  const logout = (showNotification = true) => {
+    localStorage.removeItem('wanderly_token');
+    localStorage.removeItem('wanderly_user');
+    setToken(null);
+    setUser(null);
+    setCurrentScreen(1); // Login
+    if (showNotification) {
+      showToast('Logged out successfully.');
+    }
   };
 
   const toggleSaveDestination = (id) => {
@@ -166,8 +302,17 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider value={{
       currentScreen,
       setCurrentScreen,
+      token,
       user,
       setUser,
+      isAuthenticated,
+      authLoading,
+      checkEmailExist,
+      loginUser,
+      signupUser,
+      logout,
+      prefilledEmail,
+      setPrefilledEmail,
       trips,
       setTrips,
       destinations,
