@@ -392,28 +392,28 @@ export const CreateTrip = () => {
                     </div>
                   </div>
 
-                  {/* Grid of Places */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
-                    {placesList.map(place => {
+                  {/* Grid of Places (Max 4 Iconic Spots) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '14px' }}>
+                    {placesList.slice(0, 4).map(place => {
                       const isSelected = formData.selectedPlaces.includes(place.id);
                       return (
                         <div 
                           key={place.id} 
                           onClick={() => handleSelectPlace(place)}
                           style={{ 
-                            height: '140px', borderRadius: '14px', overflow: 'hidden', position: 'relative', cursor: 'pointer',
+                            height: '110px', borderRadius: '14px', overflow: 'hidden', position: 'relative', cursor: 'pointer',
                             border: isSelected ? '3px solid #E85D26' : '1px solid #EDE9E2',
                             boxShadow: isSelected ? '0 4px 12px rgba(232, 93, 38, 0.25)' : 'none',
                             transition: 'transform 0.15s ease'
                           }}
                         >
                           <img src={place.image || formData.coverPhoto} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', padding: '12px' }}>
-                            <span style={{ color: 'white', fontWeight: '700', fontSize: '13px', display: 'block', lineHeight: 1.2 }}>{place.name}</span>
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', padding: '10px' }}>
+                            <span style={{ color: 'white', fontWeight: '700', fontSize: '12px', display: 'block', lineHeight: 1.2 }}>{place.name}</span>
                           </div>
                           {isSelected && (
-                            <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Check size={14} color="#fff" />
+                            <div style={{ position: 'absolute', top: '6px', right: '6px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Check size={12} color="#fff" />
                             </div>
                           )}
                         </div>
