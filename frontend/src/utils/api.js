@@ -1,4 +1,9 @@
-const API_BASE_URL = 'http://localhost:5000';
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD || import.meta.env.MODE === 'production'
+    ? 'https://wanderly-backend-m65m.onrender.com'
+    : 'http://localhost:5000');
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+
 
 export const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('wanderly_token');
@@ -26,7 +31,7 @@ export const apiFetch = async (endpoint, options = {}) => {
       response = await fetch(url, config);
     } catch (networkError) {
       console.error('Network connection error:', networkError);
-      throw new Error('Unable to connect to the backend server. Please make sure the backend is running on http://localhost:5000');
+      throw new Error('Unable to connect to the backend server. Please verify network or backend server deployment.');
     }
 
     if (response.status === 401) {
