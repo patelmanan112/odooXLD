@@ -112,7 +112,7 @@ const INITIAL_ACTIVITIES = [
 ];
 
 export const SearchExplorer = () => {
-  const { selectedTrip, updateTrip, showToast } = useApp();
+  const { trips, selectedTrip, addTrip, updateTrip, showToast } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -177,37 +177,79 @@ export const SearchExplorer = () => {
   const handleAdd = (item) => {
     setAddedIds(prev => [...prev, item.id]);
 
-    if (selectedTrip) {
-      const copy = { ...selectedTrip };
-      const days = [...(copy.days || [])];
-      if (days.length === 0) {
-        days.push({
-          id: `day-${Date.now()}`,
-          dayNum: 1,
-          title: `Day 1: ${copy.destination || 'Exploration'}`,
-          date: copy.startDate || new Date().toISOString().split('T')[0],
-          activities: []
-        });
-      }
-      const day1 = { ...days[0] };
-      const activities = [...(day1.activities || [])];
-      activities.push({
-        id: `act-${Date.now()}`,
-        time: '02:00 PM',
-        title: item.title,
-        category: item.category,
-        cost: item.price,
-        notes: `Added from Explore (${item.location})`
-      });
-      day1.activities = activities;
-      days[0] = day1;
-      copy.days = days;
+    let targetTrip = selectedTrip || (trips && trips.length > 0 ? trips[0] : null);
 
-      if (updateTrip) updateTrip(copy);
-      if (showToast) showToast(`Added "${item.title}" to ${copy.name || 'your trip'}! 🎉`);
-    } else {
-      if (showToast) showToast(`Added "${item.title}"! Create a trip to save your activities.`);
+    // If no trip exists at all, auto-create one!
+    if (!targetTrip) {
+      const cityShort = item.location.split(',')[0];
+      const newTrip = {
+        id: `trip-${Date.now()}`,
+        name: `Trip to ${cityShort}`,
+        title: `Trip to ${cityShort}`,
+        destination: item.location,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+        dates: `${new Date().toLocaleDateString()} - ${new Date(Date.now() + 3 * 86400000).toLocaleDateString()}`,
+        estimatedBudget: 50000,
+        spentBudget: item.price,
+        coverPhoto: item.image,
+        status: 'Upcoming',
+        days: [
+          {
+            id: `day-1`,
+            dayNum: 1,
+            title: `Day 1: ${cityShort} Exploration`,
+            date: new Date().toISOString().split('T')[0],
+            activities: [
+              {
+                id: `act-${Date.now()}`,
+                time: '10:00 AM',
+                title: item.title,
+                category: item.category,
+                cost: item.price,
+                notes: `Added from Explore`
+              }
+            ]
+          }
+        ]
+      };
+
+      if (addTrip) addTrip(newTrip);
+      if (showToast) showToast(`Created trip & added "${item.title}" to My Trips! 🎉`);
+      return;
     }
+
+    // Append activity to active trip
+    const copy = { ...targetTrip };
+    const days = [...(copy.days || [])];
+    if (days.length === 0) {
+      days.push({
+        id: `day-1`,
+        dayNum: 1,
+        title: `Day 1: ${copy.destination || 'Exploration'}`,
+        date: copy.startDate || new Date().toISOString().split('T')[0],
+        activities: []
+      });
+    }
+
+    const day1 = { ...days[0] };
+    const activities = [...(day1.activities || [])];
+    activities.push({
+      id: `act-${Date.now()}`,
+      time: '02:00 PM',
+      title: item.title,
+      category: item.category,
+      cost: item.price,
+      notes: `Added from Explore`
+    });
+
+    day1.activities = activities;
+    days[0] = day1;
+    copy.days = days;
+    copy.spentBudget = days.reduce((sum, d) => sum + (d.activities || []).reduce((s, a) => s + (Number(a.cost) || 0), 0), 0);
+
+    if (updateTrip) updateTrip(copy);
+    if (showToast) showToast(`Added "${item.title}" to ${copy.name || 'My Trips'}! 🎉`);
   };
 
   return (

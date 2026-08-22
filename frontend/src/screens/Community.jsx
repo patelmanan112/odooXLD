@@ -1,12 +1,57 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 export const Community = () => {
   const { addTrip, showToast } = useApp();
+  const navigate = useNavigate();
 
-  const handleClone = (title) => {
-    addTrip?.({ title, status: 'Draft' });
-    showToast?.(`Cloned "${title}" to your trips!`);
+  const handleClone = (post) => {
+    const postTitle = typeof post === 'string' ? post : post.title;
+    const postCover = typeof post === 'object' ? (post.coverPhoto || post.image) : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1000&q=80';
+    const postBudget = typeof post === 'object' ? (post.estimatedBudget || post.budget || 75000) : 75000;
+    const cleanBudget = typeof postBudget === 'number' ? postBudget : parseFloat(String(postBudget).replace(/[^0-9.]/g, '')) || 75000;
+
+    const clonedTrip = {
+      id: `trip-${Date.now()}`,
+      name: `Cloned: ${postTitle}`,
+      title: `Cloned: ${postTitle}`,
+      destination: postTitle.replace(/^Cloned:\s*/i, ''),
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+      dates: `${new Date().toLocaleDateString()} - ${new Date(Date.now() + 5 * 86400000).toLocaleDateString()}`,
+      durationDays: 5,
+      estimatedBudget: cleanBudget,
+      spentBudget: 25800,
+      coverPhoto: postCover,
+      status: 'Upcoming',
+      days: [
+        {
+          id: `day-1`,
+          dayNum: 1,
+          title: 'Day 1: Arrival & Exploration',
+          date: new Date().toISOString().split('T')[0],
+          activities: [
+            { id: `act-1`, time: '10:00 AM', title: `Arrival Flight`, category: 'Flight', cost: 12000, notes: 'Cloned itinerary' },
+            { id: `act-2`, time: '02:00 PM', title: 'Hotel Check-in', category: 'Stay', cost: 8500, notes: 'Cloned itinerary' },
+            { id: `act-3`, time: '06:00 PM', title: 'Welcome Tasting Dinner', category: 'Food', cost: 1800, notes: 'Cloned itinerary' }
+          ]
+        },
+        {
+          id: `day-2`,
+          dayNum: 2,
+          title: 'Day 2: Guided Tour & Landmarks',
+          date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          activities: [
+            { id: `act-4`, time: '09:30 AM', title: 'City Landmark Sightseeing', category: 'Sightseeing', cost: 3500, notes: 'Cloned itinerary' }
+          ]
+        }
+      ]
+    };
+
+    if (addTrip) addTrip(clonedTrip);
+    if (showToast) showToast(`Cloned "${postTitle}" to My Trips! 🎉`);
+    navigate('/trips');
   };
 
   const [publicTrips, setPublicTrips] = React.useState([]);
@@ -26,7 +71,7 @@ export const Community = () => {
 
   const featuredPost = publicTrips.length > 0 ? publicTrips[0] : {
     title: 'Swiss Alps Backpacking',
-    description: 'Discover how to experience the majestic views.',
+    description: 'Discover how to experience the majestic views of Zermatt, Interlaken, and Grindelwald.',
     estimatedBudget: 75000,
     coverPhoto: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1000&q=80',
     user: { name: 'Sarah Jenkins', avatarUrl: 'https://i.pravatar.cc/150?img=44' }
@@ -40,7 +85,26 @@ export const Community = () => {
     desc: p.description || 'Awesome trip.',
     image: p.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
     likes: 120, comments: 14, budget: `₹${p.estimatedBudget || 50000}`
-  })) : [];
+  })) : [
+    {
+      id: 'p1',
+      author: 'Manan Patel',
+      avatar: 'https://i.pravatar.cc/150?img=12',
+      title: 'Goa Coastal Getaway',
+      desc: 'Sun, sand, and serene beaches across North and South Goa.',
+      image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=80',
+      likes: 184, comments: 28, budget: '₹35,000'
+    },
+    {
+      id: 'p2',
+      author: 'Aarav Sharma',
+      avatar: 'https://i.pravatar.cc/150?img=33',
+      title: 'Tokyo & Kyoto 7-Day Blitz',
+      desc: 'High-speed bullet trains, neon streets, and tranquil Zen gardens.',
+      image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&q=80',
+      likes: 240, comments: 45, budget: '₹95,000'
+    }
+  ];
 
   return (
     <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', padding: '40px', boxSizing: 'border-box' }}>
@@ -60,7 +124,7 @@ export const Community = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                   <img src={featuredPost.user?.avatarUrl || "https://i.pravatar.cc/150?img=44"} alt="Author" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
                   <div>
-                    <div style={{ fontWeight: 'bold', color: '#1A1A2E', fontSize: '0.9rem' }}>{featuredPost.user?.name || "User"}</div>
+                    <div style={{ fontWeight: 'bold', color: '#1A1A2E', fontSize: '0.9rem' }}>{featuredPost.user?.name || "Sarah Jenkins"}</div>
                     <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>2 days ago</div>
                   </div>
                 </div>
@@ -70,10 +134,15 @@ export const Community = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', fontSize: '0.9rem', color: '#4B5563', fontWeight: '500' }}>
                   <span>❤️ 240</span>
                   <span>💬 42</span>
-                  <span style={{ paddingLeft: '16px', borderLeft: '1px solid #E5E7EB' }}>Budget: ₹{featuredPost.estimatedBudget || 75000}</span>
+                  <span style={{ paddingLeft: '16px', borderLeft: '1px solid #E5E7EB' }}>Budget: ₹{(featuredPost.estimatedBudget || 75000).toLocaleString('en-IN')}</span>
                 </div>
                 
-                <button onClick={() => handleClone(featuredPost.title)} style={{ backgroundColor: '#E85D26', color: '#fff', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', textAlign: 'center' }}>Clone This Itinerary</button>
+                <button
+                  onClick={() => handleClone(featuredPost)}
+                  style={{ backgroundColor: '#E85D26', color: '#fff', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', textAlign: 'center' }}
+                >
+                  Clone This Itinerary
+                </button>
               </div>
           </div>
 
@@ -104,7 +173,12 @@ export const Community = () => {
                       <span>Likes: {post.likes}</span>
                       <span>Comments: {post.comments}</span>
                     </div>
-                    <button onClick={() => handleClone(post.title)} style={{ backgroundColor: '#F3F4F6', color: '#1A1A2E', padding: '6px 12px', borderRadius: '8px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer' }}>Clone</button>
+                    <button
+                      onClick={() => handleClone(post)}
+                      style={{ backgroundColor: '#1A1A2E', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', border: 'none', fontWeight: '600', fontSize: '0.82rem', cursor: 'pointer' }}
+                    >
+                      Clone Itinerary
+                    </button>
                   </div>
                 </div>
               </div>
@@ -120,7 +194,7 @@ export const Community = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {['Kyoto, Japan', 'Goa, India', 'Bali, Indonesia', 'Paris, France', 'Reykjavik, Iceland'].map((dest, i) => (
                 <div key={dest} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#FDE8E0', color: '#E85D26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}>{i + 1}</div>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#FEF0E7', color: '#E85D26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}>{i + 1}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: '600', color: '#1A1A2E', fontSize: '0.95rem' }}>{dest}</div>
                     <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{1200 - (i * 200)} trips</div>
