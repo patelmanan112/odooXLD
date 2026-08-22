@@ -1,25 +1,43 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Globe, Shield, Bell, Heart, Award, Camera, Save } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Screen7_ProfileSettings = () => {
-  const { user, setUser, destinations, setCurrentScreen, showToast, updateUser } = useApp();
+  const { user, setUser, destinations, showToast, updateUser } = useApp();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Profile');
-  const [avatar, setAvatar] = useState(user.avatarUrl || user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80');
+  const [avatar, setAvatar] = useState(user?.avatarUrl || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80');
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    city: user.city,
-    country: user.country,
-    currency: user.currency || '₹'
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    city: user?.city || '',
+    country: user?.country || '',
+    currency: user?.currency || '₹'
   });
 
-  const handleSave = (e) => {
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      showToast('Image must be less than 1MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatar(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    setUser({ ...user, ...formData });
-    showToast('Profile settings saved successfully!');
+    if (updateUser) {
+      await updateUser({ ...formData, avatarUrl: avatar });
+    } else {
+      setUser({ ...user, ...formData });
+      showToast('Profile settings saved successfully!');
+    }
   };
 
   return (
@@ -162,7 +180,7 @@ export const Screen7_ProfileSettings = () => {
         <div className="glass-card" style={{ padding: '28px', backgroundColor: '#ffffff' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>Preplanned & Past Travel Archives</h4>
           <p style={{ color: '#64748b', fontSize: '0.88rem' }}>Access all completed trip logs, photo journals, and expense receipts.</p>
-          <button onClick={() => setCurrentScreen(6)} className="btn btn-secondary" style={{ marginTop: '16px' }}>
+          <button onClick={() => navigate('/trips')} className="btn btn-secondary" style={{ marginTop: '16px' }}>
             Go to My Trips
           </button>
         </div>

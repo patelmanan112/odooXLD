@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { DemoSwitcher } from './components/DemoSwitcher';
 import { Loader, Plane } from 'lucide-react';
 
+import { LandingPage } from './pages/LandingPage';
 import { Screen1_Login } from './screens/Screen1_Login';
 import { Screen2_Register } from './screens/Screen2_Register';
 import { Screen3_Dashboard } from './screens/Screen3_Dashboard';
@@ -45,7 +46,7 @@ const AppContent = () => {
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const location = useLocation();
 
-  const isAuthScreen = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthScreen = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
 
   if (authLoading) {
     return (
@@ -122,7 +123,7 @@ const AppContent = () => {
               <Route path="/login" element={<PublicRoute><Screen1_Login /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><Screen2_Register /></PublicRoute>} />
               
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
               <Route path="/trips/new" element={<ProtectedRoute><Screen4_CreateTrip /></ProtectedRoute>} />
               <Route path="/itinerary/builder" element={<ProtectedRoute><Screen5_BuildItinerary /></ProtectedRoute>} />
