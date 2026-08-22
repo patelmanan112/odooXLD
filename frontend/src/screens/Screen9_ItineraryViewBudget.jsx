@@ -1,231 +1,437 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Share2, Edit3, Download, DollarSign, Clock, Map } from 'lucide-react';
+import {
+  MapPin, Calendar, Share2, Edit3, Download,
+  DollarSign, Clock, ArrowLeft, Wallet, CheckCircle2,
+  Plane, Utensils, Camera, Train, Compass, Coffee, Eye,
+  Hotel, Bus
+} from 'lucide-react';
+
+/* ─── category → color + icon ─────────────── */
+const CAT = {
+  Flight:      { color: '#4F46E5', bg: '#EEF2FF', icon: Plane },
+  Transport:   { color: '#4F46E5', bg: '#EEF2FF', icon: Train },
+  Hotel:       { color: '#7C3AED', bg: '#F5F3FF', icon: Hotel },
+  Stay:        { color: '#7C3AED', bg: '#F5F3FF', icon: Hotel },
+  Food:        { color: '#059669', bg: '#ECFDF5', icon: Utensils },
+  Sightseeing: { color: '#D97706', bg: '#FFFBEB', icon: Camera },
+  Activity:    { color: '#D97706', bg: '#FFFBEB', icon: Compass },
+  Adventure:   { color: '#DC2626', bg: '#FEF2F2', icon: Compass },
+  Culture:     { color: '#E85D26', bg: '#FEF0E7', icon: Coffee },
+  default:     { color: '#6B7280', bg: '#F9FAFB', icon: Eye },
+};
+
+const getCat = (category) => CAT[category] || CAT.default;
+
+/* ─── Dot on timeline ──────────────────────── */
+const Dot = ({ color }) => (
+  <div style={{
+    position: 'absolute', left: -20, top: 6,
+    width: 12, height: 12, borderRadius: '50%',
+    backgroundColor: '#fff', border: `3px solid ${color}`,
+    zIndex: 2, flexShrink: 0,
+  }} />
+);
 
 export const Screen9_ItineraryViewBudget = () => {
-  const { selectedTrip, setCurrentScreen, showToast } = useApp();
+  const { selectedTrip, showToast, setCurrentScreen } = useApp();
   const navigate = useNavigate();
 
-  // Mock data if selectedTrip is null
-  const trip = selectedTrip || {
-    name: "Summer in Kyoto",
-    destination: "Kyoto, Japan",
-    startDate: "2024-06-12",
-    endDate: "2024-06-19",
-    coverImage: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070&auto=format&fit=crop",
-    budget: 2500,
-    spent: 1850,
-    status: "Upcoming",
-    days: [
-      {
-        id: 1,
-        date: "2024-06-12",
-        title: "Arrival & Exploring Gion",
-        activities: [
-          { time: "10:00 AM", title: "Flight Arrival (KIX)", category: "Transport", cost: 0, color: "#4F46E5" },
-          { time: "01:00 PM", title: "Check-in at Ryokan", category: "Stay", cost: 450, color: "#059669" },
-          { time: "03:30 PM", title: "Gion District Walk", category: "Activity", cost: 0, color: "#D97706" },
-          { time: "07:00 PM", title: "Kaiseki Dinner", category: "Food", cost: 120, color: "#DC2626" }
-        ]
-      },
-      {
-        id: 2,
-        date: "2024-06-13",
-        title: "Temples and Bamboo",
-        activities: [
-          { time: "08:00 AM", title: "Arashiyama Bamboo Grove", category: "Activity", cost: 15, color: "#D97706" },
-          { time: "12:30 PM", title: "Noodle Shop Lunch", category: "Food", cost: 25, color: "#DC2626" },
-          { time: "02:00 PM", title: "Kinkaku-ji (Golden Pavilion)", category: "Activity", cost: 10, color: "#D97706" }
-        ]
-      }
-    ],
-    categories: [
-      { name: "Stay", spent: 900, limit: 1000, color: "#059669" },
-      { name: "Food", spent: 450, limit: 600, color: "#DC2626" },
-      { name: "Activity", spent: 200, limit: 500, color: "#D97706" },
-      { name: "Transport", spent: 300, limit: 400, color: "#4F46E5" }
-    ]
-  };
+  /* ── If no trip selected, show a friendly message ── */
+  if (!selectedTrip) {
+    return (
+      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+        <div style={{ fontSize: '3rem', marginBottom: 16 }}>🗺️</div>
+        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
+          No trip selected
+        </h2>
+        <p style={{ color: '#9CA3AF', marginBottom: 24 }}>Go to My Trips and click a trip to view its itinerary.</p>
+        <button onClick={() => navigate('/trips')} className="btn btn-primary">
+          <ArrowLeft size={16} /> Go to My Trips
+        </button>
+      </div>
+    );
+  }
 
-  const handleShare = () => showToast("Share link copied to clipboard!");
-  const handleEdit = () => showToast("Edit mode enabled");
-  const handleDownload = () => showToast("Downloading PDF...");
+  const trip = selectedTrip;
 
-  const totalDays = 8;
-  const spentPercent = Math.min((trip.spent / trip.budget) * 100, 100);
+  /* ── Derive financials from real trip fields ── */
+  const estimatedBudget = trip.estimatedBudget || 0;
+  const spentBudget     = trip.spentBudget || 0;
+  const spentPct        = estimatedBudget > 0
+    ? Math.min(100, Math.round((spentBudget / estimatedBudget) * 100))
+    : 0;
+  const remaining       = estimatedBudget - spentBudget;
+
+  /* ── Build category breakdown from days.activities ── */
+  const days = trip.days || [];
+  const allActivities = days.flatMap(d => d.activities || []);
+
+  // Group by category for the breakdown bars
+  const catTotals = {};
+  allActivities.forEach(act => {
+    const cat = act.category || 'Other';
+    catTotals[cat] = (catTotals[cat] || 0) + (act.cost || 0);
+  });
+
+  // Also use categoryBreakdown if available (richer data)
+  const catBreakdown = trip.categoryBreakdown
+    ? Object.entries(trip.categoryBreakdown).map(([name, spent]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        spent,
+        color: getCat(name.charAt(0).toUpperCase() + name.slice(1)).color,
+      }))
+    : Object.entries(catTotals).map(([name, spent]) => ({
+        name,
+        spent,
+        color: getCat(name).color,
+      }));
+
+  const totalCatSpent = catBreakdown.reduce((s, c) => s + c.spent, 0) || spentBudget || 1;
+  const avgPerDay = days.length > 0 ? Math.round(spentBudget / days.length) : 0;
 
   return (
-    <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: '60px' }}>
-      
-      {/* Top Header Section */}
-      <div style={{ 
-        position: 'relative', 
-        height: '260px', 
-        width: '100%', 
-        backgroundImage: `url(${trip.coverImage || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800'})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 0, paddingBottom: 60 }}
+    >
+
+      {/* ══ HERO HEADER ══════════════════════════════ */}
+      <div style={{
+        position: 'relative',
+        height: 280,
+        borderRadius: 24,
+        overflow: 'hidden',
+        marginBottom: 32,
+        flexShrink: 0,
       }}>
-        <div style={{ 
-          position: 'absolute', inset: 0, 
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%)',
-          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '40px'
-        }}>
-          
-          <div style={{ position: 'absolute', top: '24px', right: '40px', display: 'flex', gap: '12px' }}>
-            <button onClick={handleShare} style={{ 
-              background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.4)', 
-              color: '#FFF', padding: '8px 16px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' 
-            }}>
-              <Share2 size={16} /> Share
-            </button>
-            <button onClick={handleEdit} style={{ 
-              background: '#FFF', color: '#1A1A2E', border: 'none', 
-              padding: '8px 16px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold' 
-            }}>
-              <Edit3 size={16} /> Edit
-            </button>
+        <img
+          src={trip.coverPhoto || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1400&q=80'}
+          alt={trip.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.75) 100%)' }} />
+
+        {/* back button */}
+        <button
+          onClick={() => navigate('/trips')}
+          style={{
+            position: 'absolute', top: 20, left: 24,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '7px 14px', borderRadius: 8,
+            backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            color: '#fff', fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer',
+          }}
+        >
+          <ArrowLeft size={15} /> My Trips
+        </button>
+
+        {/* action buttons */}
+        <div style={{ position: 'absolute', top: 20, right: 24, display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => showToast('Share link copied!')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Share2 size={14} /> Share
+          </button>
+          <button
+            onClick={() => navigate('/itinerary/builder')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', color: '#1A1A2E', fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+          >
+            <Edit3 size={14} /> Edit
+          </button>
+        </div>
+
+        {/* trip info */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.6rem,4vw,2.2rem)', fontWeight: 900, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>
+              {trip.name}
+            </h1>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.85)', fontSize: '0.88rem' }}>
+                <MapPin size={14} /> {trip.destination}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.85)', fontSize: '0.88rem' }}>
+                <Calendar size={14} /> {trip.dates}
+              </span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div>
-              <h1 style={{ color: '#FFF', fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 8px 0' }}>{trip.name}</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#E2E8F0', fontSize: '1rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={16} /> {trip.destination}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={16} /> {trip.startDate} - {trip.endDate}</span>
+          {/* stat pills */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Duration',  val: `${trip.durationDays || days.length || '?'} days` },
+              { label: 'Budget',    val: `₹${estimatedBudget.toLocaleString('en-IN')}` },
+              { label: 'Status',    val: trip.status || 'Upcoming' },
+            ].map(s => (
+              <div key={s.label} style={{
+                backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 10, padding: '8px 14px', color: '#fff', textAlign: 'center',
+              }}>
+                <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{s.label}</p>
+                <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: 800 }}>{s.val}</p>
               </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {[{label: 'Total Days', val: totalDays}, {label: 'Budget', val: `$${trip.budget}`}, {label: 'Status', val: trip.status}].map((stat, i) => (
-                <div key={i} style={{ 
-                  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', padding: '12px 20px', 
-                  borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', textAlign: 'center' 
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ TWO-COLUMN BODY ══════════════════════════ */}
+      <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start' }}>
+
+        {/* ── LEFT: Day Timeline ────────────────────── */}
+        <div style={{ flex: 2, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 40 }}>
+
+          {days.length > 0 ? days.map((day, dIdx) => (
+            <motion.div
+              key={day.dayNum || dIdx}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: dIdx * 0.08 }}
+            >
+              {/* Day header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+                <div style={{
+                  backgroundColor: '#E85D26', color: '#fff',
+                  padding: '5px 14px', borderRadius: 8,
+                  fontFamily: 'Outfit, sans-serif', fontSize: '0.82rem', fontWeight: 800,
+                  flexShrink: 0,
                 }}>
-                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{stat.val}</div>
+                  Day {day.dayNum || (dIdx + 1)}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content: Two Columns */}
-      <div style={{ maxWidth: '1200px', margin: '40px auto 0', padding: '0 24px', display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
-        
-        {/* Left: Timeline Journal */}
-        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '48px' }}>
-          {trip.days.map((day, dIdx) => (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: dIdx * 0.1 }} key={day.id}>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ background: '#E85D26', color: '#FFF', padding: '6px 16px', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  Day {day.id} • {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </div>
-                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1A1A2E', fontWeight: '600' }}>{day.title}</h2>
-                <div style={{ flex: 1, height: '1px', background: '#E2E8F0', marginLeft: '16px' }} />
+                {day.date && (
+                  <span style={{ fontSize: '0.82rem', color: '#9CA3AF', fontWeight: 600 }}>
+                    {day.date}
+                  </span>
+                )}
+                <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.1rem', fontWeight: 800, color: '#1A1A2E', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {day.title}
+                </h2>
+                <div style={{ height: 1, flex: 1, backgroundColor: '#EDE9E2' }} />
               </div>
 
-              <div style={{ position: 'relative', paddingLeft: '32px' }}>
-                {/* Vertical Line */}
-                <div style={{ position: 'absolute', left: '11px', top: '16px', bottom: '-16px', width: '3px', background: '#E85D26', borderRadius: '2px' }} />
+              {/* Activities timeline */}
+              <div style={{ position: 'relative', paddingLeft: 28 }}>
+                {/* vertical line */}
+                <div style={{
+                  position: 'absolute', left: 5, top: 10, bottom: 10,
+                  width: 3, backgroundColor: '#FEE2D5', borderRadius: 9999,
+                }} />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {day.activities.map((act, aIdx) => (
-                    <div key={aIdx} style={{ position: 'relative', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                      {/* Dot */}
-                      <div style={{ 
-                        position: 'absolute', left: '-25.5px', top: '4px', width: '12px', height: '12px', 
-                        borderRadius: '50%', background: '#FFF', border: `3px solid ${act.color}`, zIndex: 2 
-                      }} />
-                      
-                      <div style={{ width: '80px', color: '#64748B', fontSize: '0.9rem', fontWeight: '500', paddingTop: '2px' }}>
-                        {act.time}
-                      </div>
-                      
-                      <div style={{ flex: 1, background: '#FFF', padding: '16px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#1A1A2E', fontSize: '1.05rem', marginBottom: '8px' }}>{act.title}</div>
-                          <div style={{ display: 'inline-block', padding: '4px 10px', background: `${act.color}15`, color: act.color, borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
-                            {act.category}
-                          </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {(day.activities || []).map((act, aIdx) => {
+                    const cat = getCat(act.category);
+                    const Icon = cat.icon;
+                    return (
+                      <motion.div
+                        key={act.time + aIdx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: dIdx * 0.08 + aIdx * 0.04 }}
+                        style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'flex-start' }}
+                      >
+                        <Dot color={cat.color} />
+
+                        {/* time */}
+                        <div style={{ width: 72, flexShrink: 0, fontSize: '0.78rem', fontWeight: 700, color: '#9CA3AF', paddingTop: 4 }}>
+                          {act.time}
                         </div>
-                        {act.cost > 0 && (
-                          <div style={{ fontWeight: 'bold', color: '#334155' }}>
-                            ${act.cost}
+
+                        {/* activity card */}
+                        <div style={{
+                          flex: 1,
+                          backgroundColor: '#FFFFFF',
+                          border: '1px solid #EDE9E2',
+                          borderRadius: 14,
+                          padding: '12px 16px',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: cat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Icon size={16} color={cat.color} />
+                            </div>
+                            <div>
+                              <p style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1A1A2E', marginBottom: 3 }}>{act.title}</p>
+                              <span style={{
+                                padding: '2px 8px', borderRadius: 5,
+                                backgroundColor: cat.bg, color: cat.color,
+                                fontSize: '0.7rem', fontWeight: 700,
+                              }}>
+                                {act.category}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+
+                          {act.cost > 0 && (
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: 800, color: '#1A1A2E' }}>
+                                ₹{act.cost.toLocaleString('en-IN')}
+                              </p>
+                            </div>
+                          )}
+                          {act.cost === 0 && (
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '3px 8px', borderRadius: 5 }}>
+                              Free
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
-
             </motion.div>
-          ))}
+          )) : (
+            /* No days yet */
+            <div style={{ textAlign: 'center', padding: '48px 24px', backgroundColor: '#FFFFFF', borderRadius: 20, border: '2px dashed #E2DDD5' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📋</div>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
+                No itinerary built yet
+              </h3>
+              <p style={{ color: '#9CA3AF', fontSize: '0.9rem', marginBottom: 20 }}>
+                Start adding days and activities to your trip.
+              </p>
+              <button onClick={() => navigate('/itinerary/builder')} className="btn btn-primary">
+                <Edit3 size={16} /> Build Itinerary
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Right: Sticky Panel */}
-        <div style={{ flex: 1, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          <div style={{ background: '#FFF', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <DollarSign size={20} color="#E85D26" /> Budget Breakdown
-            </h3>
-            
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#1A1A2E', lineHeight: '1' }}>${trip.spent}</div>
-              <div style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '8px' }}>of ${trip.budget} total budget</div>
+        {/* ── RIGHT: Sticky Financial Panel ─────────── */}
+        <div style={{ flex: '0 0 300px', position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 16, alignSelf: 'flex-start' }}>
+
+          {/* Budget card */}
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, border: '1px solid #EDE9E2', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: '#FEF0E7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Wallet size={16} color="#E85D26" />
+              </div>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: 800, color: '#1A1A2E' }}>Budget Breakdown</h3>
             </div>
 
-            <div style={{ height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden', marginBottom: '24px' }}>
-              <div style={{ height: '100%', width: `${spentPercent}%`, background: spentPercent > 90 ? '#DC2626' : '#E85D26', borderRadius: '4px' }} />
+            {/* big number */}
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: '0.75rem', color: '#9CA3AF', marginBottom: 4 }}>Total Spent</p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 900, color: '#1A1A2E', lineHeight: 1 }}>
+                ₹{spentBudget.toLocaleString('en-IN')}
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#9CA3AF', marginTop: 4 }}>
+                of ₹{estimatedBudget.toLocaleString('en-IN')} budget
+              </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {trip.categories.map((cat, idx) => {
-                const p = Math.min((cat.spent / cat.limit) * 100, 100);
-                return (
-                  <div key={idx}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: '600', color: '#334155' }}>{cat.name}</span>
-                      <span style={{ color: '#64748B' }}>${cat.spent} / ${cat.limit}</span>
+            {/* overall bar */}
+            <div style={{ height: 8, backgroundColor: '#F3F4F6', borderRadius: 9999, overflow: 'hidden', marginBottom: 6 }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${spentPct}%` }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                style={{
+                  height: '100%',
+                  background: spentPct > 85 ? '#EF4444' : 'linear-gradient(90deg, #E85D26, #F97316)',
+                  borderRadius: 9999,
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+              <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{spentPct}% used</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: remaining >= 0 ? '#059669' : '#EF4444' }}>
+                ₹{Math.abs(remaining).toLocaleString('en-IN')} {remaining >= 0 ? 'left' : 'over'}
+              </span>
+            </div>
+
+            {/* per-category bars */}
+            {catBreakdown.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {catBreakdown.map((cat, i) => {
+                  const pct = Math.min(100, Math.round((cat.spent / totalCatSpent) * 100));
+                  return (
+                    <div key={i}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>{cat.name}</span>
+                        <span style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>₹{cat.spent.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div style={{ height: 5, backgroundColor: '#F3F4F6', borderRadius: 9999, overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.8, delay: i * 0.1 }}
+                          style={{ height: '100%', backgroundColor: cat.color, borderRadius: 9999 }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ height: '6px', background: '#F1F5F9', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${p}%`, background: cat.color, borderRadius: '3px' }} />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* avg per day */}
+            {days.length > 0 && (
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.82rem', color: '#9CA3AF' }}>Avg. per day</span>
+                <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: 800, color: '#1A1A2E' }}>
+                  ₹{avgPerDay.toLocaleString('en-IN')}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, border: '1px solid #EDE9E2', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 14 }}>Quick Actions</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                onClick={() => navigate('/itinerary/builder')}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#FEF0E7', color: '#E85D26', border: '1px solid #FDDCC9', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                <Edit3 size={15} /> Edit Itinerary
+              </button>
+              <button
+                onClick={() => showToast('Downloading PDF...')}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                <Download size={15} /> Download PDF
+              </button>
+              <button
+                onClick={() => showToast('Share link copied!')}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                <Share2 size={15} /> Share Link
+              </button>
+            </div>
+          </div>
+
+          {/* Stops */}
+          {trip.stops && trip.stops.length > 0 && (
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, border: '1px solid #EDE9E2' }}>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 14 }}>Stops</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {trip.stops.map((stop, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: i < trip.stops.length - 1 ? 12 : 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: i === 0 || i === trip.stops.length - 1 ? '#E85D26' : '#CBD5E1', border: '2px solid #fff', outline: `2px solid ${i === 0 || i === trip.stops.length - 1 ? '#E85D26' : '#CBD5E1'}` }} />
+                      {i < trip.stops.length - 1 && <div style={{ width: 2, height: 20, backgroundColor: '#E2DDD5', marginTop: 2 }} />}
                     </div>
+                    <span style={{ fontSize: '0.85rem', fontWeight: i === 0 || i === trip.stops.length - 1 ? 700 : 500, color: i === 0 || i === trip.stops.length - 1 ? '#1A1A2E' : '#6B7280' }}>
+                      {stop}
+                    </span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-
-            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#64748B', fontSize: '0.9rem' }}>Avg. Per Day</span>
-              <span style={{ fontWeight: 'bold', color: '#1A1A2E', fontSize: '1.1rem' }}>${Math.round(trip.spent / totalDays)}</span>
-            </div>
-          </div>
-
-          <div style={{ background: '#FFF', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#1A1A2E' }}>Quick Actions</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <button onClick={handleEdit} style={{ width: '100%', padding: '12px', background: '#FFF3EE', color: '#E85D26', border: '1px solid #FFDCD0', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}>
-                <Edit3 size={18} /> Edit Itinerary
-              </button>
-              <button onClick={handleDownload} style={{ width: '100%', padding: '12px', background: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}>
-                <Download size={18} /> Download PDF
-              </button>
-              <button onClick={handleShare} style={{ width: '100%', padding: '12px', background: '#F8FAFC', color: '#334155', border: '1px solid #E2E8F0', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}>
-                <Share2 size={18} /> Share Link
-              </button>
-            </div>
-          </div>
-
+          )}
         </div>
-
       </div>
-    </div>
+    </motion.div>
   );
 };
