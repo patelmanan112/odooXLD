@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Star, Plus, RotateCcw, Filter, Check } from 'lucide-react';
+import { Search, MapPin, Star, Plus, RotateCcw, Filter, Check, X, Briefcase, Calendar } from 'lucide-react';
 
 const CATEGORIES = ['Adventure', 'Food', 'Water Sports', 'Sightseeing', 'Culture'];
 const DURATIONS = ['All', 'Under 2hrs', 'Half Day', 'Full Day'];
@@ -122,6 +122,11 @@ export const SearchExplorer = () => {
   const [minRating, setMinRating] = useState(0);
   const [addedIds, setAddedIds] = useState([]);
 
+  /* ── Add to Trip Modal State ── */
+  const [selectedItemForAdd, setSelectedItemForAdd] = useState(null);
+  const [targetTripId, setTargetTripId] = useState('');
+  const [createNewTripName, setCreateNewTripName] = useState('');
+
   const handleCategoryToggle = (cat) => {
     setSelectedCategories(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
@@ -174,18 +179,31 @@ export const SearchExplorer = () => {
     });
   }, [searchQuery, selectedCategories, minPrice, maxPrice, selectedDuration, minRating]);
 
-  const handleAdd = (item) => {
+  /* ── Open Popup Modal ── */
+  const handleOpenAddModal = (item) => {
+    setSelectedItemForAdd(item);
+    if (trips && trips.length > 0) {
+      setTargetTripId(selectedTrip?.id || trips[0].id);
+    } else {
+      setTargetTripId('new');
+    }
+    setCreateNewTripName(`Trip to ${item.location.split(',')[0]}`);
+  };
+
+  /* ── Submit Modal Selection ── */
+  const handleConfirmAdd = (e) => {
+    e.preventDefault();
+    if (!selectedItemForAdd) return;
+    const item = selectedItemForAdd;
     setAddedIds(prev => [...prev, item.id]);
 
-    let targetTrip = selectedTrip || (trips && trips.length > 0 ? trips[0] : null);
-
-    // If no trip exists at all, auto-create one!
-    if (!targetTrip) {
+    if (targetTripId === 'new' || !trips || trips.length === 0) {
+      // Create new trip
       const cityShort = item.location.split(',')[0];
       const newTrip = {
         id: `trip-${Date.now()}`,
-        name: `Trip to ${cityShort}`,
-        title: `Trip to ${cityShort}`,
+        name: createNewTripName.trim() || `Trip to ${cityShort}`,
+        title: createNewTripName.trim() || `Trip to ${cityShort}`,
         destination: item.location,
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
@@ -213,43 +231,46 @@ export const SearchExplorer = () => {
           }
         ]
       };
-
       if (addTrip) addTrip(newTrip);
-      if (showToast) showToast(`Created trip & added "${item.title}" to My Trips! 🎉`);
-      return;
+      if (showToast) showToast(`Created "${newTrip.name}" & added "${item.title}"! 🎉`);
+    } else {
+      // Add to selected existing trip
+      const existingTrip = trips.find(t => t.id === targetTripId);
+      if (existingTrip) {
+        const copy = { ...existingTrip };
+        const days = [...(copy.days || [])];
+        if (days.length === 0) {
+          days.push({
+            id: `day-1`,
+            dayNum: 1,
+            title: `Day 1: ${copy.destination || 'Exploration'}`,
+            date: copy.startDate || new Date().toISOString().split('T')[0],
+            activities: []
+          });
+        }
+
+        const day1 = { ...days[0] };
+        const activities = [...(day1.activities || [])];
+        activities.push({
+          id: `act-${Date.now()}`,
+          time: '02:00 PM',
+          title: item.title,
+          category: item.category,
+          cost: item.price,
+          notes: `Added from Explore`
+        });
+
+        day1.activities = activities;
+        days[0] = day1;
+        copy.days = days;
+        copy.spentBudget = days.reduce((sum, d) => sum + (d.activities || []).reduce((s, a) => s + (Number(a.cost) || 0), 0), 0);
+
+        if (updateTrip) updateTrip(copy);
+        if (showToast) showToast(`Added "${item.title}" to "${copy.name || copy.title}"! 🎉`);
+      }
     }
 
-    // Append activity to active trip
-    const copy = { ...targetTrip };
-    const days = [...(copy.days || [])];
-    if (days.length === 0) {
-      days.push({
-        id: `day-1`,
-        dayNum: 1,
-        title: `Day 1: ${copy.destination || 'Exploration'}`,
-        date: copy.startDate || new Date().toISOString().split('T')[0],
-        activities: []
-      });
-    }
-
-    const day1 = { ...days[0] };
-    const activities = [...(day1.activities || [])];
-    activities.push({
-      id: `act-${Date.now()}`,
-      time: '02:00 PM',
-      title: item.title,
-      category: item.category,
-      cost: item.price,
-      notes: `Added from Explore`
-    });
-
-    day1.activities = activities;
-    days[0] = day1;
-    copy.days = days;
-    copy.spentBudget = days.reduce((sum, d) => sum + (d.activities || []).reduce((s, a) => s + (Number(a.cost) || 0), 0), 0);
-
-    if (updateTrip) updateTrip(copy);
-    if (showToast) showToast(`Added "${item.title}" to ${copy.name || 'My Trips'}! 🎉`);
+    setSelectedItemForAdd(null);
   };
 
   return (
@@ -458,7 +479,7 @@ export const SearchExplorer = () => {
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <ResultCard item={item} isAdded={addedIds.includes(item.id)} handleAdd={handleAdd} />
+                    <ResultCard item={item} isAdded={addedIds.includes(item.id)} onOpenModal={() => handleOpenAddModal(item)} />
                   </motion.div>
                 ))}
               </div>
@@ -493,11 +514,203 @@ export const SearchExplorer = () => {
 
         </div>
       </div>
+
+      {/* ══ ADD TO TRIP SELECTION MODAL POPUP ════════════════════ */}
+      <AnimatePresence>
+        {selectedItemForAdd && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '24px',
+                width: '100%',
+                maxWidth: '480px',
+                padding: '24px',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                border: '1px solid #EDE9E2'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <img
+                    src={selectedItemForAdd.image}
+                    alt={selectedItemForAdd.title}
+                    style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover' }}
+                  />
+                  <div>
+                    <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.1rem', fontWeight: 800, color: '#1A1A2E', margin: '0 0 2px' }}>
+                      Add to Trip
+                    </h3>
+                    <p style={{ fontSize: '0.82rem', color: '#6B7280', margin: 0, fontWeight: 600 }}>
+                      {selectedItemForAdd.title} ({selectedItemForAdd.priceDisplay})
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedItemForAdd(null)}
+                  style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleConfirmAdd} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Select Destination Trip:
+                </label>
+
+                {/* List of existing trips */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {trips && trips.length > 0 && trips.map(t => {
+                    const isSelected = targetTripId === t.id;
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => setTargetTripId(t.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          border: isSelected ? '2px solid #E85D26' : '1.5px solid #EDE9E2',
+                          backgroundColor: isSelected ? '#FEF0E7' : '#FAFAF8',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="targetTrip"
+                          checked={isSelected}
+                          onChange={() => setTargetTripId(t.id)}
+                          style={{ accentColor: '#E85D26', width: '16px', height: '16px' }}
+                        />
+                        <img
+                          src={t.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80'}
+                          alt={t.name || t.title}
+                          style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.9rem', fontWeight: 800, color: isSelected ? '#E85D26' : '#1A1A2E', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {t.name || t.title}
+                          </p>
+                          <p style={{ fontSize: '0.75rem', color: '#9CA3AF', margin: 0 }}>
+                            {t.destination || 'Destination'} • {t.durationDays || 5} Days
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Option: Create New Trip */}
+                  <div
+                    onClick={() => setTargetTripId('new')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      border: targetTripId === 'new' ? '2px solid #E85D26' : '1.5px dashed #CBD5E1',
+                      backgroundColor: targetTripId === 'new' ? '#FEF0E7' : '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="targetTrip"
+                      checked={targetTripId === 'new'}
+                      onChange={() => setTargetTripId('new')}
+                      style={{ accentColor: '#E85D26', width: '16px', height: '16px' }}
+                    />
+                    <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#FEF0E7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E85D26' }}>
+                      <Plus size={20} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.9rem', fontWeight: 800, color: targetTripId === 'new' ? '#E85D26' : '#1A1A2E', margin: 0 }}>
+                        + Create New Trip
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: '#9CA3AF', margin: 0 }}>
+                        Start a brand new trip with this activity
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* If 'new' selected, text input for Trip Name */}
+                {targetTripId === 'new' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
+                      New Trip Name
+                    </label>
+                    <input
+                      type="text"
+                      value={createNewTripName}
+                      onChange={(e) => setCreateNewTripName(e.target.value)}
+                      placeholder="e.g. Summer Trip to Tokyo"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: '1.5px solid #EDE9E2',
+                        fontSize: '0.9rem',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Modal Buttons */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedItemForAdd(null)}
+                    className="btn btn-outline"
+                    style={{ flex: 1, padding: '12px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ flex: 1, padding: '12px' }}
+                  >
+                    Add to Selected Trip
+                  </button>
+                </div>
+
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
 
-const ResultCard = ({ item, isAdded, handleAdd }) => {
+const ResultCard = ({ item, isAdded, onOpenModal }) => {
   return (
     <div style={{
       backgroundColor: '#FFFFFF',
@@ -542,7 +755,7 @@ const ResultCard = ({ item, isAdded, handleAdd }) => {
             </div>
           </div>
           <button
-            onClick={() => handleAdd(item)}
+            onClick={onOpenModal}
             className={isAdded ? "btn btn-outline" : "btn btn-dark"}
             style={{
               padding: '8px 14px',
