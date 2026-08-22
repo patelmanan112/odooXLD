@@ -41,8 +41,8 @@ export const Screen10_Community = () => {
               <p style={{ color: '#4B5563', margin: '0 0 24px', fontSize: '0.95rem', lineHeight: '1.5' }}>Discover how to experience the majestic views, scenic trains, and cozy hostels without breaking the bank.</p>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', fontSize: '0.9rem', color: '#4B5563', fontWeight: '500' }}>
-                <span>❤️ 240</span>
-                <span>💬 42</span>
+                <span>Likes: 240</span>
+                <span>Comments: 42</span>
                 <span style={{ paddingLeft: '16px', borderLeft: '1px solid #E5E7EB' }}>Budget: ₹75,000</span>
               </div>
               
@@ -74,8 +74,8 @@ export const Screen10_Community = () => {
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
                     <div style={{ fontSize: '0.8rem', color: '#6B7280', display: 'flex', gap: '12px' }}>
-                      <span>❤️ {post.likes}</span>
-                      <span>💬 {post.comments}</span>
+                      <span>Likes: {post.likes}</span>
+                      <span>Comments: {post.comments}</span>
                     </div>
                     <button onClick={() => handleClone(post.title)} style={{ backgroundColor: '#F3F4F6', color: '#1A1A2E', padding: '6px 12px', borderRadius: '8px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer' }}>Clone</button>
                   </div>

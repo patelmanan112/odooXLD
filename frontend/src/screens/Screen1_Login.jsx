@@ -121,7 +121,7 @@ export const Screen1_Login = () => {
         {/* Bottom caption */}
         <div style={{ position: 'absolute', bottom: 44, left: 36, right: 36 }}>
           <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
-            ✦ Wanderly
+            Wanderly
           </p>
           <h2 style={{
             fontFamily: 'Outfit, sans-serif',
@@ -174,7 +174,7 @@ export const Screen1_Login = () => {
               fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.16em',
               textTransform: 'uppercase', color: '#c8622a', marginBottom: 12
             }}>
-              ✦ Sign In
+              Sign In
             </p>
             <h1 style={{
               fontFamily: 'Outfit, sans-serif',

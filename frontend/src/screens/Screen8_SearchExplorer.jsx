@@ -20,9 +20,9 @@ const CATEGORIES = ['Adventure', 'Food', 'Water Sports', 'Sightseeing', 'Culture
 const DURATIONS = ['All', 'Under 2hrs', 'Half Day', 'Full Day'];
 const RATINGS = [
   { label: 'All', val: 0 },
-  { label: '3+ ⭐', val: 3.0 },
-  { label: '4+ ⭐', val: 4.0 },
-  { label: '4.8+ ⭐', val: 4.8 },
+  { label: '3+ Stars', val: 3.0 },
+  { label: '4+ Stars', val: 4.0 },
+  { label: '4.8+ Stars', val: 4.8 },
 ];
 
 export const Screen8_SearchExplorer = () => {
@@ -97,7 +97,7 @@ export const Screen8_SearchExplorer = () => {
   }, [searchQuery, selectedCategories, minPrice, maxPrice, selectedDuration, minRating]);
 
   const handleAdd = (title) => {
-    showToast(`Added "${title}" to your trip! 🎉`);
+    showToast(`Added "${title}" to your trip!`);
   };
 
   return (
@@ -110,7 +110,7 @@ export const Screen8_SearchExplorer = () => {
             Catalog Explorer
           </p>
           <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '16px' }}>
-            Find Experiences & Activities 🔍
+            Find Experiences & Activities
           </h1>
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -323,7 +323,7 @@ export const Screen8_SearchExplorer = () => {
                     border: '2px dashed #EDE9E2'
                   }}
                 >
-                  <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔍</div>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Search size={40} color="#9CA3AF" /></div>
                   <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '8px' }}>
                     No matching experiences found
                   </h3>

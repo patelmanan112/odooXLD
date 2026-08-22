@@ -43,7 +43,7 @@ export const Screen9_ItineraryViewBudget = () => {
   if (!selectedTrip) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>🗺️</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Map size={48} color="#9CA3AF" /></div>
         <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
           No trip selected
         </h2>
@@ -293,7 +293,7 @@ export const Screen9_ItineraryViewBudget = () => {
           )) : (
             /* No days yet */
             <div style={{ textAlign: 'center', padding: '48px 24px', backgroundColor: '#FFFFFF', borderRadius: 20, border: '2px dashed #E2DDD5' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📋</div>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Calendar size={40} color="#9CA3AF" /></div>
               <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
                 No itinerary built yet
               </h3>

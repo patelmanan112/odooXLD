@@ -36,7 +36,7 @@ export const HeroSection = () => {
         animate="visible"
       >
         <motion.p className={s.label} variants={fadeUp}>
-          ✦ Wanderly / Your Travel Planner
+          Wanderly / Your Travel Planner
         </motion.p>
 
         <motion.h1 className={s.heroHeadline} variants={fadeUp}>
@@ -67,7 +67,7 @@ export const HeroSection = () => {
           {[
             { number: '12K+', label: 'Trips Planned' },
             { number: '80+', label: 'Destinations' },
-            { number: '4.9★', label: 'User Rating' },
+            { number: '4.9/5', label: 'User Rating' },
           ].map(stat => (
             <div key={stat.label} className={s.statItem}>
               <span className={s.statNumber}>{stat.number}</span>
@@ -101,7 +101,7 @@ export const HeroSection = () => {
           animate={{ opacity: 1, x: 0, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className={s.heroFloatingCardTitle}>✦ Your Next Escape</p>
+          <p className={s.heroFloatingCardTitle}>Your Next Escape</p>
           <p className={s.heroFloatingCardCity}>Udaipur, India</p>
           <p className={s.heroFloatingCardDates}>10 — 17 September</p>
           <div className={s.heroFloatingCardMeta}>

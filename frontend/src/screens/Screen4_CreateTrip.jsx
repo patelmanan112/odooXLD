@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Image as ImageIcon, Check } from 'lucide-react';
 
 export const Screen4_CreateTrip = () => {
   const { addTrip, setSelectedTripId, destinations, showToast } = useApp();
@@ -231,7 +231,7 @@ export const Screen4_CreateTrip = () => {
                         </div>
                         {formData.selectedPlaces.includes(place.id) && (
                           <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            ✓
+                            <Check size={14} color="#fff" />
                           </div>
                         )}
                       </div>

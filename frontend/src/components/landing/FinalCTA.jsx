@@ -56,7 +56,7 @@ export const FinalCTA = () => {
 
       <footer className={s.footer}>
         <div className={s.footerLogo}>Wander<span>ly</span></div>
-        <p className={s.footerCopy}>© 2026 Wanderly. Made with ♥ for travelers.</p>
+        <p className={s.footerCopy}>© 2026 Wanderly. Made for travelers.</p>
         <div style={{ display: 'flex', gap: 24 }}>
           {['Privacy', 'Terms', 'Contact'].map(item => (
             <a key={item} href="#" style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }} onClick={e => e.preventDefault()}>

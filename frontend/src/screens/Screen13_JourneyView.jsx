@@ -33,10 +33,10 @@ export const Screen13_JourneyView = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c8622a' }}>
-            ✦ Route & Progression
+            Route & Progression
           </span>
           <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-            Trip Journey & Route Line 🗺️
+            Trip Journey & Route Line
           </h1>
           <p style={{ fontSize: '0.88rem', color: '#64748b', marginTop: '4px' }}>
             {selectedTrip ? selectedTrip.name : 'Japan Adventure'} • {stops.length} Stops Progression

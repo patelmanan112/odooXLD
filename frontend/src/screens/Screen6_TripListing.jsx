@@ -9,11 +9,11 @@ import { useApp } from '../context/AppContext';
 
 /* ─── Status config ──────────────────────── */
 const S = {
-  Ongoing:   { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', dot: '#10B981', emoji: '🛫' },
-  Upcoming:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', emoji: '📅' },
-  Planned:   { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', emoji: '📅' },
-  Draft:     { color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB', dot: '#9CA3AF', emoji: '📝' },
-  Completed: { color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE', dot: '#3B82F6', emoji: '✅' },
+  Ongoing:   { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', dot: '#10B981', emoji: '' },
+  Upcoming:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', emoji: '' },
+  Planned:   { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', emoji: '' },
+  Draft:     { color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB', dot: '#9CA3AF', emoji: '' },
+  Completed: { color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE', dot: '#3B82F6', emoji: '' },
 };
 
 /* ─── CARD VIEW ──────────────────────────── */
@@ -63,7 +63,7 @@ const TripCard = ({ trip, index, onView, onEdit, onDelete }) => {
             backgroundColor: cfg.bg, color: cfg.color,
             border: `1px solid ${cfg.border}`,
           }}>
-            {cfg.emoji} {cfg.label || trip.status}
+            {cfg.label || trip.status}
           </span>
         </div>
 
@@ -558,7 +558,7 @@ export const Screen6_TripListing = () => {
               backgroundColor: '#FAFAF8',
             }}
           >
-            <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>🧳</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Plane size={48} color="#9CA3AF" /></div>
             <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
               {search ? 'No trips match your search' : 'No trips yet'}
             </h3>

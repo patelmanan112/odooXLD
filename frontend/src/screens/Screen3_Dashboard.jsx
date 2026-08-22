@@ -60,7 +60,7 @@ export const Screen3_Dashboard = () => {
 
   const handleAI = (e) => {
     e.preventDefault();
-    if (!aiPrompt.trim()) { showToast('Tell me where you want to go ✈️'); return; }
+    if (!aiPrompt.trim()) { showToast('Tell me where you want to go'); return; }
     setAiLoading(true);
     showToast(`Building your itinerary for "${aiPrompt}"…`);
     setTimeout(() => { setAiLoading(false); navigate('/itinerary/builder'); }, 1200);
@@ -165,7 +165,7 @@ export const Screen3_Dashboard = () => {
             {/* top row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Chip color="#fff" bg="rgba(255,255,255,0.2)">
-                {nextTrip ? `✈️ ${nextTrip.status}` : 'No trips yet'}
+                {nextTrip ? `${nextTrip.status}` : 'No trips yet'}
               </Chip>
               {nextTrip && (
                 <div style={{
@@ -536,7 +536,7 @@ export const Screen3_Dashboard = () => {
           backgroundColor: '#FFFFFF', borderRadius: 24,
           border: '2px dashed #E2DDD5',
         }}>
-          <div style={{ fontSize: '3rem', marginBottom: 12 }}>✈️</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Plane size={40} color="#9CA3AF" /></div>
           <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 800, color: '#1A1A2E', marginBottom: 8 }}>
             Your first adventure awaits
           </h2>

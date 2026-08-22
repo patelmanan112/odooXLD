@@ -308,7 +308,7 @@ export const AppProvider = ({ children }) => {
 
       setToken(data.token);
       setUser(formattedUser);
-      showToast(`Welcome, ${formattedUser.name}! Logged in with Google. ✨`);
+      showToast(`Welcome, ${formattedUser.name}! Logged in with Google.`);
       navigate('/dashboard');
       return { success: true };
     } catch (err) {
@@ -361,7 +361,7 @@ export const AppProvider = ({ children }) => {
   const addTrip = (newTrip) => {
     setTrips(prev => [newTrip, ...prev]);
     setSelectedTripId(newTrip.id);
-    showToast(`Trip "${newTrip.name}" created successfully! 🎉`);
+    showToast(`Trip "${newTrip.name}" created successfully!`);
   };
 
   const selectedTrip = trips.find(t => t.id === selectedTripId) || trips[0];

@@ -55,7 +55,7 @@ export const TripNavigation = () => {
       navigator.share({ title: selectedTrip?.name || 'Wanderly Trip', url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      showToast('Trip link copied to clipboard! 📋');
+      showToast('Trip link copied to clipboard!');
     }
   };
 
