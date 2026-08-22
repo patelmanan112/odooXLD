@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   MapPin, Calendar, Share2, Edit3, Download,
   DollarSign, Clock, ArrowLeft, Wallet, CheckCircle2,
@@ -36,8 +36,34 @@ const Dot = ({ color }) => (
 );
 
 export const ItineraryViewBudget = () => {
-  const { selectedTrip, showToast, setCurrentScreen } = useApp();
+  const { trips, selectedTrip, setSelectedTripId, showToast } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tripId = params.get('id');
+    if (tripId && trips?.length > 0) {
+      const found = trips.find(t => String(t.id) === String(tripId));
+      if (found && (!selectedTrip || String(selectedTrip.id) !== String(tripId))) {
+        setSelectedTripId(found.id);
+      }
+    }
+  }, [location.search, trips, selectedTrip, setSelectedTripId]);
+
+  const handleShareLink = () => {
+    if (!selectedTrip?.id) return;
+    const url = `${window.location.origin}/itinerary/view?id=${selectedTrip.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Share link copied to clipboard!');
+    }).catch(() => {
+      showToast('Failed to copy link');
+    });
+  };
+
+  const handleDownloadPDF = () => {
+    window.print();
+  };
 
   /* ── If no trip selected, show a friendly message ── */
   if (!selectedTrip) {
@@ -147,7 +173,7 @@ export const ItineraryViewBudget = () => {
         {/* action buttons */}
         <div style={{ position: 'absolute', top: 20, right: 24, display: 'flex', gap: 8 }}>
           <button
-            onClick={() => showToast('Share link copied!')}
+            onClick={handleShareLink}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer' }}
           >
             <Share2 size={14} /> Share
@@ -409,13 +435,13 @@ export const ItineraryViewBudget = () => {
                 <Edit3 size={15} /> Edit Itinerary
               </button>
               <button
-                onClick={() => showToast('Downloading PDF...')}
+                onClick={handleDownloadPDF}
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <Download size={15} /> Download PDF
               </button>
               <button
-                onClick={() => showToast('Share link copied!')}
+                onClick={handleShareLink}
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <Share2 size={15} /> Share Link
