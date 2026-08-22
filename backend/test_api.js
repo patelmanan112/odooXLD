@@ -115,8 +115,36 @@ async function runTests() {
       throw new Error('Unauthenticated request expected 401 status');
     }
 
-    // 10. Create Trip for User A
-    console.log('\n--- 8. Create Trip (User A) ---');
+    // 10. Trip Validation Error Tests
+    console.log('\n--- 8. Trip Validation Error Tests ---');
+    // Invalid status
+    const invalidStatusRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Test Trip', status: 'INVALID_STATUS' })
+    });
+    if (invalidStatusRes.status !== 400) throw new Error('Invalid status expected 400');
+
+    // Negative estimatedBudget
+    const negEstRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Test Trip', estimatedBudget: -500 })
+    });
+    if (negEstRes.status !== 400) throw new Error('Negative budget expected 400');
+
+    // Invalid date range (endDate before startDate)
+    const invalidDatesRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Test Trip', startDate: '2026-10-10', endDate: '2026-10-01' })
+    });
+    if (invalidDatesRes.status !== 400) throw new Error('Invalid date range expected 400');
+
+    console.log('Validation error tests passed!');
+
+    // 11. Create Basic Trip (User A)
+    console.log('\n--- 9. Create Basic Trip (User A) ---');
     const createTripRes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: {
@@ -131,25 +159,63 @@ async function runTests() {
       })
     });
     const tripAData = await createTripRes.json();
-    console.log('Create Trip Response:', createTripRes.status, tripAData);
-    if (createTripRes.status !== 201 || !tripAData.id) {
-      throw new Error('Create trip failed');
+    console.log('Create Basic Trip Response:', createTripRes.status, tripAData);
+    if (createTripRes.status !== 201 || !tripAData.id || tripAData.status !== 'DRAFT') {
+      throw new Error('Create basic trip failed');
     }
     const tripId = tripAData.id;
 
-    // 11. List Trips (User A)
-    console.log('\n--- 9. Get Trips (User A) ---');
+    // 12. Create Enhanced Trip with all fields (User A)
+    console.log('\n--- 10. Create Enhanced Trip (User A) ---');
+    const createEnhancedRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenA}`
+      },
+      body: JSON.stringify({
+        title: 'Japan Autumn Adventure',
+        description: 'Tokyo and Kyoto in Autumn',
+        startDate: '2026-11-01',
+        endDate: '2026-11-12',
+        estimatedBudget: 150000,
+        spentBudget: 45000,
+        status: 'UPCOMING',
+        coverPhoto: 'https://example.com/japan.jpg',
+        isPublic: true
+      })
+    });
+    const tripEnhancedData = await createEnhancedRes.json();
+    console.log('Create Enhanced Trip Response:', createEnhancedRes.status, tripEnhancedData);
+    if (
+      createEnhancedRes.status !== 201 ||
+      tripEnhancedData.estimatedBudget !== 150000 ||
+      tripEnhancedData.status !== 'UPCOMING' ||
+      tripEnhancedData.isPublic !== true
+    ) {
+      throw new Error('Create enhanced trip failed');
+    }
+
+    // 13. List Trips with Status Filtering (User A)
+    console.log('\n--- 11. Get Trips & Status Filtering (User A) ---');
     const getTripsARes = await fetch(`${baseUrl}/trips`, {
       headers: { 'Authorization': `Bearer ${tokenA}` }
     });
     const tripsA = await getTripsARes.json();
-    console.log('Get Trips A Response:', getTripsARes.status, 'Count:', tripsA.length);
-    if (tripsA.length !== 1 || tripsA[0].id !== tripId) {
-      throw new Error('Get trips for User A unexpected result');
+    console.log('All Trips Count for User A:', tripsA.length);
+    if (tripsA.length !== 2) throw new Error('Expected 2 trips for User A');
+
+    const getUpcomingRes = await fetch(`${baseUrl}/trips?status=UPCOMING`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const upcomingTrips = await getUpcomingRes.json();
+    console.log('Upcoming Trips Count:', upcomingTrips.length, upcomingTrips[0]?.title);
+    if (upcomingTrips.length !== 1 || upcomingTrips[0].title !== 'Japan Autumn Adventure') {
+      throw new Error('Status filter UPCOMING failed');
     }
 
-    // 12. List Trips (User B - should be empty)
-    console.log('\n--- 10. Get Trips (User B) ---');
+    // 14. List Trips (User B - should be empty)
+    console.log('\n--- 12. Get Trips (User B) ---');
     const getTripsBRes = await fetch(`${baseUrl}/trips`, {
       headers: { 'Authorization': `Bearer ${tokenB}` }
     });
@@ -160,7 +226,7 @@ async function runTests() {
     }
 
     // Seed temporary City & Activity to test Full Itinerary Retrieval
-    console.log('\n--- 11. Seeding City & Activity for Itinerary Test ---');
+    console.log('\n--- 13. Seeding City & Activity for Itinerary Test ---');
     const city = await prisma.city.create({
       data: {
         name: 'Udaipur',
@@ -200,18 +266,17 @@ async function runTests() {
       }
     });
 
-    // 13. GET /api/trips/:id (User A - Full Itinerary)
-    console.log('\n--- 12. Get Trip By ID (User A - Full Itinerary) ---');
+    // 15. GET /api/trips/:id (User A - Full Itinerary with enhanced fields)
+    console.log('\n--- 14. Get Trip By ID (User A - Full Itinerary) ---');
     const fullTripRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       headers: { 'Authorization': `Bearer ${tokenA}` }
     });
     const fullTripData = await fullTripRes.json();
     console.log('Full Trip Response Status:', fullTripRes.status);
     console.log('Full Trip Title:', fullTripData.title);
+    console.log('Full Trip Status:', fullTripData.status);
+    console.log('Full Trip Estimated Budget:', fullTripData.estimatedBudget);
     console.log('Full Trip Stops Count:', fullTripData.stops?.length);
-    console.log('First Stop City:', fullTripData.stops?.[0]?.city?.name);
-    console.log('First Stop Activity Name:', fullTripData.stops?.[0]?.tripActivities?.[0]?.activity?.name);
-    console.log('First Stop Activity Cost Type:', typeof fullTripData.stops?.[0]?.tripActivities?.[0]?.activity?.estimatedCost, fullTripData.stops?.[0]?.tripActivities?.[0]?.activity?.estimatedCost);
 
     if (
       fullTripRes.status !== 200 ||
@@ -222,8 +287,8 @@ async function runTests() {
       throw new Error('Full nested itinerary endpoint test failed!');
     }
 
-    // 14. User B Access User A Trip (Ownership Enforcement)
-    console.log('\n--- 13. User B Access User A Trip (Ownership Isolation) ---');
+    // 16. User B Access User A Trip (Ownership Enforcement)
+    console.log('\n--- 15. User B Access User A Trip (Ownership Isolation) ---');
     const userBAccessRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       headers: { 'Authorization': `Bearer ${tokenB}` }
     });
@@ -232,8 +297,8 @@ async function runTests() {
       throw new Error('User B was able to access User A trip!');
     }
 
-    // 15. PUT /api/trips/:id (Update Trip)
-    console.log('\n--- 14. Update Trip (User A) ---');
+    // 17. PUT /api/trips/:id (Update Trip - Budgets, Status, Visibility)
+    console.log('\n--- 16. Update Trip (User A) ---');
     const updateRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       method: 'PUT',
       headers: {
@@ -242,17 +307,49 @@ async function runTests() {
       },
       body: JSON.stringify({
         title: 'Updated Rajasthan Expedition',
-        description: 'Extended tour'
+        estimatedBudget: 120000,
+        spentBudget: 35000,
+        status: 'ONGOING',
+        isPublic: true,
+        coverPhoto: 'https://example.com/rajasthan.jpg'
       })
     });
     const updateData = await updateRes.json();
-    console.log('Update Trip Response:', updateRes.status, updateData.title);
-    if (updateRes.status !== 200 || updateData.title !== 'Updated Rajasthan Expedition') {
+    console.log('Update Trip Response:', updateRes.status, updateData);
+    if (
+      updateRes.status !== 200 ||
+      updateData.title !== 'Updated Rajasthan Expedition' ||
+      updateData.estimatedBudget !== 120000 ||
+      updateData.status !== 'ONGOING' ||
+      updateData.isPublic !== true
+    ) {
       throw new Error('Update trip failed!');
     }
 
-    // 16. Cities API Test
-    console.log('\n--- 15. GET /api/cities & Search ---');
+    // 18. Partial Update Verification (Unspecified fields remain unchanged)
+    console.log('\n--- 17. Partial Update Verification ---');
+    const partialUpdateRes = await fetch(`${baseUrl}/trips/${tripId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenA}`
+      },
+      body: JSON.stringify({
+        spentBudget: 40000
+      })
+    });
+    const partialData = await partialUpdateRes.json();
+    console.log('Partial Update Response:', partialData.spentBudget, partialData.title, partialData.status);
+    if (
+      partialData.spentBudget !== 40000 ||
+      partialData.title !== 'Updated Rajasthan Expedition' ||
+      partialData.status !== 'ONGOING'
+    ) {
+      throw new Error('Partial update broke existing field values!');
+    }
+
+    // 19. Cities API Test
+    console.log('\n--- 18. GET /api/cities & Search ---');
     const citiesRes = await fetch(`${baseUrl}/cities`);
     const citiesData = await citiesRes.json();
     console.log('Cities count:', citiesData.length);
@@ -264,8 +361,8 @@ async function runTests() {
       throw new Error('City search failed!');
     }
 
-    // 17. Activities API Test
-    console.log('\n--- 16. GET /api/activities with filters ---');
+    // 20. Activities API Test
+    console.log('\n--- 19. GET /api/activities with filters ---');
     const actCityRes = await fetch(`${baseUrl}/activities?cityId=${city.id}`);
     const actCityData = await actCityRes.json();
     console.log('Activities by cityId count:', actCityData.length, actCityData[0]?.name);
@@ -278,8 +375,8 @@ async function runTests() {
       throw new Error('Activity filters test failed!');
     }
 
-    // 18. Delete Trip
-    console.log('\n--- 17. DELETE /api/trips/:id ---');
+    // 21. Delete Trip
+    console.log('\n--- 20. DELETE /api/trips/:id ---');
     const deleteRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${tokenA}` }
