@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Briefcase, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Briefcase, Plus, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MONTH_NAMES = [
@@ -13,25 +13,45 @@ export const CalendarView = () => {
   const { trips, selectedTrip, showToast } = useApp();
   const navigate = useNavigate();
 
-  /* Current Active View Month/Year State */
+  /* ── Auto-Select Active Trip Month ── */
   const [currentDate, setCurrentDate] = useState(() => {
     if (selectedTrip && selectedTrip.startDate) {
-      const d = new Date(selectedTrip.startDate);
-      if (!isNaN(d.getTime())) return d;
+      const parts = String(selectedTrip.startDate).split('-');
+      if (parts.length === 3) {
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+      }
     }
     if (trips && trips.length > 0 && trips[0].startDate) {
-      const d = new Date(trips[0].startDate);
-      if (!isNaN(d.getTime())) return d;
+      const parts = String(trips[0].startDate).split('-');
+      if (parts.length === 3) {
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+      }
     }
     return new Date();
   });
 
   const [selectedDayNumber, setSelectedDayNumber] = useState(new Date().getDate());
 
+  /* If trips change and currentDate isn't aligned, auto-align to trip month */
+  useEffect(() => {
+    const activeTrip = selectedTrip || (trips && trips.length > 0 ? trips[0] : null);
+    if (activeTrip && activeTrip.startDate) {
+      const parts = String(activeTrip.startDate).split('-');
+      if (parts.length === 3) {
+        const tripYear = parseInt(parts[0], 10);
+        const tripMonth = parseInt(parts[1], 10) - 1;
+        const tripDay = parseInt(parts[2], 10) || 1;
+        
+        setCurrentDate(new Date(tripYear, tripMonth, 1));
+        setSelectedDayNumber(tripDay);
+      }
+    }
+  }, [trips, selectedTrip]);
+
   const year = currentDate.getFullYear();
   const monthIndex = currentDate.getMonth();
 
-  /* Navigate Months */
+  /* Month Navigation */
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   };
@@ -51,38 +71,48 @@ export const CalendarView = () => {
   const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // 0 = Sun, 1 = Mon ...
   const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Mon = 0 ... Sun = 6
 
-  /* ── Dynamic Parsing of REAL Trips ONLY from Context ── */
-  const { activeTripDayNumbers, eventsByDayNumber } = useMemo(() => {
+  /* ── Parse Real Trips and Activities from Context ── */
+  const { activeTripDayNumbers, eventsByDayNumber, totalTripsInMonth } = useMemo(() => {
     const activeDays = new Set();
     const eventsMap = {};
+    let monthTripCount = 0;
 
-    // STRICTLY return empty if no trips exist in My Trips
     if (!trips || trips.length === 0) {
-      return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap };
+      return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap, totalTripsInMonth: 0 };
     }
 
     trips.forEach(trip => {
-      if (!trip.startDate) return;
-      const start = new Date(trip.startDate);
-      const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + (trip.durationDays || 1) * 86400000);
+      const sStr = String(trip.startDate || '').split('T')[0];
+      const eStr = String(trip.endDate || sStr).split('T')[0];
 
-      if (isNaN(start.getTime())) return;
+      if (!sStr) return;
 
-      // Check each day of active month
+      const [sYear, sMonth, sDay] = sStr.split('-').map(n => parseInt(n, 10));
+      const [eYear, eMonth, eDay] = (eStr || sStr).split('-').map(n => parseInt(n, 10));
+
+      if (!sYear || !sMonth || !sDay) return;
+
+      const startDateObj = new Date(sYear, sMonth - 1, sDay);
+      const endDateObj = new Date(eYear || sYear, (eMonth || sMonth) - 1, eDay || sDay + 2);
+
+      // Check if trip overlaps current view month/year
+      let isTripInCurrentMonth = false;
+
       for (let dayNum = 1; dayNum <= daysInMonthCount; dayNum++) {
-        const thisDate = new Date(year, monthIndex, dayNum);
+        const thisDateObj = new Date(year, monthIndex, dayNum);
 
-        const tDate = new Date(thisDate.getFullYear(), thisDate.getMonth(), thisDate.getDate()).getTime();
-        const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-        const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+        const tTime = thisDateObj.getTime();
+        const sTime = startDateObj.getTime();
+        const eTime = endDateObj.getTime();
 
-        if (tDate >= sDate && tDate <= eDate) {
+        if (tTime >= sTime && tTime <= eTime) {
           activeDays.add(dayNum);
+          isTripInCurrentMonth = true;
 
           if (!eventsMap[dayNum]) eventsMap[dayNum] = [];
 
-          // Map actual activities if available in trip days
-          const dayIndex = Math.round((tDate - sDate) / 86400000);
+          // Calculate day index within trip
+          const dayIndex = Math.round((tTime - sTime) / 86400000);
           const tripDayObj = trip.days ? trip.days[dayIndex] : null;
 
           if (tripDayObj && tripDayObj.activities && tripDayObj.activities.length > 0) {
@@ -91,19 +121,19 @@ export const CalendarView = () => {
                 id: act.id || `act-${Math.random()}`,
                 title: act.title || act.name,
                 time: act.time || '10:00 AM',
-                location: trip.destination || 'Destination',
+                location: trip.destination || 'Spot',
                 category: act.category || 'Sightseeing',
                 color: getCategoryColor(act.category),
                 tripName: trip.name || trip.title
               });
             });
           } else {
-            // Display only the real trip entry
+            // Main Trip Bar Event
             eventsMap[dayNum].push({
               id: `trip-${trip.id}-${dayNum}`,
-              title: trip.name || trip.title,
+              title: `${trip.name || trip.title} (Day ${dayIndex + 1})`,
               time: 'All Day',
-              location: trip.destination || '',
+              location: trip.destination || 'Destination',
               category: 'Trip',
               color: '#E85D26',
               tripName: trip.name || trip.title
@@ -111,9 +141,11 @@ export const CalendarView = () => {
           }
         }
       }
+
+      if (isTripInCurrentMonth) monthTripCount++;
     });
 
-    return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap };
+    return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap, totalTripsInMonth: monthTripCount };
   }, [trips, year, monthIndex, daysInMonthCount]);
 
   const handleConnectCalendar = () => {
@@ -134,10 +166,10 @@ export const CalendarView = () => {
         <div style={{ flex: 3, background: '#FFFFFF', borderRadius: '24px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #EDE9E2' }}>
           
           {/* Calendar Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
               <p style={{ fontSize: '0.78rem', fontWeight: 800, color: '#E85D26', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>
-                Schedule & Itinerary Sync
+                My Trips Schedule & Sync
               </p>
               <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 'bold', color: '#1A1A2E', margin: 0 }}>
                 My Trips Calendar
@@ -164,6 +196,28 @@ export const CalendarView = () => {
               </button>
             </div>
           </div>
+
+          {/* Month Trips Summary Badge */}
+          {trips && trips.length > 0 && (
+            <div style={{ backgroundColor: '#FEF0E7', border: '1px solid #FDDCC9', borderRadius: '12px', padding: '10px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.85rem', color: '#E85D26', fontWeight: 800 }}>
+                ✈️ Showing {totalTripsInMonth} active trip{totalTripsInMonth !== 1 ? 's' : ''} in {MONTH_NAMES[monthIndex]} {year}
+              </span>
+              <button
+                onClick={() => {
+                  const firstTrip = trips[0];
+                  if (firstTrip.startDate) {
+                    const parts = String(firstTrip.startDate).split('-');
+                    setCurrentDate(new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1));
+                    setSelectedDayNumber(parseInt(parts[2], 10) || 1);
+                  }
+                }}
+                style={{ background: 'none', border: 'none', color: '#E85D26', fontSize: '0.78rem', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Jump to Trip Dates
+              </button>
+            </div>
+          )}
 
           {/* Days of week header */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '12px' }}>
@@ -192,7 +246,7 @@ export const CalendarView = () => {
                   key={dayNum}
                   onClick={() => setSelectedDayNumber(dayNum)}
                   style={{ 
-                    minHeight: '92px', 
+                    minHeight: '96px', 
                     borderRadius: '14px', 
                     padding: '10px',
                     cursor: 'pointer',
@@ -209,24 +263,25 @@ export const CalendarView = () => {
                     {dayNum}
                   </div>
                   
+                  {/* Event Badges inside Date Cells */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {dayEvents.slice(0, 2).map((ev, idx) => (
                       <div key={idx} style={{ 
                         fontSize: '0.7rem',
                         padding: '3px 6px',
                         borderRadius: '6px', 
-                        background: isToday ? 'rgba(255,255,255,0.2)' : `${ev.color}18`, 
-                        color: isToday ? '#FFF' : ev.color, 
+                        background: isToday ? 'rgba(255,255,255,0.25)' : (ev.category === 'Trip' ? '#E85D26' : `${ev.color}20`), 
+                        color: (isToday || ev.category === 'Trip') ? '#FFFFFF' : ev.color, 
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        fontWeight: 700
+                        fontWeight: 800
                       }}>
                         {ev.title}
                       </div>
                     ))}
                     {dayEvents.length > 2 && (
-                      <div style={{ fontSize: '0.68rem', color: isToday ? '#FCD34D' : '#9CA3AF', fontWeight: 700 }}>
+                      <div style={{ fontSize: '0.68rem', color: isToday ? '#FCD34D' : '#E85D26', fontWeight: 800 }}>
                         +{dayEvents.length - 2} more
                       </div>
                     )}
@@ -296,7 +351,7 @@ export const CalendarView = () => {
                     No trip events for this date
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#9CA3AF', marginBottom: '16px' }}>
-                    Create a new trip to schedule events on your calendar.
+                    Select a date with an active trip highlight to view events.
                   </div>
                   <button onClick={() => navigate('/trips/new')} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>
                     <Plus size={14} /> Create Trip
