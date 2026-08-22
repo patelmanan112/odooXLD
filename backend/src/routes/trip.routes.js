@@ -11,8 +11,12 @@ import {
   updateTripStop,
   deleteTripStop,
   reorderTripStops,
-  assignActivityToStop,
-  removeActivityFromStop,
+  createTripActivity,
+  getTripStopActivities,
+  getSingleTripActivity,
+  updateTripActivity,
+  deleteTripActivity,
+  reorderTripActivities,
   getTripBudget
 } from '../controllers/trip.controller.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
@@ -36,11 +40,20 @@ router.get('/:id/stops/:stopId', getSingleTripStop);
 router.put('/:id/stops/:stopId', updateTripStop);
 router.delete('/:id/stops/:stopId', deleteTripStop);
 
+/* Trip Activities Scheduling */
+router.post('/:id/stops/:stopId/activities', createTripActivity);
+router.get('/:id/stops/:stopId/activities', getTripStopActivities);
+router.put('/:id/stops/:stopId/activities/reorder', reorderTripActivities);
+router.patch('/:id/stops/:stopId/activities/reorder', reorderTripActivities);
+router.get('/:id/stops/:stopId/activities/:tripActivityId', getSingleTripActivity);
+router.put('/:id/stops/:stopId/activities/:tripActivityId', updateTripActivity);
+router.delete('/:id/stops/:stopId/activities/:tripActivityId', deleteTripActivity);
+
+/* Direct Stop Activities Routes */
+router.post('/stops/:stopId/activities', createTripActivity);
+router.delete('/stops/:stopId/activities/:activityId', deleteTripActivity);
+
 /* Budget Calculation */
 router.get('/:id/budget', getTripBudget);
-
-/* Trip Activities */
-router.post('/stops/:stopId/activities', assignActivityToStop);
-router.delete('/stops/:stopId/activities/:activityId', removeActivityFromStop);
 
 export default router;

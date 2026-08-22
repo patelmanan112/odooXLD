@@ -1,6 +1,7 @@
 import prisma from '../config/prisma.js';
 
 const VALID_STATUSES = ['DRAFT', 'UPCOMING', 'ONGOING', 'COMPLETED'];
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const formatTrip = (trip) => {
   if (!trip) return null;
@@ -18,6 +19,44 @@ const formatStop = (stop) => {
     sectionBudget: stop.sectionBudget !== null && stop.sectionBudget !== undefined ? Number(stop.sectionBudget) : null
   };
 };
+
+const formatTripActivity = (ta) => {
+  if (!ta) return null;
+  return {
+    ...ta,
+    activity: ta.activity ? {
+      ...ta.activity,
+      estimatedCost: ta.activity.estimatedCost !== undefined && ta.activity.estimatedCost !== null ? Number(ta.activity.estimatedCost) : 0
+    } : null
+  };
+};
+
+const verifyStopOwnership = async (userId, tripId, stopId) => {
+  if (tripId) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId }
+    });
+    if (!trip) return { error: { status: 404, message: 'Trip not found or permission denied.' } };
+
+    const stop = await prisma.tripStop.findFirst({
+      where: { id: stopId, tripId }
+    });
+    if (!stop) return { error: { status: 404, message: 'Trip stop not found in specified trip.' } };
+
+    return { stop, trip };
+  } else {
+    const stop = await prisma.tripStop.findFirst({
+      where: { id: stopId, trip: { userId } },
+      include: { trip: true }
+    });
+    if (!stop) return { error: { status: 404, message: 'Trip stop not found or permission denied.' } };
+    return { stop, trip: stop.trip };
+  }
+};
+
+/* ==========================================
+   TRIP CRUD APIs
+   ========================================== */
 
 export const createTrip = async (req, res, next) => {
   try {
@@ -185,6 +224,11 @@ export const getTripById = async (req, res, next) => {
               }
             },
             tripActivities: {
+              orderBy: [
+                { date: 'asc' },
+                { time: 'asc' },
+                { order: 'asc' }
+              ],
               include: {
                 activity: {
                   select: {
@@ -194,7 +238,8 @@ export const getTripById = async (req, res, next) => {
                     category: true,
                     estimatedCost: true,
                     duration: true,
-                    imageUrl: true
+                    imageUrl: true,
+                    effortLevel: true
                   }
                 }
               }
@@ -503,7 +548,6 @@ export const createTripStop = async (req, res, next) => {
   }
 };
 
-// Alias addTripStop to createTripStop for backwards compatibility
 export const addTripStop = createTripStop;
 
 export const getTripStops = async (req, res, next) => {
@@ -778,37 +822,103 @@ export const reorderTripStops = async (req, res, next) => {
 };
 
 /* ==========================================
-   TRIP ACTIVITY APIs
+   PART 3: TRIP ACTIVITY APIs
    ========================================== */
 
-export const assignActivityToStop = async (req, res, next) => {
+export const createTripActivity = async (req, res, next) => {
   try {
-    const { stopId } = req.params;
-    const { activityId, date, time } = req.body;
+    const { id: tripId, stopId } = req.params;
+    const { activityId, date, time, order } = req.body;
 
-    if (!activityId) {
+    if (!activityId || typeof activityId !== 'string' || !activityId.trim()) {
       return res.status(400).json({ error: 'Validation Error', message: 'activityId is required.' });
+    }
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
+    }
+    const { stop } = ownership;
+
+    const activity = await prisma.activity.findUnique({
+      where: { id: activityId.trim() }
+    });
+
+    if (!activity) {
+      return res.status(404).json({ error: 'Not Found', message: 'Activity not found in catalog.' });
+    }
+
+    const existingTA = await prisma.tripActivity.findFirst({
+      where: { tripStopId: stopId, activityId: activityId.trim() }
+    });
+
+    if (existingTA) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'This activity is already assigned to this trip stop.'
+      });
+    }
+
+    let parsedDate = null;
+    if (date) {
+      parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ error: 'Validation Error', message: 'Invalid date format.' });
+      }
+      if (parsedDate < stop.startDate || parsedDate > stop.endDate) {
+        return res.status(400).json({ error: 'Validation Error', message: 'Activity date must fall within the TripStop date range.' });
+      }
+    }
+
+    let formattedTime = null;
+    if (time !== undefined && time !== null && String(time).trim() !== '') {
+      const trimmedTime = String(time).trim();
+      if (!TIME_REGEX.test(trimmedTime)) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Invalid time format. Expected HH:mm in 24-hour format (e.g. 09:00, 14:30).'
+        });
+      }
+      formattedTime = trimmedTime;
+    }
+
+    let itemOrder = 0;
+    if (order !== undefined && order !== null) {
+      const numOrder = Number(order);
+      if (!Number.isInteger(numOrder) || numOrder < 0) {
+        return res.status(400).json({ error: 'Validation Error', message: 'order must be a non-negative integer.' });
+      }
+      itemOrder = numOrder;
+    } else {
+      const count = await prisma.tripActivity.count({ where: { tripStopId: stopId } });
+      itemOrder = count + 1;
     }
 
     const tripActivity = await prisma.tripActivity.create({
       data: {
         tripStopId: stopId,
-        activityId,
-        date: date ? new Date(date) : null,
-        time: time || null
+        activityId: activityId.trim(),
+        date: parsedDate,
+        time: formattedTime,
+        order: itemOrder
       },
       include: {
-        activity: true
+        activity: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            estimatedCost: true,
+            duration: true,
+            imageUrl: true,
+            effortLevel: true
+          }
+        }
       }
     });
 
-    return res.status(201).json({
-      ...tripActivity,
-      activity: {
-        ...tripActivity.activity,
-        estimatedCost: Number(tripActivity.activity.estimatedCost)
-      }
-    });
+    return res.status(201).json(formatTripActivity(tripActivity));
   } catch (error) {
     if (error.code === 'P2002') {
       return res.status(409).json({
@@ -820,22 +930,272 @@ export const assignActivityToStop = async (req, res, next) => {
   }
 };
 
-export const removeActivityFromStop = async (req, res, next) => {
-  try {
-    const { stopId, activityId } = req.params;
+// Legacy alias
+export const assignActivityToStop = createTripActivity;
 
-    const deleted = await prisma.tripActivity.deleteMany({
-      where: {
-        tripStopId: stopId,
-        activityId
+export const getTripStopActivities = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId } = req.params;
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
+    }
+
+    const activities = await prisma.tripActivity.findMany({
+      where: { tripStopId: stopId },
+      orderBy: [
+        { date: 'asc' },
+        { time: 'asc' },
+        { order: 'asc' }
+      ],
+      include: {
+        activity: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            estimatedCost: true,
+            duration: true,
+            imageUrl: true,
+            effortLevel: true
+          }
+        }
       }
     });
 
-    if (deleted.count === 0) {
-      return res.status(404).json({ error: 'Not Found', message: 'Activity assignment not found.' });
+    return res.status(200).json(activities.map(formatTripActivity));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSingleTripActivity = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId, tripActivityId } = req.params;
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
     }
 
-    return res.status(200).json({ message: 'Activity removed from stop successfully.' });
+    const tripActivity = await prisma.tripActivity.findFirst({
+      where: { id: tripActivityId, tripStopId: stopId },
+      include: {
+        activity: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            estimatedCost: true,
+            duration: true,
+            imageUrl: true,
+            effortLevel: true
+          }
+        }
+      }
+    });
+
+    if (!tripActivity) {
+      return res.status(404).json({ error: 'Not Found', message: 'Trip activity not found in specified stop.' });
+    }
+
+    return res.status(200).json(formatTripActivity(tripActivity));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTripActivity = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId, tripActivityId } = req.params;
+    const { activityId, date, time, order } = req.body;
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
+    }
+    const { stop } = ownership;
+
+    const existingTA = await prisma.tripActivity.findFirst({
+      where: { id: tripActivityId, tripStopId: stopId }
+    });
+
+    if (!existingTA) {
+      return res.status(404).json({ error: 'Not Found', message: 'Trip activity not found in specified stop.' });
+    }
+
+    const updateData = {};
+
+    if (activityId !== undefined) {
+      if (typeof activityId !== 'string' || !activityId.trim()) {
+        return res.status(400).json({ error: 'Validation Error', message: 'activityId must be a non-empty string.' });
+      }
+      const act = await prisma.activity.findUnique({ where: { id: activityId.trim() } });
+      if (!act) {
+        return res.status(404).json({ error: 'Not Found', message: 'Activity not found in catalog.' });
+      }
+      const conflict = await prisma.tripActivity.findFirst({
+        where: { tripStopId: stopId, activityId: activityId.trim(), id: { not: tripActivityId } }
+      });
+      if (conflict) {
+        return res.status(409).json({ error: 'Conflict', message: 'This activity is already assigned to this trip stop.' });
+      }
+      updateData.activityId = activityId.trim();
+    }
+
+    if (date !== undefined) {
+      if (date === null) {
+        updateData.date = null;
+      } else {
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ error: 'Validation Error', message: 'Invalid date format.' });
+        }
+        if (parsedDate < stop.startDate || parsedDate > stop.endDate) {
+          return res.status(400).json({ error: 'Validation Error', message: 'Activity date must fall within the TripStop date range.' });
+        }
+        updateData.date = parsedDate;
+      }
+    }
+
+    if (time !== undefined) {
+      if (time === null || String(time).trim() === '') {
+        updateData.time = null;
+      } else {
+        const trimmedTime = String(time).trim();
+        if (!TIME_REGEX.test(trimmedTime)) {
+          return res.status(400).json({ error: 'Validation Error', message: 'Invalid time format. Expected HH:mm in 24-hour format (e.g. 09:00, 14:30).' });
+        }
+        updateData.time = trimmedTime;
+      }
+    }
+
+    if (order !== undefined && order !== null) {
+      const numOrder = Number(order);
+      if (!Number.isInteger(numOrder) || numOrder < 0) {
+        return res.status(400).json({ error: 'Validation Error', message: 'order must be a non-negative integer.' });
+      }
+      updateData.order = numOrder;
+    }
+
+    const updatedTA = await prisma.tripActivity.update({
+      where: { id: tripActivityId },
+      data: updateData,
+      include: {
+        activity: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            estimatedCost: true,
+            duration: true,
+            imageUrl: true,
+            effortLevel: true
+          }
+        }
+      }
+    });
+
+    return res.status(200).json(formatTripActivity(updatedTA));
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Conflict', message: 'This activity is already assigned to this trip stop.' });
+    }
+    next(error);
+  }
+};
+
+export const deleteTripActivity = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId, tripActivityId, activityId } = req.params;
+    const targetId = tripActivityId || activityId;
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
+    }
+
+    const existingTA = await prisma.tripActivity.findFirst({
+      where: {
+        tripStopId: stopId,
+        OR: [
+          { id: targetId },
+          { activityId: targetId }
+        ]
+      }
+    });
+
+    if (!existingTA) {
+      return res.status(404).json({ error: 'Not Found', message: 'Trip activity assignment not found in specified stop.' });
+    }
+
+    // Delete ONLY the TripActivity record (does NOT delete underlying Activity catalog entry)
+    await prisma.tripActivity.delete({
+      where: { id: existingTA.id }
+    });
+
+    return res.status(200).json({ message: 'Trip activity deleted successfully', tripActivityId: existingTA.id });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeActivityFromStop = deleteTripActivity;
+
+export const reorderTripActivities = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId } = req.params;
+    const { activityIds, tripActivityIds } = req.body;
+
+    const ownership = await verifyStopOwnership(req.user.userId, tripId, stopId);
+    if (ownership.error) {
+      return res.status(ownership.error.status).json({ error: 'Not Found', message: ownership.error.message });
+    }
+
+    const currentTAs = await prisma.tripActivity.findMany({
+      where: { tripStopId: stopId }
+    });
+
+    const existingIds = new Set(currentTAs.map(ta => ta.id));
+
+    let orderedIds = [];
+    if (Array.isArray(activityIds)) {
+      orderedIds = activityIds;
+    } else if (Array.isArray(tripActivityIds)) {
+      orderedIds = tripActivityIds;
+    } else {
+      return res.status(400).json({ error: 'Validation Error', message: 'activityIds must be an array of TripActivity IDs.' });
+    }
+
+    if (orderedIds.length !== currentTAs.length) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Reorder payload must include all trip activities for this stop.' });
+    }
+
+    const uniqueInputIds = new Set(orderedIds);
+    if (uniqueInputIds.size !== orderedIds.length) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Duplicate tripActivity IDs are not allowed in reorder request.' });
+    }
+
+    for (const id of orderedIds) {
+      if (!existingIds.has(id)) {
+        return res.status(400).json({ error: 'Validation Error', message: `Trip activity ${id} does not belong to this stop.` });
+      }
+    }
+
+    const updates = orderedIds.map((id, index) =>
+      prisma.tripActivity.update({
+        where: { id },
+        data: { order: index + 1 }
+      })
+    );
+
+    await prisma.$transaction(updates);
+
+    return res.status(200).json({ message: 'Trip activities reordered successfully.' });
   } catch (error) {
     next(error);
   }
