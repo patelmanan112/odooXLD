@@ -117,10 +117,10 @@ export const Header = ({ onMenuToggle }) => {
               <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '12px', color: '#064e3b' }}>Notifications</div>
               <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#ecfdf5' }}>
-                  🎉 <strong>Japan Trip:</strong> Budget updated with flight deals!
+                  <strong>Japan Trip:</strong> Budget updated with flight deals!
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#f8fafc' }}>
-                  ✈️ <strong>Reminder:</strong> Goa flight leaves in 15 days.
+                  <strong>Reminder:</strong> Goa flight leaves in 15 days.
                 </div>
               </div>
             </div>

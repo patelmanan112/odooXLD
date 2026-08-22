@@ -162,7 +162,7 @@ export const Sidebar = ({ isOpenMobile, setIsOpenMobile }) => {
             Plan smarter with <Sparkles size={14} color="#f59e0b" />
           </div>
           <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#064e3b', marginBottom: '14px', lineHeight: 1.3 }}>
-            AI Trip Planner ✨
+            AI Trip Planner
           </div>
           <button 
             onClick={() => handleNavClick(4)}
