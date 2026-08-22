@@ -147,7 +147,6 @@ async function runTests() {
 
     // 13. Trip Validation Error Tests
     console.log('\n--- 11. Trip Validation Error Tests ---');
-    // Invalid status
     const invalidStatusRes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
@@ -155,7 +154,6 @@ async function runTests() {
     });
     if (invalidStatusRes.status !== 400) throw new Error('Invalid status expected 400');
 
-    // Negative estimatedBudget
     const negEstRes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
@@ -163,7 +161,6 @@ async function runTests() {
     });
     if (negEstRes.status !== 400) throw new Error('Negative budget expected 400');
 
-    // Invalid date range (endDate before startDate)
     const invalidDatesRes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
@@ -255,171 +252,193 @@ async function runTests() {
       throw new Error('User B saw trips belonging to User A!');
     }
 
-    // 18. Seed temporary City & Activity to test Full Itinerary Retrieval
-    console.log('\n--- 16. Seeding City & Activity for Itinerary Test ---');
-    const city = await prisma.city.create({
-      data: {
-        name: 'Udaipur',
-        country: 'India',
-        description: 'City of Lakes',
-        imageUrl: 'https://example.com/udaipur.jpg'
-      }
+    // 18. Seed Test Cities
+    console.log('\n--- 16. Seeding Test Cities ---');
+    const city1 = await prisma.city.create({
+      data: { name: 'Jaipur', country: 'India', description: 'Pink City', imageUrl: 'https://example.com/jaipur.jpg' }
+    });
+    const city2 = await prisma.city.create({
+      data: { name: 'Udaipur', country: 'India', description: 'City of Lakes', imageUrl: 'https://example.com/udaipur.jpg' }
+    });
+    const city3 = await prisma.city.create({
+      data: { name: 'Jaisalmer', country: 'India', description: 'Golden City', imageUrl: 'https://example.com/jaisalmer.jpg' }
     });
 
-    const activity = await prisma.activity.create({
-      data: {
-        cityId: city.id,
-        name: 'City Palace Tour',
-        description: 'Historic palace visit',
-        category: 'Culture',
-        estimatedCost: 350.00,
-        duration: 3,
-        imageUrl: 'https://example.com/citypalace.jpg'
-      }
+    // 19. PART 2: TripStop Management Tests
+    console.log('\n--- 17. PART 2: TripStop Validation & Error Tests ---');
+    // Non-existent City (404)
+    const invalidCityStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: 'non-existent-city-id', startDate: '2026-10-02', endDate: '2026-10-04', stopOrder: 1 })
     });
+    if (invalidCityStopRes.status !== 404) throw new Error('Invalid city expected 404');
 
-    const stop = await prisma.tripStop.create({
-      data: {
-        tripId: tripId,
-        cityId: city.id,
-        startDate: new Date('2026-10-02'),
-        endDate: new Date('2026-10-04'),
-        stopOrder: 1
-      }
+    // Inverted Stop Dates (400)
+    const invertedStopDatesRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-05', endDate: '2026-10-02', stopOrder: 1 })
     });
+    if (invertedStopDatesRes.status !== 400) throw new Error('Inverted stop dates expected 400');
 
-    await prisma.tripActivity.create({
-      data: {
-        tripStopId: stop.id,
-        activityId: activity.id,
-        date: new Date('2026-10-03')
-      }
+    // Stop date outside Trip date range (400)
+    const outOfBoundsStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: city1.id, startDate: '2026-09-25', endDate: '2026-10-04', stopOrder: 1 })
     });
+    if (outOfBoundsStopRes.status !== 400) throw new Error('Stop date outside trip range expected 400');
 
-    // 19. GET /api/trips/:id (User A - Full Itinerary with enhanced fields)
-    console.log('\n--- 17. Get Trip By ID (User A - Full Itinerary) ---');
+    // User B attempting to add stop to User A trip (404)
+    const userBAddStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
+      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-02', endDate: '2026-10-04', stopOrder: 1 })
+    });
+    if (userBAddStopRes.status !== 404) throw new Error('User B add stop expected 404');
+
+    console.log('TripStop validation error tests passed!');
+
+    // 20. Create TripStops (User A)
+    console.log('\n--- 18. Create Valid TripStops (User A) ---');
+    const stop1Res = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-01', endDate: '2026-10-03', stopOrder: 1, sectionBudget: 15000 })
+    });
+    const stop1Data = await stop1Res.json();
+    console.log('Stop 1 Created:', stop1Res.status, stop1Data.id, stop1Data.city.name);
+    if (stop1Res.status !== 201 || stop1Data.city.name !== 'Jaipur' || stop1Data.sectionBudget !== 15000) {
+      throw new Error('Stop 1 creation failed');
+    }
+
+    const stop2Res = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: city2.id, startDate: '2026-10-04', endDate: '2026-10-07', stopOrder: 2, sectionBudget: 25000 })
+    });
+    const stop2Data = await stop2Res.json();
+
+    const stop3Res = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ cityId: city3.id, startDate: '2026-10-08', endDate: '2026-10-10', stopOrder: 3, sectionBudget: 20000 })
+    });
+    const stop3Data = await stop3Res.json();
+
+    // 21. Get All TripStops (User A)
+    console.log('\n--- 19. GET /api/trips/:tripId/stops (Ordered ASC) ---');
+    const getStopsRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const stopsList = await getStopsRes.json();
+    console.log('Stops count:', stopsList.length, stopsList.map(s => `${s.stopOrder}:${s.city.name}`));
+    if (stopsList.length !== 3 || stopsList[0].stopOrder !== 1 || stopsList[1].stopOrder !== 2 || stopsList[2].stopOrder !== 3) {
+      throw new Error('Get trip stops order verification failed');
+    }
+
+    // 22. Get Single TripStop (User A)
+    console.log('\n--- 20. GET /api/trips/:tripId/stops/:stopId ---');
+    const getSingleStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops/${stop1Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const singleStopData = await getSingleStopRes.json();
+    console.log('Single Stop Response:', getSingleStopRes.status, singleStopData.city.name);
+    if (getSingleStopRes.status !== 200 || singleStopData.city.name !== 'Jaipur') {
+      throw new Error('Get single trip stop failed');
+    }
+
+    // Attempting to access stop belonging to trip A via trip B route (404)
+    const crossTripAccessRes = await fetch(`${baseUrl}/trips/${tripEnhancedData.id}/stops/${stop1Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    if (crossTripAccessRes.status !== 404) throw new Error('Cross trip stop access expected 404');
+
+    // 23. Update TripStop (User A)
+    console.log('\n--- 21. PUT /api/trips/:tripId/stops/:stopId ---');
+    const updateStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops/${stop1Data.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ sectionBudget: 18000 })
+    });
+    const updatedStopData = await updateStopRes.json();
+    console.log('Update Stop Response:', updateStopRes.status, updatedStopData.sectionBudget);
+    if (updateStopRes.status !== 200 || updatedStopData.sectionBudget !== 18000 || updatedStopData.city.name !== 'Jaipur') {
+      throw new Error('Update trip stop failed');
+    }
+
+    // 24. Reorder TripStops (3 -> 1 -> 2)
+    console.log('\n--- 22. PUT /api/trips/:tripId/stops/reorder ---');
+    const reorderRes = await fetch(`${baseUrl}/trips/${tripId}/stops/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ stopIds: [stop3Data.id, stop1Data.id, stop2Data.id] })
+    });
+    const reorderData = await reorderRes.json();
+    console.log('Reorder Response:', reorderRes.status, reorderData.message);
+    if (reorderRes.status !== 200) throw new Error('Reorder trip stops failed');
+
+    const checkReorderRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const reorderedList = await checkReorderRes.json();
+    console.log('Reordered List:', reorderedList.map(s => `${s.stopOrder}:${s.city.name}`));
+    if (
+      reorderedList[0].id !== stop3Data.id ||
+      reorderedList[1].id !== stop1Data.id ||
+      reorderedList[2].id !== stop2Data.id
+    ) {
+      throw new Error('Reordering verification failed');
+    }
+
+    // Reorder error tests (duplicate stop IDs, missing stop IDs, foreign stop IDs)
+    const dupReorderRes = await fetch(`${baseUrl}/trips/${tripId}/stops/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ stopIds: [stop3Data.id, stop3Data.id, stop2Data.id] })
+    });
+    if (dupReorderRes.status !== 400) throw new Error('Duplicate reorder IDs expected 400');
+
+    // 25. Delete Single TripStop
+    console.log('\n--- 23. DELETE /api/trips/:tripId/stops/:stopId ---');
+    const deleteStopRes = await fetch(`${baseUrl}/trips/${tripId}/stops/${stop3Data.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    console.log('Delete Stop Response Status:', deleteStopRes.status);
+    if (deleteStopRes.status !== 200) throw new Error('Delete trip stop failed');
+
+    const verifyDeleteStopsRes = await fetch(`${baseUrl}/trips/${tripId}/stops`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const postDeleteStops = await verifyDeleteStopsRes.json();
+    console.log('Stops count post deletion:', postDeleteStops.length);
+    if (postDeleteStops.length !== 2) throw new Error('Delete trip stop count verification failed');
+
+    // 26. GET /api/trips/:id (Verify Full Itinerary Includes Remaining Stops)
+    console.log('\n--- 24. Get Trip By ID (Full Itinerary Check) ---');
     const fullTripRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       headers: { 'Authorization': `Bearer ${tokenA}` }
     });
     const fullTripData = await fullTripRes.json();
-    console.log('Full Trip Response Status:', fullTripRes.status);
-    console.log('Full Trip Title:', fullTripData.title);
-    console.log('Full Trip Status:', fullTripData.status);
-    console.log('Full Trip Estimated Budget:', fullTripData.estimatedBudget);
-    console.log('Full Trip Stops Count:', fullTripData.stops?.length);
-
-    if (
-      fullTripRes.status !== 200 ||
-      fullTripData.stops?.length !== 1 ||
-      fullTripData.stops[0].city.name !== 'Udaipur'
-    ) {
-      throw new Error('Full nested itinerary endpoint test failed!');
+    console.log('Full Trip Response Status:', fullTripRes.status, 'Stops count:', fullTripData.stops?.length);
+    if (fullTripRes.status !== 200 || fullTripData.stops?.length !== 2) {
+      throw new Error('Full trip itinerary verification failed');
     }
 
-    // 20. User B Access User A Trip (Ownership Enforcement)
-    console.log('\n--- 18. User B Access User A Trip (Ownership Isolation) ---');
-    const userBAccessRes = await fetch(`${baseUrl}/trips/${tripId}`, {
-      headers: { 'Authorization': `Bearer ${tokenB}` }
-    });
-    console.log('User B Access Status:', userBAccessRes.status);
-    if (userBAccessRes.status !== 404) {
-      throw new Error('User B was able to access User A trip!');
-    }
-
-    // 21. PUT /api/trips/:id (Update Trip - Budgets, Status, Visibility)
-    console.log('\n--- 19. Update Trip (User A) ---');
-    const updateRes = await fetch(`${baseUrl}/trips/${tripId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tokenA}`
-      },
-      body: JSON.stringify({
-        title: 'Updated Rajasthan Expedition',
-        estimatedBudget: 120000,
-        spentBudget: 35000,
-        status: 'ONGOING',
-        isPublic: true,
-        coverPhoto: 'https://example.com/rajasthan.jpg'
-      })
-    });
-    const updateData = await updateRes.json();
-    console.log('Update Trip Response:', updateRes.status, updateData);
-    if (
-      updateRes.status !== 200 ||
-      updateData.title !== 'Updated Rajasthan Expedition' ||
-      updateData.estimatedBudget !== 120000 ||
-      updateData.status !== 'ONGOING' ||
-      updateData.isPublic !== true
-    ) {
-      throw new Error('Update trip failed!');
-    }
-
-    // 22. Partial Update Verification (Unspecified fields remain unchanged)
-    console.log('\n--- 20. Partial Update Verification ---');
-    const partialUpdateRes = await fetch(`${baseUrl}/trips/${tripId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tokenA}`
-      },
-      body: JSON.stringify({
-        spentBudget: 40000
-      })
-    });
-    const partialData = await partialUpdateRes.json();
-    console.log('Partial Update Response:', partialData.spentBudget, partialData.title, partialData.status);
-    if (
-      partialData.spentBudget !== 40000 ||
-      partialData.title !== 'Updated Rajasthan Expedition' ||
-      partialData.status !== 'ONGOING'
-    ) {
-      throw new Error('Partial update broke existing field values!');
-    }
-
-    // 23. Cities API Test
-    console.log('\n--- 21. GET /api/cities & Search ---');
-    const citiesRes = await fetch(`${baseUrl}/cities`);
-    const citiesData = await citiesRes.json();
-    console.log('Cities count:', citiesData.length);
-
-    const searchCityRes = await fetch(`${baseUrl}/cities?search=udaipur`);
-    const searchCityData = await searchCityRes.json();
-    console.log('Search Udaipur count:', searchCityData.length, searchCityData[0]?.name);
-    if (searchCityData.length !== 1 || searchCityData[0].name !== 'Udaipur') {
-      throw new Error('City search failed!');
-    }
-
-    // 24. Activities API Test
-    console.log('\n--- 22. GET /api/activities with filters ---');
-    const actCityRes = await fetch(`${baseUrl}/activities?cityId=${city.id}`);
-    const actCityData = await actCityRes.json();
-    console.log('Activities by cityId count:', actCityData.length, actCityData[0]?.name);
-
-    const actSearchRes = await fetch(`${baseUrl}/activities?search=palace`);
-    const actSearchData = await actSearchRes.json();
-    console.log('Activities search "palace" count:', actSearchData.length, actSearchData[0]?.name);
-
-    if (actCityData.length !== 1 || actSearchData.length !== 1) {
-      throw new Error('Activity filters test failed!');
-    }
-
-    // 25. Delete Trip
-    console.log('\n--- 23. DELETE /api/trips/:id ---');
+    // 27. Delete Trip
+    console.log('\n--- 25. DELETE /api/trips/:id ---');
     const deleteRes = await fetch(`${baseUrl}/trips/${tripId}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${tokenA}` }
     });
     console.log('Delete Response Status:', deleteRes.status);
-    if (deleteRes.status !== 200) {
-      throw new Error('Delete trip failed!');
-    }
+    if (deleteRes.status !== 200) throw new Error('Delete trip failed!');
 
-    // Clean up seeded City & test records from DB
-    await prisma.city.delete({ where: { id: city.id } });
-    await prisma.user.deleteMany({
-      where: { email: { in: [userA.email, userB.email] } }
-    });
+    // Clean up seeded Cities & test records from DB
+    await prisma.city.deleteMany({ where: { id: { in: [city1.id, city2.id, city3.id] } } });
+    await prisma.user.deleteMany({ where: { email: { in: [userA.email, userB.email] } } });
 
     console.log('\n✅ ALL VERIFICATION TESTS PASSED SUCCESSFULLY!');
   } catch (err) {

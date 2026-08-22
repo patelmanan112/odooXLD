@@ -11,6 +11,14 @@ const formatTrip = (trip) => {
   };
 };
 
+const formatStop = (stop) => {
+  if (!stop) return null;
+  return {
+    ...stop,
+    sectionBudget: stop.sectionBudget !== null && stop.sectionBudget !== undefined ? Number(stop.sectionBudget) : null
+  };
+};
+
 export const createTrip = async (req, res, next) => {
   try {
     const {
@@ -378,16 +386,57 @@ export const deleteTrip = async (req, res, next) => {
    TRIP STOPS APIs
    ========================================== */
 
-export const addTripStop = async (req, res, next) => {
+export const createTripStop = async (req, res, next) => {
   try {
     const { id: tripId } = req.params;
-    const { cityId, startDate, endDate, stopOrder } = req.body;
+    const { cityId, startDate, endDate, stopOrder, sectionBudget } = req.body;
 
-    if (!cityId || !startDate || !endDate) {
+    if (!cityId || typeof cityId !== 'string' || !cityId.trim()) {
       return res.status(400).json({
         error: 'Validation Error',
-        message: 'cityId, startDate, and endDate are required.'
+        message: 'cityId is required.'
       });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'startDate and endDate are required.'
+      });
+    }
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Invalid date format.'
+      });
+    }
+
+    if (parsedEndDate < parsedStartDate) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'endDate cannot be before startDate.'
+      });
+    }
+
+    if (stopOrder === undefined || stopOrder === null || !Number.isInteger(Number(stopOrder)) || Number(stopOrder) <= 0) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'stopOrder must be a positive integer.'
+      });
+    }
+
+    if (sectionBudget !== undefined && sectionBudget !== null) {
+      const numBudget = Number(sectionBudget);
+      if (isNaN(numBudget) || numBudget < 0) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'sectionBudget cannot be negative.'
+        });
+      }
     }
 
     const trip = await prisma.trip.findFirst({
@@ -395,25 +444,249 @@ export const addTripStop = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(404).json({ error: 'Not Found', message: 'Trip not found.' });
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip not found or permission denied.'
+      });
     }
 
-    const maxOrder = stopOrder !== undefined ? stopOrder : (await prisma.tripStop.count({ where: { tripId } })) + 1;
+    if (trip.startDate && parsedStartDate < trip.startDate) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Stop startDate cannot be before trip startDate.'
+      });
+    }
+
+    if (trip.endDate && parsedEndDate > trip.endDate) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Stop endDate cannot be after trip endDate.'
+      });
+    }
+
+    const city = await prisma.city.findUnique({
+      where: { id: cityId.trim() }
+    });
+
+    if (!city) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'City not found.'
+      });
+    }
 
     const stop = await prisma.tripStop.create({
       data: {
         tripId,
-        cityId,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        stopOrder: maxOrder
+        cityId: cityId.trim(),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        stopOrder: Number(stopOrder),
+        sectionBudget: sectionBudget !== undefined && sectionBudget !== null ? Number(sectionBudget) : null
       },
       include: {
-        city: true
+        city: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            description: true,
+            imageUrl: true
+          }
+        }
       }
     });
 
-    return res.status(201).json(stop);
+    return res.status(201).json(formatStop(stop));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Alias addTripStop to createTripStop for backwards compatibility
+export const addTripStop = createTripStop;
+
+export const getTripStops = async (req, res, next) => {
+  try {
+    const { id: tripId } = req.params;
+
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.user.userId }
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip not found or permission denied.'
+      });
+    }
+
+    const stops = await prisma.tripStop.findMany({
+      where: { tripId },
+      orderBy: { stopOrder: 'asc' },
+      include: {
+        city: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            description: true,
+            imageUrl: true
+          }
+        }
+      }
+    });
+
+    return res.status(200).json(stops.map(formatStop));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSingleTripStop = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId } = req.params;
+
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.user.userId }
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip not found or permission denied.'
+      });
+    }
+
+    const stop = await prisma.tripStop.findFirst({
+      where: { id: stopId, tripId },
+      include: {
+        city: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            description: true,
+            imageUrl: true
+          }
+        }
+      }
+    });
+
+    if (!stop) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip stop not found.'
+      });
+    }
+
+    return res.status(200).json(formatStop(stop));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTripStop = async (req, res, next) => {
+  try {
+    const { id: tripId, stopId } = req.params;
+    const { cityId, startDate, endDate, stopOrder, sectionBudget } = req.body;
+
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.user.userId }
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip not found or permission denied.'
+      });
+    }
+
+    const existingStop = await prisma.tripStop.findFirst({
+      where: { id: stopId, tripId }
+    });
+
+    if (!existingStop) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Trip stop not found.'
+      });
+    }
+
+    if (cityId !== undefined) {
+      if (typeof cityId !== 'string' || !cityId.trim()) {
+        return res.status(400).json({ error: 'Validation Error', message: 'cityId must be a valid string.' });
+      }
+      const cityExists = await prisma.city.findUnique({ where: { id: cityId.trim() } });
+      if (!cityExists) {
+        return res.status(404).json({ error: 'Not Found', message: 'City not found.' });
+      }
+    }
+
+    const effectiveStartDate = startDate !== undefined ? new Date(startDate) : existingStop.startDate;
+    const effectiveEndDate = endDate !== undefined ? new Date(endDate) : existingStop.endDate;
+
+    if (startDate !== undefined) {
+      if (isNaN(effectiveStartDate.getTime())) {
+        return res.status(400).json({ error: 'Validation Error', message: 'Invalid startDate format.' });
+      }
+    }
+
+    if (endDate !== undefined) {
+      if (isNaN(effectiveEndDate.getTime())) {
+        return res.status(400).json({ error: 'Validation Error', message: 'Invalid endDate format.' });
+      }
+    }
+
+    if (effectiveEndDate < effectiveStartDate) {
+      return res.status(400).json({ error: 'Validation Error', message: 'endDate cannot be before startDate.' });
+    }
+
+    if (trip.startDate && effectiveStartDate < trip.startDate) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Stop startDate cannot be before trip startDate.' });
+    }
+
+    if (trip.endDate && effectiveEndDate > trip.endDate) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Stop endDate cannot be after trip endDate.' });
+    }
+
+    if (stopOrder !== undefined) {
+      if (!Number.isInteger(Number(stopOrder)) || Number(stopOrder) <= 0) {
+        return res.status(400).json({ error: 'Validation Error', message: 'stopOrder must be a positive integer.' });
+      }
+    }
+
+    if (sectionBudget !== undefined && sectionBudget !== null) {
+      const numBudget = Number(sectionBudget);
+      if (isNaN(numBudget) || numBudget < 0) {
+        return res.status(400).json({ error: 'Validation Error', message: 'sectionBudget cannot be negative.' });
+      }
+    }
+
+    const updateData = {};
+    if (cityId !== undefined) updateData.cityId = cityId.trim();
+    if (startDate !== undefined) updateData.startDate = effectiveStartDate;
+    if (endDate !== undefined) updateData.endDate = effectiveEndDate;
+    if (stopOrder !== undefined) updateData.stopOrder = Number(stopOrder);
+    if (sectionBudget !== undefined) updateData.sectionBudget = sectionBudget !== null ? Number(sectionBudget) : null;
+
+    const updatedStop = await prisma.tripStop.update({
+      where: { id: stopId },
+      data: updateData,
+      include: {
+        city: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            description: true,
+            imageUrl: true
+          }
+        }
+      }
+    });
+
+    return res.status(200).json(formatStop(updatedStop));
   } catch (error) {
     next(error);
   }
@@ -423,8 +696,16 @@ export const deleteTripStop = async (req, res, next) => {
   try {
     const { id: tripId, stopId } = req.params;
 
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.user.userId }
+    });
+
+    if (!trip) {
+      return res.status(404).json({ error: 'Not Found', message: 'Trip not found or permission denied.' });
+    }
+
     const stop = await prisma.tripStop.findFirst({
-      where: { id: stopId, tripId, trip: { userId: req.user.userId } }
+      where: { id: stopId, tripId }
     });
 
     if (!stop) {
@@ -441,16 +722,50 @@ export const deleteTripStop = async (req, res, next) => {
 export const reorderTripStops = async (req, res, next) => {
   try {
     const { id: tripId } = req.params;
-    const { stops } = req.body; // Array of { stopId, stopOrder }
+    const { stopIds, stops } = req.body;
 
-    if (!Array.isArray(stops)) {
-      return res.status(400).json({ error: 'Validation Error', message: 'stops must be an array.' });
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.user.userId }
+    });
+
+    if (!trip) {
+      return res.status(404).json({ error: 'Not Found', message: 'Trip not found or permission denied.' });
     }
 
-    const updates = stops.map(s => 
-      prisma.tripStop.updateMany({
-        where: { id: s.stopId, tripId, trip: { userId: req.user.userId } },
-        data: { stopOrder: s.stopOrder }
+    const existingStops = await prisma.tripStop.findMany({
+      where: { tripId }
+    });
+
+    const existingStopIds = new Set(existingStops.map(s => s.id));
+
+    let orderedIds = [];
+    if (Array.isArray(stopIds)) {
+      orderedIds = stopIds;
+    } else if (Array.isArray(stops)) {
+      orderedIds = stops.map(s => (typeof s === 'string' ? s : s.stopId));
+    } else {
+      return res.status(400).json({ error: 'Validation Error', message: 'stopIds must be an array of stop IDs.' });
+    }
+
+    if (orderedIds.length !== existingStops.length) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Reorder payload must include all stops for this trip.' });
+    }
+
+    const uniqueInputIds = new Set(orderedIds);
+    if (uniqueInputIds.size !== orderedIds.length) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Duplicate stop IDs are not allowed in reorder request.' });
+    }
+
+    for (const id of orderedIds) {
+      if (!existingStopIds.has(id)) {
+        return res.status(400).json({ error: 'Validation Error', message: `Stop ${id} does not belong to this trip.` });
+      }
+    }
+
+    const updates = orderedIds.map((id, index) =>
+      prisma.tripStop.update({
+        where: { id },
+        data: { stopOrder: index + 1 }
       })
     );
 
