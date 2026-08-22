@@ -1,12 +1,4 @@
-const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
-const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const productionBaseUrl = 'https://wanderly-backend-m65m.onrender.com';
-const rawBaseUrl = isProduction
-  ? (configuredBaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(configuredBaseUrl)
-    ? configuredBaseUrl
-    : productionBaseUrl)
-  : (configuredBaseUrl || 'http://localhost:5000');
-const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+const API_BASE_URL = 'https://wanderly-backend-m65m.onrender.com';
 
 
 export const apiFetch = async (endpoint, options = {}) => {

@@ -18,3 +18,10 @@ yarn-error.log*
 .env.*.local
 .DS_Store
 pdf_text.txt
+
+# Scratch / temp files
+scratch_*
+*.excalidraw
+*.pdf
+fix_colors*.py
+strip_glass*.py

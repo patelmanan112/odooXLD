@@ -9,7 +9,7 @@ const destinations = [
     country: 'Rajasthan, India',
     tag: 'Heritage',
     descriptor: 'City of Lakes',
-    image: 'https://images.unsplash.com/photo-1599661046289-e31897f87183?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://www.thehosteller.com/_next/image/?url=https%3A%2F%2Fstatic.thehosteller.com%2Fhostel%2Fimages%2Fcover%20photo.jpg%2Fcover%20photo-1696914123916.jpg&w=3840&q=75',
   },
   {
     city: 'Goa',
@@ -30,7 +30,7 @@ const destinations = [
     country: 'Rajasthan, India',
     tag: 'Culture',
     descriptor: 'The Pink City',
-    image: 'https://images.unsplash.com/photo-1477587458883-47145ed6979e?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?auto=format&fit=crop&w=800&q=80',
   },
   {
     city: 'Mumbai',
