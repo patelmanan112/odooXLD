@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Star, Plus, RotateCcw, Filter } from 'lucide-react';
+import { Search, MapPin, Star, Plus, RotateCcw, Filter, Check } from 'lucide-react';
 
 const CATEGORIES = ['Adventure', 'Food', 'Water Sports', 'Sightseeing', 'Culture'];
 const DURATIONS = ['All', 'Under 2hrs', 'Half Day', 'Full Day'];
@@ -12,8 +12,107 @@ const RATINGS = [
   { label: '4.8+ Stars', val: 4.8 },
 ];
 
+const INITIAL_ACTIVITIES = [
+  {
+    id: 'exp-1',
+    title: 'Scuba Diving at Grande Island',
+    category: 'Water Sports',
+    location: 'Goa, India',
+    price: 3500,
+    priceDisplay: '₹3,500',
+    duration: 'Half Day',
+    rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80',
+    desc: 'Explore underwater coral reefs and marine life with certified PADI instructors.'
+  },
+  {
+    id: 'exp-2',
+    title: 'Old Goa Heritage Walking Tour',
+    category: 'Culture',
+    location: 'Goa, India',
+    price: 1200,
+    priceDisplay: '₹1,200',
+    duration: 'Under 2hrs',
+    rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80',
+    desc: 'Guided walk through Portuguese architecture, ancient churches, and museums.'
+  },
+  {
+    id: 'exp-3',
+    title: 'Tokyo Street Food & Izakaya Crawl',
+    category: 'Food',
+    location: 'Shibuya, Tokyo',
+    price: 4500,
+    priceDisplay: '₹4,500',
+    duration: 'Half Day',
+    rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80',
+    desc: 'Taste authentic ramen, yakitori, and local drinks hidden in Tokyo alleyways.'
+  },
+  {
+    id: 'exp-4',
+    title: 'Kyoto Fushimi Inari Sunset Hike',
+    category: 'Sightseeing',
+    location: 'Kyoto, Japan',
+    price: 2200,
+    priceDisplay: '₹2,200',
+    duration: 'Half Day',
+    rating: 5.0,
+    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
+    desc: 'Walk through thousands of vermilion torii gates up Mount Inari at sunset.'
+  },
+  {
+    id: 'exp-5',
+    title: 'Seine River Cruise with Dinner',
+    category: 'Food',
+    location: 'Paris, France',
+    price: 8500,
+    priceDisplay: '₹8,500',
+    duration: 'Under 2hrs',
+    rating: 4.7,
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80',
+    desc: 'Gourmet 3-course French dining along the illuminated Parisian monuments.'
+  },
+  {
+    id: 'exp-6',
+    title: 'Colosseum & Roman Forum VIP Access',
+    category: 'Culture',
+    location: 'Rome, Italy',
+    price: 6200,
+    priceDisplay: '₹6,200',
+    duration: 'Half Day',
+    rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80',
+    desc: 'Skip-the-line access to the ancient Arena Floor and gladiators quarters.'
+  },
+  {
+    id: 'exp-7',
+    title: 'Mount Batur Sunrise Trekking & Hot Spring',
+    category: 'Adventure',
+    location: 'Bali, Indonesia',
+    price: 3800,
+    priceDisplay: '₹3,800',
+    duration: 'Full Day',
+    rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
+    desc: 'Early morning hike to watch sunrise over active volcano followed by volcanic hot springs.'
+  },
+  {
+    id: 'exp-8',
+    title: 'Solang Valley Paragliding & ATV Ride',
+    category: 'Adventure',
+    location: 'Manali, India',
+    price: 4200,
+    priceDisplay: '₹4,200',
+    duration: 'Half Day',
+    rating: 4.6,
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80',
+    desc: 'Soar over Himalayan snow-capped peaks and power through mountain ATV trails.'
+  }
+];
+
 export const SearchExplorer = () => {
-  const { showToast } = useApp();
+  const { selectedTrip, updateTrip, showToast } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -21,6 +120,7 @@ export const SearchExplorer = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('All');
   const [minRating, setMinRating] = useState(0);
+  const [addedIds, setAddedIds] = useState([]);
 
   const handleCategoryToggle = (cat) => {
     setSelectedCategories(prev =>
@@ -35,7 +135,7 @@ export const SearchExplorer = () => {
     setMaxPrice('');
     setSelectedDuration('All');
     setMinRating(0);
-    showToast('Filters cleared!');
+    if (showToast) showToast('Filters cleared!');
   };
 
   const filteredResults = useMemo(() => {
@@ -74,8 +174,40 @@ export const SearchExplorer = () => {
     });
   }, [searchQuery, selectedCategories, minPrice, maxPrice, selectedDuration, minRating]);
 
-  const handleAdd = (title) => {
-    showToast(`Added "${title}" to your trip!`);
+  const handleAdd = (item) => {
+    setAddedIds(prev => [...prev, item.id]);
+
+    if (selectedTrip) {
+      const copy = { ...selectedTrip };
+      const days = [...(copy.days || [])];
+      if (days.length === 0) {
+        days.push({
+          id: `day-${Date.now()}`,
+          dayNum: 1,
+          title: `Day 1: ${copy.destination || 'Exploration'}`,
+          date: copy.startDate || new Date().toISOString().split('T')[0],
+          activities: []
+        });
+      }
+      const day1 = { ...days[0] };
+      const activities = [...(day1.activities || [])];
+      activities.push({
+        id: `act-${Date.now()}`,
+        time: '02:00 PM',
+        title: item.title,
+        category: item.category,
+        cost: item.price,
+        notes: `Added from Explore (${item.location})`
+      });
+      day1.activities = activities;
+      days[0] = day1;
+      copy.days = days;
+
+      if (updateTrip) updateTrip(copy);
+      if (showToast) showToast(`Added "${item.title}" to ${copy.name || 'your trip'}! 🎉`);
+    } else {
+      if (showToast) showToast(`Added "${item.title}"! Create a trip to save your activities.`);
+    }
   };
 
   return (
@@ -284,7 +416,7 @@ export const SearchExplorer = () => {
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <ResultCard item={item} handleAdd={handleAdd} />
+                    <ResultCard item={item} isAdded={addedIds.includes(item.id)} handleAdd={handleAdd} />
                   </motion.div>
                 ))}
               </div>
@@ -323,7 +455,7 @@ export const SearchExplorer = () => {
   );
 };
 
-const ResultCard = ({ item, handleAdd }) => {
+const ResultCard = ({ item, isAdded, handleAdd }) => {
   return (
     <div style={{
       backgroundColor: '#FFFFFF',
@@ -368,11 +500,27 @@ const ResultCard = ({ item, handleAdd }) => {
             </div>
           </div>
           <button
-            onClick={() => handleAdd(item.title)}
-            className="btn btn-dark"
-            style={{ padding: '8px 14px', borderRadius: '10px', fontSize: '0.82rem', gap: '4px' }}
+            onClick={() => handleAdd(item)}
+            className={isAdded ? "btn btn-outline" : "btn btn-dark"}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '10px',
+              fontSize: '0.82rem',
+              gap: '4px',
+              backgroundColor: isAdded ? '#ECFDF5' : '#1A1A2E',
+              color: isAdded ? '#059669' : '#FFFFFF',
+              border: isAdded ? '1px solid #A7F3D0' : 'none'
+            }}
           >
-            <Plus size={14} /> Add to Trip
+            {isAdded ? (
+              <>
+                <Check size={14} color="#059669" /> Added
+              </>
+            ) : (
+              <>
+                <Plus size={14} /> Add to Trip
+              </>
+            )}
           </button>
         </div>
       </div>
