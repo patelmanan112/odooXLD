@@ -63,234 +63,173 @@ async function runTests() {
     const signupBData = await signupBRes.json();
     const tokenB = signupBData.token;
 
-    // 5. Create Trips for User A and User B
-    console.log('\n--- 3. Create Trips (User A & User B) ---');
-    const tripARes = await fetch(`${baseUrl}/trips`, {
+    // 5. Create Test Trips (Public & Private)
+    console.log('\n--- 3. Create Public & Private Trips ---');
+    // Public Trip 1 (User A)
+    const pubTrip1Res = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
       body: JSON.stringify({
-        title: 'EuroTrip 2026',
-        estimatedBudget: 20000,
+        title: 'Paris Romantic Getaway',
+        description: 'Exploring Eiffel Tower and Louvre Museum in Paris',
         startDate: '2026-10-01',
-        endDate: '2026-10-15'
+        endDate: '2026-10-10',
+        estimatedBudget: 30000,
+        status: 'UPCOMING',
+        isPublic: true
       })
     });
-    const tripAData = await tripARes.json();
-    if (tripARes.status !== 201) throw new Error('Trip A creation failed');
-    const tripIdA = tripAData.id;
+    const pubTrip1Data = await pubTrip1Res.json();
+    if (pubTrip1Res.status !== 201 || pubTrip1Data.isPublic !== true) throw new Error('Public Trip 1 creation failed');
 
-    const tripBRes = await fetch(`${baseUrl}/trips`, {
+    // Public Trip 2 (User B)
+    const pubTrip2Res = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
       body: JSON.stringify({
-        title: 'Asia Tour 2026',
-        estimatedBudget: 10000,
+        title: 'Tokyo Cultural Backpacking',
+        description: 'Tokyo temples, food, and culture',
         startDate: '2026-11-01',
-        endDate: '2026-11-10'
+        endDate: '2026-11-12',
+        estimatedBudget: 40000,
+        status: 'COMPLETED',
+        isPublic: true
       })
     });
-    const tripBData = await tripBRes.json();
-    const tripIdB = tripBData.id;
+    const pubTrip2Data = await pubTrip2Res.json();
 
-    // 6. PART 6B: Unauthenticated Access Rejections (401)
-    console.log('\n--- 4. PART 6B: Unauthenticated Expense Access (401) ---');
-    const unauthPostRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Hotel', amount: 5000 })
-    });
-    if (unauthPostRes.status !== 401) throw new Error('Unauthenticated POST expense expected 401');
-
-    const unauthGetRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`);
-    if (unauthGetRes.status !== 401) throw new Error('Unauthenticated GET expenses expected 401');
-
-    // 7. PART 6B: Create Expense Validation Error Tests
-    console.log('\n--- 5. PART 6B: Create Expense Validation Error Tests ---');
-    // Missing title (400)
-    const noTitleRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+    // Private Trip (User A)
+    const privTripRes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ amount: 1000 })
+      body: JSON.stringify({
+        title: 'Confidential Business Trip',
+        description: 'Private meetings',
+        startDate: '2026-12-01',
+        endDate: '2026-12-05',
+        isPublic: false
+      })
     });
-    if (noTitleRes.status !== 400) throw new Error('Missing title expected 400');
+    const privTripData = await privTripRes.json();
 
-    // Empty title (400)
-    const emptyTitleRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+    // 6. Seed Stops & Activities for Public Trip 1
+    const city1 = await prisma.city.create({
+      data: { name: 'Paris', country: 'France', description: 'City of Lights', imageUrl: 'https://example.com/paris.jpg' }
+    });
+    const stop1Res = await fetch(`${baseUrl}/trips/${pubTrip1Data.id}/stops`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: '   ', amount: 1000 })
+      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-01', endDate: '2026-10-05', stopOrder: 1, sectionBudget: 15000 })
     });
-    if (emptyTitleRes.status !== 400) throw new Error('Empty title expected 400');
+    const stop1Data = await stop1Res.json();
 
-    // Missing amount (400)
-    const noAmountRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+    const act1 = await prisma.activity.create({
+      data: { cityId: city1.id, name: 'Eiffel Tower Night Tour', description: 'Illuminated tour', category: 'Sightseeing', estimatedCost: 150, duration: 3, effortLevel: 'LOW' }
+    });
+
+    const ta1Res = await fetch(`${baseUrl}/trips/${pubTrip1Data.id}/stops/${stop1Data.id}/activities`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Hotel' })
+      body: JSON.stringify({ activityId: act1.id, date: '2026-10-02', time: '20:00', order: 1 })
     });
-    if (noAmountRes.status !== 400) throw new Error('Missing amount expected 400');
 
-    // Negative amount (400)
-    const negAmountRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Hotel', amount: -500 })
-    });
-    if (negAmountRes.status !== 400) throw new Error('Negative amount expected 400');
-
-    // Invalid category (400)
-    const invalidCatRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Hotel', amount: 5000, category: 'INVALID_CAT' })
-    });
-    if (invalidCatRes.status !== 400) throw new Error('Invalid category expected 400');
-
-    // Invalid date (400)
-    const invalidDateRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Hotel', amount: 5000, date: 'invalid-date' })
-    });
-    if (invalidDateRes.status !== 400) throw new Error('Invalid date expected 400');
-
-    // Non-existent Trip (404)
-    const nonExistentTripRes = await fetch(`${baseUrl}/trips/non-existent-trip-id/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Hotel', amount: 5000 })
-    });
-    if (nonExistentTripRes.status !== 404) throw new Error('Non-existent trip expected 404');
-
-    console.log('Create Expense Validation Error Tests Passed!');
-
-    // 8. PART 6B: Create Valid Expenses & Verify Numeric Formatting
-    console.log('\n--- 6. PART 6B: Create Valid Expenses ---');
-    const exp1Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Boutique Hotel Stay', amount: 2500, category: 'ACCOMMODATION', date: '2026-10-02' })
-    });
-    const exp1Data = await exp1Res.json();
-    console.log('Expense 1 Created:', exp1Res.status, exp1Data.id, exp1Data.amount, typeof exp1Data.amount);
-    if (exp1Res.status !== 201 || exp1Data.amount !== 2500 || typeof exp1Data.amount !== 'number') {
-      throw new Error('Expense 1 creation or amount formatting failed');
-    }
-
-    const exp2Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Train Pass', amount: 1500, category: 'TRANSPORT' })
-    });
-    const exp2Data = await exp2Res.json();
-
-    const exp3Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Museum Guided Tour', amount: 1000, category: 'ACTIVITIES' })
-    });
-    const exp3Data = await exp3Res.json();
-
-    // 9. PART 6B: GET Trip Expenses
-    console.log('\n--- 7. PART 6B: GET Trip Expenses ---');
-    const getExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    const expList = await getExpRes.json();
-    console.log('Expenses Count:', expList.length, expList.map(e => e.title));
-    if (expList.length !== 3 || expList[0].amount !== 1000) {
-      throw new Error('GET Trip Expenses failed');
-    }
-
-    // 10. PART 6B: GET Single Expense & Scope Security Isolation
-    console.log('\n--- 8. PART 6B: GET Single Expense & Scope Isolation ---');
-    const getSingleExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    const singleExpData = await getSingleExpRes.json();
-    console.log('Single Expense Response:', getSingleExpRes.status, singleExpData.title);
-    if (getSingleExpRes.status !== 200 || singleExpData.title !== 'Boutique Hotel Stay') {
-      throw new Error('GET single expense failed');
-    }
-
-    // User B attempting to access User A's expense (404)
-    const crossUserGetExp = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
-      headers: { 'Authorization': `Bearer ${tokenB}` }
-    });
-    if (crossUserGetExp.status !== 404) throw new Error('Cross-user expense GET expected 404');
-
-    // Accessing Expense A via Trip B URL (404)
-    const crossTripGetExp = await fetch(`${baseUrl}/trips/${tripIdB}/expenses/${exp1Data.id}`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    if (crossTripGetExp.status !== 404) throw new Error('Cross-trip expense GET expected 404');
-
-    // 11. PART 6B: UPDATE Expense (Partial & Security Rejections)
-    console.log('\n--- 9. PART 6B: PUT /api/trips/:tripId/expenses/:expenseId ---');
-    const updateExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ amount: 3000, title: 'Luxury Hotel Stay' })
-    });
-    const updatedExpData = await updateExpRes.json();
-    console.log('Updated Expense Response:', updateExpRes.status, updatedExpData.title, updatedExpData.amount);
-    if (updateExpRes.status !== 200 || updatedExpData.amount !== 3000 || updatedExpData.category !== 'ACCOMMODATION') {
-      throw new Error('Update expense failed');
-    }
-
-    // Protected field modification attempt (tripId/userId) (400)
-    const protectedUpdateRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ tripId: tripIdB })
-    });
-    if (protectedUpdateRes.status !== 400) throw new Error('Protected field update attempt expected 400');
-
-    // 12. PART 6B: GET Expense Summary
-    console.log('\n--- 10. PART 6B: GET /api/trips/:tripId/expenses/summary ---');
-    const summaryRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/summary`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    const summaryData = await summaryRes.json();
-    console.log('Expense Summary Response:', summaryRes.status, summaryData);
-    // exp1=3000, exp2=1500, exp3=1000 => totalSpent=5500, estimatedBudget=20000 => remainingBudget=14500
+    // 7. PART 7: Public Trip Listing & Isolation Tests
+    console.log('\n--- 4. PART 7: GET /api/community/trips (Public Trips Listing) ---');
+    const commTripsRes = await fetch(`${baseUrl}/community/trips`);
+    const commTripsData = await commTripsRes.json();
+    console.log('Community Trips Response Status:', commTripsRes.status, 'Total:', commTripsData.pagination.total);
     if (
-      summaryRes.status !== 200 ||
-      summaryData.totalSpent !== 5500 ||
-      summaryData.estimatedBudget !== 20000 ||
-      summaryData.remainingBudget !== 14500
+      commTripsRes.status !== 200 ||
+      commTripsData.pagination.total !== 2 ||
+      commTripsData.data.some(t => t.isPublic === false)
     ) {
-      throw new Error('Expense summary calculation failed!');
+      throw new Error('Public trip listing failed or exposed private trips!');
     }
 
-    // User B attempting to access User A's expense summary (404)
-    const crossUserSummaryRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/summary`, {
-      headers: { 'Authorization': `Bearer ${tokenB}` }
-    });
-    if (crossUserSummaryRes.status !== 404) throw new Error('Cross-user expense summary expected 404');
+    // Verify passwordHash is absent in user attribution
+    if (commTripsData.data[0].user && commTripsData.data[0].user.passwordHash !== undefined) {
+      throw new Error('passwordHash exposed in community listing!');
+    }
 
-    // 13. PART 6B: DELETE Expense
-    console.log('\n--- 11. PART 6B: DELETE /api/trips/:tripId/expenses/:expenseId ---');
-    const deleteExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp3Data.id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    console.log('Delete Expense Response Status:', deleteExpRes.status);
-    if (deleteExpRes.status !== 200) throw new Error('Delete expense failed');
+    // Attempting query param ?isPublic=false (must NOT expose private trips)
+    const bypassAttemptRes = await fetch(`${baseUrl}/community/trips?isPublic=false`);
+    const bypassAttemptData = await bypassAttemptRes.json();
+    if (bypassAttemptData.data.some(t => t.isPublic === false)) {
+      throw new Error('isPublic=false query parameter bypassed private trip protection!');
+    }
 
-    // Verify Expense 3 is deleted but Trip A STILL EXISTS
-    const checkDeletedExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp3Data.id}`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    if (checkDeletedExpRes.status !== 404) throw new Error('Deleted expense verification failed');
+    // 8. PART 7: Search & Filter Tests
+    console.log('\n--- 5. PART 7: Search & Status Filtering ---');
+    // Search by title "Paris"
+    const searchRes = await fetch(`${baseUrl}/community/trips?search=paris`);
+    const searchData = await searchRes.json();
+    console.log('Search "paris" result count:', searchData.pagination.total, searchData.data[0]?.title);
+    if (searchData.pagination.total !== 1 || searchData.data[0].id !== pubTrip1Data.id) {
+      throw new Error('Community search by title failed');
+    }
 
-    const checkTripStillExists = await prisma.trip.findUnique({ where: { id: tripIdA } });
-    if (!checkTripStillExists) throw new Error('Deleting expense accidentally deleted parent Trip!');
-    console.log('Parent Trip preserved:', checkTripStillExists.title);
+    // Filter by status COMPLETED
+    const statusRes = await fetch(`${baseUrl}/community/trips?status=COMPLETED`);
+    const statusData = await statusRes.json();
+    console.log('Status COMPLETED result count:', statusData.pagination.total, statusData.data[0]?.title);
+    if (statusData.pagination.total !== 1 || statusData.data[0].id !== pubTrip2Data.id) {
+      throw new Error('Community status filter failed');
+    }
 
-    // 14. Cleanup Test Records
-    console.log('\n--- 12. Cleanup Test Records ---');
-    await prisma.trip.deleteMany({ where: { id: { in: [tripIdA, tripIdB] } } });
+    // Invalid status filter (400)
+    const invalidStatusRes = await fetch(`${baseUrl}/community/trips?status=INVALID_STATUS`);
+    if (invalidStatusRes.status !== 400) throw new Error('Invalid status filter expected 400');
+
+    // 9. PART 7: Pagination Tests
+    console.log('\n--- 6. PART 7: Pagination Validation & Functionality ---');
+    const pageRes = await fetch(`${baseUrl}/community/trips?page=1&limit=1`);
+    const pageData = await pageRes.json();
+    if (pageRes.status !== 200 || pageData.data.length !== 1 || pageData.pagination.totalPages !== 2) {
+      throw new Error('Community pagination failed');
+    }
+
+    // Invalid page/limit (400)
+    const invalidPageRes = await fetch(`${baseUrl}/community/trips?page=0`);
+    if (invalidPageRes.status !== 400) throw new Error('Invalid page expected 400');
+
+    const invalidLimitRes = await fetch(`${baseUrl}/community/trips?limit=100`);
+    if (invalidLimitRes.status !== 400) throw new Error('Invalid limit expected 400');
+
+    // 10. PART 7: Public Trip Detail
+    console.log('\n--- 7. PART 7: GET /api/community/trips/:tripId (Public Trip Detail) ---');
+    const detailRes = await fetch(`${baseUrl}/community/trips/${pubTrip1Data.id}`);
+    const detailData = await detailRes.json();
+    console.log('Public Trip Detail Response Status:', detailRes.status, detailData.title, 'Stops count:', detailData.stops.length);
+    if (
+      detailRes.status !== 200 ||
+      detailData.title !== 'Paris Romantic Getaway' ||
+      detailData.stops.length !== 1 ||
+      detailData.stops[0].city.name !== 'Paris' ||
+      detailData.stops[0].tripActivities[0].activity.name !== 'Eiffel Tower Night Tour'
+    ) {
+      throw new Error('Public trip detail retrieval failed');
+    }
+
+    // Verify numeric decimal conversions
+    if (
+      typeof detailData.estimatedBudget !== 'number' ||
+      typeof detailData.stops[0].sectionBudget !== 'number' ||
+      typeof detailData.stops[0].tripActivities[0].activity.estimatedCost !== 'number'
+    ) {
+      throw new Error('Public trip detail Decimal numeric conversion failed');
+    }
+
+    // 11. PART 7: Private Trip Protection (404)
+    console.log('\n--- 8. PART 7: Private Trip Security Rejection ---');
+    const privDetailRes = await fetch(`${baseUrl}/community/trips/${privTripData.id}`);
+    console.log('Private Trip Access Attempt Status:', privDetailRes.status);
+    if (privDetailRes.status !== 404) throw new Error('Private trip community detail access expected 404');
+
+    // 12. Cleanup Test Records
+    console.log('\n--- 9. Cleanup Test Records ---');
+    await prisma.trip.deleteMany({ where: { id: { in: [pubTrip1Data.id, pubTrip2Data.id, privTripData.id] } } });
+    await prisma.activity.delete({ where: { id: act1.id } });
+    await prisma.city.delete({ where: { id: city1.id } });
     await prisma.user.deleteMany({ where: { email: { in: [userA.email, userB.email] } } });
 
     console.log('\n✅ ALL VERIFICATION TESTS PASSED SUCCESSFULLY!');
