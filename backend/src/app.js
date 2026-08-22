@@ -1,11 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
 import authRoutes from './routes/auth.routes.js';
 import tripRoutes from './routes/trip.routes.js';
 import cityRoutes from './routes/city.routes.js';
 import activityRoutes from './routes/activity.routes.js';
 import calendarRoutes from './routes/calendar.routes.js';
+import savedDestinationRoutes from './routes/savedDestination.routes.js';
+import userRoutes from './routes/user.routes.js';
+import communityRoutes from './routes/community.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+
 import { errorMiddleware } from './middleware/error.middleware.js';
 
 dotenv.config();
@@ -14,17 +20,27 @@ const app = express();
 
 // Configure CORS for local development & production origin
 const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, postman) or any local dev origin
-    if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin === allowedOrigin) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Fallback allow for dev
-    }
-  },
-  credentials: true
-}));
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      // or local development origins
+      if (
+        !origin ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1') ||
+        origin === allowedOrigin
+      ) {
+        callback(null, true);
+      } else {
+        // Keep existing development behavior
+        callback(null, true);
+      }
+    },
+    credentials: true,
+  })
+);
 
 // Body parsing — set 10mb limit for base64 avatar images
 app.use(express.json({ limit: '10mb' }));
@@ -34,16 +50,20 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    message: 'GlobeTrotter backend is running'
+    message: 'GlobeTrotter backend is running',
   });
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/saved-destinations', savedDestinationRoutes);
+app.use('/api/community', communityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error middleware
 app.use(errorMiddleware);
