@@ -153,22 +153,22 @@ export const Screen8_SearchExplorer = () => {
         </div>
 
         {/* ══ MAIN LAYOUT: SIDEBAR + RESULTS ════════════════════ */}
-        <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', width: '100%' }}>
 
-          {/* ── LEFT SIDEBAR FILTERS ────────────────────────── */}
+          {/* ── LEFT SIDEBAR FILTERS (FIXED) ────────────────────────── */}
           <div style={{
+            position: 'fixed',
+            top: '84px',
             width: '260px',
+            maxHeight: 'calc(100vh - 104px)',
+            overflowY: 'auto',
             backgroundColor: '#FFFFFF',
             borderRadius: '20px',
             padding: '24px',
-            position: 'sticky',
-            top: '84px',
-            zIndex: 10,
-            flexShrink: 0,
+            zIndex: 50,
             border: '1px solid #EDE9E2',
             boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
-            maxHeight: 'calc(100vh - 104px)',
-            overflowY: 'auto'
+            boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontFamily: 'Outfit, sans-serif', margin: 0, fontSize: '1.15rem', color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -296,7 +296,7 @@ export const Screen8_SearchExplorer = () => {
           </div>
 
           {/* ── RIGHT RESULTS MASONRY / GRID ──────────────────────── */}
-          <div style={{ flex: 1, minWidth: '300px' }}>
+          <div style={{ marginLeft: '288px', width: 'calc(100% - 288px)' }}>
             <AnimatePresence mode="popLayout">
               {filteredResults.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
