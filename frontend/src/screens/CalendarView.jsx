@@ -15,7 +15,6 @@ export const CalendarView = () => {
 
   /* Current Active View Month/Year State */
   const [currentDate, setCurrentDate] = useState(() => {
-    // Default to first trip's start date if available, otherwise today
     if (selectedTrip && selectedTrip.startDate) {
       const d = new Date(selectedTrip.startDate);
       if (!isNaN(d.getTime())) return d;
@@ -52,11 +51,12 @@ export const CalendarView = () => {
   const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // 0 = Sun, 1 = Mon ...
   const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Mon = 0 ... Sun = 6
 
-  /* ── Dynamic Trip Dates & Events Parser ── */
+  /* ── Dynamic Parsing of REAL Trips ONLY from Context ── */
   const { activeTripDayNumbers, eventsByDayNumber } = useMemo(() => {
     const activeDays = new Set();
     const eventsMap = {};
 
+    // STRICTLY return empty if no trips exist in My Trips
     if (!trips || trips.length === 0) {
       return { activeTripDayNumbers: activeDays, eventsByDayNumber: eventsMap };
     }
@@ -64,7 +64,7 @@ export const CalendarView = () => {
     trips.forEach(trip => {
       if (!trip.startDate) return;
       const start = new Date(trip.startDate);
-      const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + (trip.durationDays || 3) * 86400000);
+      const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + (trip.durationDays || 1) * 86400000);
 
       if (isNaN(start.getTime())) return;
 
@@ -72,7 +72,6 @@ export const CalendarView = () => {
       for (let dayNum = 1; dayNum <= daysInMonthCount; dayNum++) {
         const thisDate = new Date(year, monthIndex, dayNum);
 
-        // Strip hours for date comparison
         const tDate = new Date(thisDate.getFullYear(), thisDate.getMonth(), thisDate.getDate()).getTime();
         const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
         const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
@@ -82,7 +81,7 @@ export const CalendarView = () => {
 
           if (!eventsMap[dayNum]) eventsMap[dayNum] = [];
 
-          // Map activities for this date if trip days exist
+          // Map actual activities if available in trip days
           const dayIndex = Math.round((tDate - sDate) / 86400000);
           const tripDayObj = trip.days ? trip.days[dayIndex] : null;
 
@@ -92,35 +91,23 @@ export const CalendarView = () => {
                 id: act.id || `act-${Math.random()}`,
                 title: act.title || act.name,
                 time: act.time || '10:00 AM',
-                location: trip.destination || 'Trip Spot',
+                location: trip.destination || 'Destination',
                 category: act.category || 'Sightseeing',
                 color: getCategoryColor(act.category),
                 tripName: trip.name || trip.title
               });
             });
           } else {
-            // Milestone event for trip start or travel day
-            if (tDate === sDate) {
-              eventsMap[dayNum].push({
-                id: `start-${trip.id}`,
-                title: `Trip Departure: ${trip.name || trip.title}`,
-                time: '09:00 AM',
-                location: trip.destination || 'Airport',
-                category: 'Flight',
-                color: '#E85D26',
-                tripName: trip.name || trip.title
-              });
-            } else {
-              eventsMap[dayNum].push({
-                id: `day-${trip.id}-${dayNum}`,
-                title: `${trip.destination} Exploration (Day ${dayIndex + 1})`,
-                time: '11:00 AM',
-                location: trip.destination || 'City Center',
-                category: 'Sightseeing',
-                color: '#059669',
-                tripName: trip.name || trip.title
-              });
-            }
+            // Display only the real trip entry
+            eventsMap[dayNum].push({
+              id: `trip-${trip.id}-${dayNum}`,
+              title: trip.name || trip.title,
+              time: 'All Day',
+              location: trip.destination || '',
+              category: 'Trip',
+              color: '#E85D26',
+              tripName: trip.name || trip.title
+            });
           }
         }
       }
@@ -130,7 +117,7 @@ export const CalendarView = () => {
   }, [trips, year, monthIndex, daysInMonthCount]);
 
   const handleConnectCalendar = () => {
-    if (showToast) showToast('Google Calendar sync connected successfully! 📅');
+    if (showToast) showToast('Google Calendar sync connected! 📅');
   };
 
   const todayObj = new Date();
@@ -153,7 +140,7 @@ export const CalendarView = () => {
                 Schedule & Itinerary Sync
               </p>
               <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 'bold', color: '#1A1A2E', margin: 0 }}>
-                Trip Calendar
+                My Trips Calendar
               </h2>
             </div>
             
@@ -262,7 +249,7 @@ export const CalendarView = () => {
               {MONTH_NAMES[monthIndex]} {selectedDayNumber}, {year}
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: '0 0 20px', fontWeight: 600 }}>
-              {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''} scheduled
+              {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''} from My Trips
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -296,7 +283,9 @@ export const CalendarView = () => {
                     )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#64748B', fontSize: '0.8rem' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={13} color="#9CA3AF" /> {ev.time}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color="#E85D26" /> {ev.location}</span>
+                      {ev.location && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color="#E85D26" /> {ev.location}</span>
+                      )}
                     </div>
                   </motion.div>
                 ))
@@ -304,10 +293,10 @@ export const CalendarView = () => {
                 <div style={{ textAlign: 'center', padding: '36px 0', color: '#9CA3AF' }}>
                   <CalendarIcon size={36} color="#CBD5E1" style={{ marginBottom: '12px' }} />
                   <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.98rem', fontWeight: 800, color: '#4B5563', marginBottom: '4px' }}>
-                    No events scheduled
+                    No trip events for this date
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#9CA3AF', marginBottom: '16px' }}>
-                    Create a trip or add activities to populate this date.
+                    Create a new trip to schedule events on your calendar.
                   </div>
                   <button onClick={() => navigate('/trips/new')} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>
                     <Plus size={14} /> Create Trip
@@ -354,6 +343,6 @@ function getCategoryColor(cat) {
     case 'Food': return '#10B981';
     case 'Sightseeing': return '#E85D26';
     case 'Transport': return '#F59E0B';
-    default: return '#EC4899';
+    default: return '#E85D26';
   }
 }
