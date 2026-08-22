@@ -8,7 +8,7 @@ const stories = [
     traveler: 'Priya M.',
     duration: '10 days',
     quote: 'Had every single detail planned without losing any of the spontaneity. The itinerary builder made it so easy.',
-    image: 'https://images.unsplash.com/photo-1599661046289-e31897f87183?auto=format&fit=crop&w=800&q=80',
+    image: 'https://www.thehosteller.com/_next/image/?url=https%3A%2F%2Fstatic.thehosteller.com%2Fhostel%2Fimages%2Fcover%20photo.jpg%2Fcover%20photo-1696914123916.jpg&w=3840&q=75',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
   },
   {
