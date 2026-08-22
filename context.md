@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 10:20 | Antigravity AI | Implemented Screen 9 (Itinerary View & Budget Breakdown) with day-by-day activity physical effort ratings, financial category donut/bar charts, daily cost calculator, and overbudget alert system. |
 | 2026-08-22 10:18 | Antigravity AI | Built Screen 8 (Activity & City Search Explorer) with live autocomplete search, category tags (Adventure, Food, Water Sports, Culture), activity details modal, and "Add to Trip" buttons. |
 | 2026-08-22 10:16 | Antigravity AI | Implemented Screen 7 (User Profile & Settings) with profile stats, badges, preplanned trip archives, saved destinations, currency selector, and privacy settings. |
 | 2026-08-22 10:14 | Antigravity AI | Built Screen 6 (User Trip Listing / My Trips) with search bar, status filter tabs (Ongoing, Upcoming, Completed), sort dropdown, and action menus. |
