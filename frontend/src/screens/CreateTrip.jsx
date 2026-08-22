@@ -8,14 +8,16 @@ export const CreateTrip = () => {
   const { addTrip, setSelectedTripId, destinations, showToast } = useApp();
   const navigate = useNavigate();
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
     destination: '',
     description: '',
-    startDate: '',
-    endDate: '',
-    budget: 1000,
+    startDate: todayStr,
+    endDate: todayStr,
+    budget: 50000,
     isPublic: false,
     selectedPlaces: []
   });
@@ -26,6 +28,22 @@ export const CreateTrip = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => {
+      let updated = { ...prev, [name]: value };
+      if (name === 'startDate' && value && value < todayStr) {
+        updated.startDate = todayStr;
+        showToast?.('Start date cannot be in the past');
+      }
+      if (updated.endDate && updated.startDate && updated.endDate < updated.startDate) {
+        updated.endDate = updated.startDate;
+        showToast?.('End date cannot be before start date');
+      }
+      return updated;
+    });
   };
 
   const handlePlaceToggle = (placeId) => {
@@ -41,14 +59,23 @@ export const CreateTrip = () => {
 
   const handleSubmit = () => {
     const newTrip = {
-      id: Date.now().toString(),
-      ...formData,
-      status: 'planning',
-      sections: []
+      id: `trip-${Date.now()}`,
+      name: formData.title || `Trip to ${formData.destination || 'Destination'}`,
+      title: formData.title || `Trip to ${formData.destination || 'Destination'}`,
+      destination: formData.destination || 'Destination',
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      dates: `${formData.startDate} - ${formData.endDate}`,
+      estimatedBudget: Number(formData.budget) || 50000,
+      spentBudget: 0,
+      isPublic: formData.isPublic,
+      status: 'Upcoming',
+      coverPhoto: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+      days: []
     };
     if (addTrip) addTrip(newTrip);
     if (setSelectedTripId) setSelectedTripId(newTrip.id);
-    if (showToast) showToast('Trip created successfully!');
+    if (showToast) showToast('Trip created successfully! 🎉');
     navigate('/itinerary/builder');
   };
 
@@ -61,12 +88,19 @@ export const CreateTrip = () => {
     return progress;
   };
 
-  // Mock destinations if not provided from context
-  const places = destinations || [
-    { id: '1', name: 'Eiffel Tower', image: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=300&q=80' },
-    { id: '2', name: 'Louvre Museum', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=300&q=80' },
-    { id: '3', name: 'Seine River', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&q=80' },
+  // Pre-populated default spots so "Pick Places" is never empty
+  const defaultPlaces = [
+    { id: 'p1', name: 'Fushimi Inari Shrine', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p2', name: 'Shibuya Crossing', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p3', name: 'Grande Island Goa', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p4', name: 'Old Goa Heritage Basilica', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p5', name: 'Eiffel Tower', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p6', name: 'Colosseum Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p7', name: 'Mount Batur Sunrise', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p8', name: 'Solang Valley Manali', image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80' },
   ];
+
+  const places = (destinations && destinations.length > 0) ? destinations : defaultPlaces;
 
   return (
     <div style={{ background: '#F5F3EF', minHeight: '100vh', padding: '32px' }}>
@@ -123,7 +157,7 @@ export const CreateTrip = () => {
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Trip Name</label>
                     <input 
                       type="text" name="title" value={formData.title} onChange={handleChange}
-                      placeholder="e.g. Summer in Paris"
+                      placeholder="e.g. Summer Vacation in Tokyo"
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
                     />
                   </div>
@@ -144,7 +178,7 @@ export const CreateTrip = () => {
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Description</label>
                     <textarea 
                       name="description" value={formData.description} onChange={handleChange}
-                      placeholder="What's the vibe?"
+                      placeholder="What's the vibe of this trip?"
                       rows="4"
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px', resize: 'vertical' }}
                     />
@@ -164,32 +198,32 @@ export const CreateTrip = () => {
                   
                   <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Start Date</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Start Date (From Today Onward)</label>
                       <input 
-                        type="date" name="startDate" value={formData.startDate} onChange={handleChange}
+                        type="date" name="startDate" min={todayStr} value={formData.startDate} onChange={handleDateChange}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
                       />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>End Date</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>End Date (After Start Date)</label>
                       <input 
-                        type="date" name="endDate" value={formData.endDate} onChange={handleChange}
+                        type="date" name="endDate" min={formData.startDate || todayStr} value={formData.endDate} onChange={handleDateChange}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
                       />
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Budget (USD)</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Estimated Budget (INR - ₹)</label>
                     <input 
-                      type="range" name="budget" min="100" max="10000" step="100"
+                      type="range" name="budget" min="5000" max="500000" step="5000"
                       value={formData.budget} onChange={handleChange}
                       style={{ width: '100%', accentColor: '#E85D26' }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '14px', color: '#64748B' }}>
-                      <span>$100</span>
-                      <span style={{ fontWeight: 'bold', color: '#1E293B', fontSize: '16px' }}>${formData.budget}</span>
-                      <span>$10,000+</span>
+                      <span>₹5,000</span>
+                      <span style={{ fontWeight: 'bold', color: '#1E293B', fontSize: '16px' }}>₹{Number(formData.budget).toLocaleString('en-IN')}</span>
+                      <span>₹5,00,000+</span>
                     </div>
                   </div>
 
@@ -279,7 +313,7 @@ export const CreateTrip = () => {
                   <ImageIcon color="#94A3B8" size={32} />
                 )}
                 <div style={{ position: 'absolute', bottom: '12px', left: '16px', background: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>
-                  {formData.budget ? `$${formData.budget}` : 'Budget'}
+                  {formData.budget ? `₹${Number(formData.budget).toLocaleString('en-IN')}` : 'Budget'}
                 </div>
               </div>
               <div style={{ padding: '20px' }}>
