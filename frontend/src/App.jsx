@@ -46,7 +46,11 @@ const AppContent = () => {
   const location = useLocation();
 
   const isPublicPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
-  const isTripViewPage = location.pathname.startsWith('/itinerary') || location.pathname === '/calendar';
+  const isTripViewPage = 
+    location.pathname.startsWith('/trips') || 
+    location.pathname.startsWith('/itinerary') || 
+    location.pathname === '/calendar' || 
+    location.pathname === '/journal';
 
   if (authLoading) {
     return (
