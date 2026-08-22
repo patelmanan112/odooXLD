@@ -33,204 +33,228 @@ async function runTests() {
 
     // Generate unique emails for test
     const timestamp = Date.now();
-    const userA = {
-      name: 'User Alpha',
-      email: `user_a_${timestamp}@example.com`,
-      password: 'password123'
+    const adminUser = {
+      name: 'Admin Master',
+      email: `admin_${timestamp}@example.com`,
+      password: 'adminpassword123'
     };
-    const userB = {
-      name: 'User Beta',
-      email: `user_b_${timestamp}@example.com`,
-      password: 'password456'
+    const normalUser = {
+      name: 'Normal Traveler',
+      email: `traveler_${timestamp}@example.com`,
+      password: 'userpassword123'
     };
 
     // 4. Signup Users
-    console.log('\n--- 2. Signup User A & B ---');
-    const signupARes = await fetch(`${baseUrl}/auth/signup`, {
+    console.log('\n--- 2. Signup Admin & Normal Users ---');
+    const signupAdminRes = await fetch(`${baseUrl}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userA)
+      body: JSON.stringify(adminUser)
     });
-    const signupAData = await signupARes.json();
-    if (signupARes.status !== 201 || !signupAData.token) throw new Error('Signup A failed');
-    const tokenA = signupAData.token;
+    const signupAdminData = await signupAdminRes.json();
+    if (signupAdminRes.status !== 201 || !signupAdminData.token) throw new Error('Signup Admin failed');
+    const adminToken = signupAdminData.token;
+    const adminUserId = signupAdminData.user.id;
 
-    const signupBRes = await fetch(`${baseUrl}/auth/signup`, {
+    // Promote Admin User directly in DB for testing
+    await prisma.user.update({
+      where: { id: adminUserId },
+      data: { role: 'ADMIN' }
+    });
+
+    const signupNormalRes = await fetch(`${baseUrl}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userB)
+      body: JSON.stringify(normalUser)
     });
-    const signupBData = await signupBRes.json();
-    const tokenB = signupBData.token;
+    const signupNormalData = await signupNormalRes.json();
+    const normalToken = signupNormalData.token;
+    const normalUserId = signupNormalData.user.id;
 
-    // 5. Create Test Trips (Public & Private)
-    console.log('\n--- 3. Create Public & Private Trips ---');
-    // Public Trip 1 (User A)
-    const pubTrip1Res = await fetch(`${baseUrl}/trips`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({
-        title: 'Paris Romantic Getaway',
-        description: 'Exploring Eiffel Tower and Louvre Museum in Paris',
-        startDate: '2026-10-01',
-        endDate: '2026-10-10',
-        estimatedBudget: 30000,
-        status: 'UPCOMING',
-        isPublic: true
-      })
-    });
-    const pubTrip1Data = await pubTrip1Res.json();
-    if (pubTrip1Res.status !== 201 || pubTrip1Data.isPublic !== true) throw new Error('Public Trip 1 creation failed');
+    // 5. PART 8: Admin Security & Unauthenticated / Unauthorized Rejections
+    console.log('\n--- 3. PART 8: Admin Security Rejection Tests (401 & 403) ---');
+    const unauthDashRes = await fetch(`${baseUrl}/admin/dashboard`);
+    if (unauthDashRes.status !== 401) throw new Error('Unauthenticated admin dashboard expected 401');
 
-    // Public Trip 2 (User B)
-    const pubTrip2Res = await fetch(`${baseUrl}/trips`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
-      body: JSON.stringify({
-        title: 'Tokyo Cultural Backpacking',
-        description: 'Tokyo temples, food, and culture',
-        startDate: '2026-11-01',
-        endDate: '2026-11-12',
-        estimatedBudget: 40000,
-        status: 'COMPLETED',
-        isPublic: true
-      })
+    const userDashRes = await fetch(`${baseUrl}/admin/dashboard`, {
+      headers: { 'Authorization': `Bearer ${normalToken}` }
     });
-    const pubTrip2Data = await pubTrip2Res.json();
+    console.log('Normal User Admin Dashboard Response Status:', userDashRes.status);
+    if (userDashRes.status !== 403) throw new Error('Normal user admin dashboard expected 403 Forbidden');
 
-    // Private Trip (User A)
-    const privTripRes = await fetch(`${baseUrl}/trips`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({
-        title: 'Confidential Business Trip',
-        description: 'Private meetings',
-        startDate: '2026-12-01',
-        endDate: '2026-12-05',
-        isPublic: false
-      })
+    const userUsersRes = await fetch(`${baseUrl}/admin/users`, {
+      headers: { 'Authorization': `Bearer ${normalToken}` }
     });
-    const privTripData = await privTripRes.json();
+    if (userUsersRes.status !== 403) throw new Error('Normal user admin users list expected 403 Forbidden');
 
-    // 6. Seed Stops & Activities for Public Trip 1
-    const city1 = await prisma.city.create({
-      data: { name: 'Paris', country: 'France', description: 'City of Lights', imageUrl: 'https://example.com/paris.jpg' }
+    // 6. PART 8: Admin Dashboard Statistics
+    console.log('\n--- 4. PART 8: GET /api/admin/dashboard ---');
+    const adminDashRes = await fetch(`${baseUrl}/admin/dashboard`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
     });
-    const stop1Res = await fetch(`${baseUrl}/trips/${pubTrip1Data.id}/stops`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-01', endDate: '2026-10-05', stopOrder: 1, sectionBudget: 15000 })
-    });
-    const stop1Data = await stop1Res.json();
-
-    const act1 = await prisma.activity.create({
-      data: { cityId: city1.id, name: 'Eiffel Tower Night Tour', description: 'Illuminated tour', category: 'Sightseeing', estimatedCost: 150, duration: 3, effortLevel: 'LOW' }
-    });
-
-    const ta1Res = await fetch(`${baseUrl}/trips/${pubTrip1Data.id}/stops/${stop1Data.id}/activities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ activityId: act1.id, date: '2026-10-02', time: '20:00', order: 1 })
-    });
-
-    // 7. PART 7: Public Trip Listing & Isolation Tests
-    console.log('\n--- 4. PART 7: GET /api/community/trips (Public Trips Listing) ---');
-    const commTripsRes = await fetch(`${baseUrl}/community/trips`);
-    const commTripsData = await commTripsRes.json();
-    console.log('Community Trips Response Status:', commTripsRes.status, 'Total:', commTripsData.pagination.total);
+    const dashData = await adminDashRes.json();
+    console.log('Admin Dashboard Stats Response:', adminDashRes.status, dashData);
     if (
-      commTripsRes.status !== 200 ||
-      commTripsData.pagination.total !== 2 ||
-      commTripsData.data.some(t => t.isPublic === false)
+      adminDashRes.status !== 200 ||
+      typeof dashData.users !== 'number' ||
+      typeof dashData.trips !== 'number' ||
+      typeof dashData.totalExpenseAmount !== 'number'
     ) {
-      throw new Error('Public trip listing failed or exposed private trips!');
+      throw new Error('Admin dashboard stats retrieval failed');
     }
 
-    // Verify passwordHash is absent in user attribution
-    if (commTripsData.data[0].user && commTripsData.data[0].user.passwordHash !== undefined) {
-      throw new Error('passwordHash exposed in community listing!');
+    // 7. PART 8: User Management (List & Single)
+    console.log('\n--- 5. PART 8: GET /api/admin/users & GET /api/admin/users/:userId ---');
+    const adminUsersRes = await fetch(`${baseUrl}/admin/users?page=1&limit=10`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const usersListData = await adminUsersRes.json();
+    console.log('Admin Users List Count:', usersListData.data.length, 'Total:', usersListData.pagination.total);
+    if (adminUsersRes.status !== 200 || usersListData.data.length < 2) {
+      throw new Error('Admin users list retrieval failed');
     }
 
-    // Attempting query param ?isPublic=false (must NOT expose private trips)
-    const bypassAttemptRes = await fetch(`${baseUrl}/community/trips?isPublic=false`);
-    const bypassAttemptData = await bypassAttemptRes.json();
-    if (bypassAttemptData.data.some(t => t.isPublic === false)) {
-      throw new Error('isPublic=false query parameter bypassed private trip protection!');
+    // Confirm passwordHash is absent in user listing
+    if (usersListData.data.some(u => u.passwordHash !== undefined)) {
+      throw new Error('passwordHash exposed in admin users list!');
     }
 
-    // 8. PART 7: Search & Filter Tests
-    console.log('\n--- 5. PART 7: Search & Status Filtering ---');
-    // Search by title "Paris"
-    const searchRes = await fetch(`${baseUrl}/community/trips?search=paris`);
-    const searchData = await searchRes.json();
-    console.log('Search "paris" result count:', searchData.pagination.total, searchData.data[0]?.title);
-    if (searchData.pagination.total !== 1 || searchData.data[0].id !== pubTrip1Data.id) {
-      throw new Error('Community search by title failed');
+    const singleUserRes = await fetch(`${baseUrl}/admin/users/${normalUserId}`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const singleUserData = await singleUserRes.json();
+    console.log('Admin Single User Response:', singleUserRes.status, singleUserData.name, singleUserData.role);
+    if (singleUserRes.status !== 200 || singleUserData.name !== normalUser.name || singleUserData.passwordHash !== undefined) {
+      throw new Error('Admin single user retrieval failed or passwordHash exposed!');
     }
 
-    // Filter by status COMPLETED
-    const statusRes = await fetch(`${baseUrl}/community/trips?status=COMPLETED`);
-    const statusData = await statusRes.json();
-    console.log('Status COMPLETED result count:', statusData.pagination.total, statusData.data[0]?.title);
-    if (statusData.pagination.total !== 1 || statusData.data[0].id !== pubTrip2Data.id) {
-      throw new Error('Community status filter failed');
-    }
+    // Non-existent user (404)
+    const invalidUserRes = await fetch(`${baseUrl}/admin/users/non-existent-user-id`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (invalidUserRes.status !== 404) throw new Error('Non-existent user expected 404');
 
-    // Invalid status filter (400)
-    const invalidStatusRes = await fetch(`${baseUrl}/community/trips?status=INVALID_STATUS`);
-    if (invalidStatusRes.status !== 400) throw new Error('Invalid status filter expected 400');
+    // 8. PART 8: User Role Management (Promote & Demote)
+    console.log('\n--- 6. PART 8: PUT /api/admin/users/:userId/role ---');
+    // Normal user attempting role update (403)
+    const userRoleAttempt = await fetch(`${baseUrl}/admin/users/${normalUserId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${normalToken}` },
+      body: JSON.stringify({ role: 'ADMIN' })
+    });
+    if (userRoleAttempt.status !== 403) throw new Error('Normal user role change attempt expected 403');
 
-    // 9. PART 7: Pagination Tests
-    console.log('\n--- 6. PART 7: Pagination Validation & Functionality ---');
-    const pageRes = await fetch(`${baseUrl}/community/trips?page=1&limit=1`);
-    const pageData = await pageRes.json();
-    if (pageRes.status !== 200 || pageData.data.length !== 1 || pageData.pagination.totalPages !== 2) {
-      throw new Error('Community pagination failed');
-    }
+    // Admin promotes Normal User -> ADMIN
+    const promoteRes = await fetch(`${baseUrl}/admin/users/${normalUserId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ role: 'ADMIN' })
+    });
+    const promoteData = await promoteRes.json();
+    console.log('Promote User Response:', promoteRes.status, promoteData.role);
+    if (promoteRes.status !== 200 || promoteData.role !== 'ADMIN') throw new Error('User promotion failed');
 
-    // Invalid page/limit (400)
-    const invalidPageRes = await fetch(`${baseUrl}/community/trips?page=0`);
-    if (invalidPageRes.status !== 400) throw new Error('Invalid page expected 400');
+    // Admin demotes User back -> USER
+    const demoteRes = await fetch(`${baseUrl}/admin/users/${normalUserId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ role: 'USER' })
+    });
+    const demoteData = await demoteRes.json();
+    console.log('Demote User Response:', demoteRes.status, demoteData.role);
+    if (demoteRes.status !== 200 || demoteData.role !== 'USER') throw new Error('User demotion failed');
 
-    const invalidLimitRes = await fetch(`${baseUrl}/community/trips?limit=100`);
-    if (invalidLimitRes.status !== 400) throw new Error('Invalid limit expected 400');
+    // Invalid role string (400)
+    const invalidRoleRes = await fetch(`${baseUrl}/admin/users/${normalUserId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ role: 'SUPERADMIN' })
+    });
+    if (invalidRoleRes.status !== 400) throw new Error('Invalid role string expected 400');
 
-    // 10. PART 7: Public Trip Detail
-    console.log('\n--- 7. PART 7: GET /api/community/trips/:tripId (Public Trip Detail) ---');
-    const detailRes = await fetch(`${baseUrl}/community/trips/${pubTrip1Data.id}`);
-    const detailData = await detailRes.json();
-    console.log('Public Trip Detail Response Status:', detailRes.status, detailData.title, 'Stops count:', detailData.stops.length);
-    if (
-      detailRes.status !== 200 ||
-      detailData.title !== 'Paris Romantic Getaway' ||
-      detailData.stops.length !== 1 ||
-      detailData.stops[0].city.name !== 'Paris' ||
-      detailData.stops[0].tripActivities[0].activity.name !== 'Eiffel Tower Night Tour'
-    ) {
-      throw new Error('Public trip detail retrieval failed');
-    }
+    // 9. PART 8: Admin Trip Management & Administrative Deletion
+    console.log('\n--- 7. PART 8: Admin Trip Management & Administrative Delete ---');
+    const createTripRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${normalToken}` },
+      body: JSON.stringify({ title: 'Normal User Trip to be Deleted by Admin', startDate: '2026-10-01', endDate: '2026-10-10' })
+    });
+    const tripData = await createTripRes.json();
+    if (createTripRes.status !== 201) throw new Error('Normal user trip creation failed');
 
-    // Verify numeric decimal conversions
-    if (
-      typeof detailData.estimatedBudget !== 'number' ||
-      typeof detailData.stops[0].sectionBudget !== 'number' ||
-      typeof detailData.stops[0].tripActivities[0].activity.estimatedCost !== 'number'
-    ) {
-      throw new Error('Public trip detail Decimal numeric conversion failed');
-    }
+    // Admin list trips
+    const adminTripsRes = await fetch(`${baseUrl}/admin/trips`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const adminTripsData = await adminTripsRes.json();
+    console.log('Admin Trips Count:', adminTripsData.length);
+    if (adminTripsRes.status !== 200 || adminTripsData.length < 1) throw new Error('Admin trip listing failed');
 
-    // 11. PART 7: Private Trip Protection (404)
-    console.log('\n--- 8. PART 7: Private Trip Security Rejection ---');
-    const privDetailRes = await fetch(`${baseUrl}/community/trips/${privTripData.id}`);
-    console.log('Private Trip Access Attempt Status:', privDetailRes.status);
-    if (privDetailRes.status !== 404) throw new Error('Private trip community detail access expected 404');
+    // Admin deletes Normal User's trip
+    const adminDelTripRes = await fetch(`${baseUrl}/admin/trips/${tripData.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    console.log('Admin Delete Trip Response:', adminDelTripRes.status);
+    if (adminDelTripRes.status !== 200) throw new Error('Admin delete trip failed');
 
-    // 12. Cleanup Test Records
+    // 10. PART 8: Admin City & Activity Management
+    console.log('\n--- 8. PART 8: Admin City & Activity Management ---');
+    // Create City
+    const createCityRes = await fetch(`${baseUrl}/admin/cities`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ name: 'Rome', country: 'Italy', description: 'Eternal City', imageUrl: 'https://example.com/rome.jpg' })
+    });
+    const cityData = await createCityRes.json();
+    console.log('Admin City Created:', createCityRes.status, cityData.name);
+    if (createCityRes.status !== 201 || cityData.name !== 'Rome') throw new Error('Admin city creation failed');
+
+    // Update City
+    const updateCityRes = await fetch(`${baseUrl}/admin/cities/${cityData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ description: 'Historic Capital of Italy' })
+    });
+    const updatedCityData = await updateCityRes.json();
+    if (updateCityRes.status !== 200 || updatedCityData.description !== 'Historic Capital of Italy') throw new Error('Admin city update failed');
+
+    // Create Activity
+    const createActRes = await fetch(`${baseUrl}/admin/activities`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ cityId: cityData.id, name: 'Colosseum Tour', description: 'Amphitheater tour', category: 'Sightseeing', estimatedCost: 350, effortLevel: 'MODERATE' })
+    });
+    const actData = await createActRes.json();
+    console.log('Admin Activity Created:', createActRes.status, actData.name, actData.estimatedCost);
+    if (createActRes.status !== 201 || actData.name !== 'Colosseum Tour' || actData.estimatedCost !== 350) throw new Error('Admin activity creation failed');
+
+    // Update Activity
+    const updateActRes = await fetch(`${baseUrl}/admin/activities/${actData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ estimatedCost: 400 })
+    });
+    const updatedActData = await updateActRes.json();
+    if (updateActRes.status !== 200 || updatedActData.estimatedCost !== 400) throw new Error('Admin activity update failed');
+
+    // Delete Activity
+    const delActRes = await fetch(`${baseUrl}/admin/activities/${actData.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (delActRes.status !== 200) throw new Error('Admin delete activity failed');
+
+    // Delete City
+    const delCityRes = await fetch(`${baseUrl}/admin/cities/${cityData.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (delCityRes.status !== 200) throw new Error('Admin delete city failed');
+
+    // 11. Cleanup Test Records
     console.log('\n--- 9. Cleanup Test Records ---');
-    await prisma.trip.deleteMany({ where: { id: { in: [pubTrip1Data.id, pubTrip2Data.id, privTripData.id] } } });
-    await prisma.activity.delete({ where: { id: act1.id } });
-    await prisma.city.delete({ where: { id: city1.id } });
-    await prisma.user.deleteMany({ where: { email: { in: [userA.email, userB.email] } } });
+    await prisma.user.deleteMany({ where: { id: { in: [adminUserId, normalUserId] } } });
 
     console.log('\n✅ ALL VERIFICATION TESTS PASSED SUCCESSFULLY!');
   } catch (err) {

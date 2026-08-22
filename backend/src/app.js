@@ -8,6 +8,7 @@ import activityRoutes from './routes/activity.routes.js';
 import savedDestinationRoutes from './routes/savedDestination.routes.js';
 import userRoutes from './routes/user.routes.js';
 import communityRoutes from './routes/community.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 
 dotenv.config();
@@ -48,6 +49,7 @@ app.use('/api/cities', cityRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/saved-destinations', savedDestinationRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error middleware
 app.use(errorMiddleware);
