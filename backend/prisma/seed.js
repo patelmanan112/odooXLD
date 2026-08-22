@@ -72,6 +72,27 @@ const CITIES = [
     country: 'Japan',
     description: 'Japan’s ultra-modern capital blending futuristic skyscrapers, neon-lit Shibuya crossing, historic temples, and world-class dining.',
     imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'rome',
+    name: 'Rome',
+    country: 'Italy',
+    description: 'The Eternal City rich in 3,000 years of globally influential art, architecture, ancient Colosseum, and vibrant Italian culinary scene.',
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'paris',
+    name: 'Paris',
+    country: 'France',
+    description: 'The City of Light, famous for the iconic Eiffel Tower, world-class Louvre art collection, romantic Seine cruises, and haute cuisine.',
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'bali',
+    name: 'Bali',
+    country: 'Indonesia',
+    description: 'Indonesia’s tropical paradise known for volcanic mountains, iconic rice paddies, ancient sea temples, and pristine surfing beaches.',
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -383,8 +404,6 @@ const ACTIVITIES = [
     id: 'hyderabad-hussain-sagar-boat',
     cityId: 'hyderabad',
     name: 'Hussain Sagar Lake & Buddha Statue Boat Cruise',
-    description: 'Boat journey across the heart-shaped lake to the monolithic 18-meter granite Buddha statue erected in the center of the lake.',
-    category: 'SIGHTSEEING',
     estimatedCost: 300,
     duration: 90,
     effortLevel: EffortLevel.LOW,
@@ -412,7 +431,7 @@ const ACTIVITIES = [
     estimatedCost: 3500,
     duration: 180,
     effortLevel: EffortLevel.LOW,
-    imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'tokyo-meiji-shrine',
@@ -424,6 +443,122 @@ const ACTIVITIES = [
     duration: 120,
     effortLevel: EffortLevel.LOW,
     imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80'
+  },
+
+  // Rome (4 activities)
+  {
+    id: 'rome-colosseum',
+    cityId: 'rome',
+    name: 'Colosseum & Arena Floor VIP Access',
+    description: 'Step onto the ancient gladiator arena floor of Rome’s 2,000-year-old amphitheater with an expert archeologist guide.',
+    category: 'HISTORY',
+    estimatedCost: 4500,
+    duration: 180,
+    effortLevel: EffortLevel.MODERATE,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'rome-trevi-fountain',
+    cityId: 'rome',
+    name: 'Trevi Fountain & Spanish Steps Evening Stroll',
+    description: 'Toss a coin into the iconic Baroque Trevi Fountain and explore the lively Spanish Steps and Piazza Navona at night.',
+    category: 'SIGHTSEEING',
+    estimatedCost: 1200,
+    duration: 120,
+    effortLevel: EffortLevel.LOW,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'rome-vatican-museums',
+    cityId: 'rome',
+    name: 'Vatican Museums & Sistine Chapel Tour',
+    description: 'Skip-the-line tour of Michelangelo’s breathtaking Sistine Chapel ceiling frescos and St. Peter’s Basilica.',
+    category: 'CULTURE',
+    estimatedCost: 5200,
+    duration: 210,
+    effortLevel: EffortLevel.MODERATE,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'rome-pantheon-walk',
+    cityId: 'rome',
+    name: 'Pantheon & Piazza Navona Architecture Walk',
+    description: 'Discover the world’s largest unreinforced concrete dome at the 1,900-year-old Roman Pantheon.',
+    category: 'HISTORY',
+    estimatedCost: 1500,
+    duration: 120,
+    effortLevel: EffortLevel.LOW,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
+  },
+
+  // Paris (3 activities)
+  {
+    id: 'paris-eiffel-tower',
+    cityId: 'paris',
+    name: 'Eiffel Tower Summit Access & Champagne',
+    description: 'Ascend to the top summit floor of the Eiffel Tower for panoramic views over Champ de Mars and the Seine.',
+    category: 'SIGHTSEEING',
+    estimatedCost: 6500,
+    duration: 150,
+    effortLevel: EffortLevel.MODERATE,
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'paris-louvre-museum',
+    cityId: 'paris',
+    name: 'Louvre Museum Masterpieces Guided Tour',
+    description: 'Explore Mona Lisa, Venus de Milo, and Winged Victory of Samothrace inside the world’s largest art museum.',
+    category: 'CULTURE',
+    estimatedCost: 4200,
+    duration: 180,
+    effortLevel: EffortLevel.MODERATE,
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'paris-seine-cruise',
+    cityId: 'paris',
+    name: 'Seine River Sunset Cruise with Gourmet Dinner',
+    description: 'Glide along the illuminations of Paris past Notre-Dame while enjoying a 3-course French dining experience.',
+    category: 'FOOD',
+    estimatedCost: 8500,
+    duration: 150,
+    effortLevel: EffortLevel.LOW,
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
+  },
+
+  // Bali (3 activities)
+  {
+    id: 'bali-mount-batur',
+    cityId: 'bali',
+    name: 'Mount Batur Sunrise Trekking & Volcanic Hot Springs',
+    description: 'Early morning hike up Mount Batur volcano to catch the sunrise above the clouds followed by natural thermal springs.',
+    category: 'ADVENTURE',
+    estimatedCost: 3800,
+    duration: 360,
+    effortLevel: EffortLevel.HIGH,
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'bali-ubud-monkey-forest',
+    cityId: 'bali',
+    name: 'Ubud Monkey Forest & Rice Terrace Walk',
+    description: 'Stroll through Sacred Monkey Forest Sanctuary and marvel at the emerald green Tegallalang rice terraces.',
+    category: 'NATURE',
+    estimatedCost: 1800,
+    duration: 180,
+    effortLevel: EffortLevel.LOW,
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'bali-tanah-lot',
+    cityId: 'bali',
+    name: 'Tanah Lot Sunset Sea Temple Visit',
+    description: 'Witness the sun setting behind the iconic offshore rock formation temple surrounded by crashing waves.',
+    category: 'CULTURE',
+    estimatedCost: 1500,
+    duration: 120,
+    effortLevel: EffortLevel.LOW,
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
