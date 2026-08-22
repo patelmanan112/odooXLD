@@ -4,7 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useApp } from './context/AppContext';
 import { GlobalNavbar } from './components/navigation/GlobalNavbar';
 import { TripNavigation } from './components/navigation/TripNavigation';
-import { DemoSwitcher } from './components/DemoSwitcher';
 import { Loader, Plane } from 'lucide-react';
 
 import { LandingPage } from './pages/LandingPage';
@@ -145,8 +144,6 @@ const AppContent = () => {
           </AnimatePresence>
         </main>
       </div>
-
-      <DemoSwitcher />
     </div>
   );
 };
