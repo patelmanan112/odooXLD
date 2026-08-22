@@ -2,6 +2,10 @@
 
 > **Wanderly** is an all-in-one travel planning, itinerary engineering, and budget tracking web application built with React 18, Vite, Framer Motion, Express.js, Prisma ORM, and PostgreSQL. It empowers users to plan trips, build interactive day-by-day itineraries, track expenses in Indian Rupees (₹), discover catalog experiences, clone community-shared itineraries, and visualize travel data through an interactive calendar and admin analytics suite.
 
+## 🔗 Live Demo Links
+- **Frontend App (Vercel)**: [https://odoo-xld.vercel.app/](https://odoo-xld.vercel.app/)
+- **Backend API (Render)**: [https://odooxld.onrender.com/](https://odooxld.onrender.com/)
+
 ---
 
 ## 👥 Authors & Team Work Split
