@@ -1,8 +1,4 @@
-const getApiBaseUrl = () => {
-  return import.meta.env.VITE_API_BASE_URL || 'https://wanderly-backend-m65m.onrender.com';
-};
-
-const API_BASE_URL = getApiBaseUrl().replace(/\/+$/, '');
+const API_BASE_URL = 'https://wanderly-backend-m65m.onrender.com';
 
 
 
