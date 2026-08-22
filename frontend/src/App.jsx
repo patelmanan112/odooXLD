@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useApp } from './context/AppContext';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
+import { GlobalNavbar } from './components/navigation/GlobalNavbar';
+import { TripNavigation } from './components/navigation/TripNavigation';
 import { DemoSwitcher } from './components/DemoSwitcher';
 import { Loader, Plane } from 'lucide-react';
 
@@ -20,6 +20,7 @@ import { Screen9_ItineraryViewBudget } from './screens/Screen9_ItineraryViewBudg
 import { Screen10_Community } from './screens/Screen10_Community';
 import { Screen11_CalendarView } from './screens/Screen11_CalendarView';
 import { Screen12_AdminAnalytics } from './screens/Screen12_AdminAnalytics';
+import { Screen13_JourneyView } from './screens/Screen13_JourneyView';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading } = useApp();
@@ -43,10 +44,14 @@ const PublicRoute = ({ children }) => {
 
 const AppContent = () => {
   const { authLoading, toastMessage } = useApp();
-  const [isOpenMobile, setIsOpenMobile] = useState(false);
   const location = useLocation();
 
-  const isAuthScreen = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
+  const isPublicPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
+  const isTripViewPage = 
+    location.pathname.startsWith('/itinerary') || 
+    location.pathname === '/journey' || 
+    location.pathname === '/calendar' || 
+    location.pathname === '/journal';
 
   if (authLoading) {
     return (
@@ -56,7 +61,7 @@ const AppContent = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#faf8f4',
         fontFamily: 'Plus Jakarta Sans, sans-serif'
       }}>
         <div style={{
@@ -82,7 +87,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className={`app-container ${isOpenMobile ? 'mobile-menu-active' : ''}`}>
+    <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#faf8f4' }}>
       {/* Toast Notification Banner */}
       {toastMessage && (
         <div style={{
@@ -103,21 +108,14 @@ const AppContent = () => {
         </div>
       )}
 
-      {!isAuthScreen && (
-        <Sidebar 
-          isOpenMobile={isOpenMobile} 
-          setIsOpenMobile={setIsOpenMobile} 
-        />
-      )}
+      {/* Floating Top Navigation for Authenticated App */}
+      {!isPublicPage && <GlobalNavbar />}
 
-      <div className="main-content">
-        {!isAuthScreen && (
-          <Header 
-            onMenuToggle={() => setIsOpenMobile(!isOpenMobile)} 
-          />
-        )}
-        
-        <main className="screen-wrapper">
+      <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <main className="screen-wrapper" style={{ flex: 1, padding: isPublicPage ? '0' : '20px 24px 40px 24px', maxWidth: '100%', margin: '0', width: '100%' }}>
+          {/* Contextual Trip Navigation if viewing trip screens */}
+          {!isPublicPage && isTripViewPage && <TripNavigation />}
+
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/login" element={<PublicRoute><Screen1_Login /></PublicRoute>} />
@@ -135,6 +133,7 @@ const AppContent = () => {
               <Route path="/journal" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
               <Route path="/community" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Screen11_CalendarView /></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute><Screen13_JourneyView /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Screen12_AdminAnalytics /></ProtectedRoute>} />
               
               {/* Fallback route */}

@@ -311,7 +311,7 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('wanderly_user');
     setToken(null);
     setUser(null);
-    navigate('/login');
+    navigate('/');
     if (showNotification) {
       showToast('Logged out successfully.');
     }

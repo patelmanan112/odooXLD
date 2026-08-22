@@ -4,7 +4,7 @@ import { Layers, ChevronUp, ChevronDown } from 'lucide-react';
 
 export const DemoSwitcher = () => {
   const { currentScreen, setCurrentScreen } = useApp();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const screens = [
     { id: 1, name: '1. Login' },
