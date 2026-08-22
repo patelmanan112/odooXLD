@@ -284,6 +284,40 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const googleLoginUser = async (googlePayload = {}) => {
+    try {
+      const payload = {
+        email: googlePayload.email || 'alex.wanderer@gmail.com',
+        name: googlePayload.name || 'Alex Wanderer',
+        avatarUrl: googlePayload.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+      };
+
+      const data = await apiFetch('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const formattedUser = {
+        ...data.user,
+        currency: data.user.currency || '₹',
+        avatar: data.user.avatarUrl || payload.avatarUrl
+      };
+
+      localStorage.setItem('wanderly_token', data.token);
+      localStorage.setItem('wanderly_user', JSON.stringify(formattedUser));
+
+      setToken(data.token);
+      setUser(formattedUser);
+      showToast(`Welcome, ${formattedUser.name}! Logged in with Google. ✨`);
+      navigate('/dashboard');
+      return { success: true };
+    } catch (err) {
+      showToast(err.message || 'Google Sign-In failed. Please try again.');
+      return { success: false, error: err.message };
+    }
+  };
+
+
   
   const updateUser = async (updateData) => {
     try {
@@ -344,6 +378,7 @@ export const AppProvider = ({ children }) => {
       checkEmailExist,
       loginUser,
       signupUser,
+      googleLoginUser,
       logout,
       prefilledEmail,
       setPrefilledEmail,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Loader, Compass } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useApp } from '../context/AppContext';
 
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80';
@@ -16,7 +17,7 @@ const fadeUp = {
 };
 
 export const Screen1_Login = () => {
-  const { showToast, loginUser, checkEmailExist, setPrefilledEmail } = useApp();
+  const { showToast, loginUser, googleLoginUser, checkEmailExist, setPrefilledEmail } = useApp();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -25,6 +26,28 @@ export const Screen1_Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailChecked, setEmailChecked] = useState(false);
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        showToast('Verifying Google credentials...');
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        const googleUser = await res.json();
+        await googleLoginUser({
+          email: googleUser.email,
+          name: googleUser.name,
+          avatarUrl: googleUser.picture
+        });
+      } catch (err) {
+        showToast('Failed to fetch Google user profile.');
+      }
+    },
+    onError: () => {
+      showToast('Google Sign-In was cancelled or failed.');
+    }
+  });
 
   const handleCheckEmail = async (e) => {
     e.preventDefault();
@@ -300,13 +323,13 @@ export const Screen1_Login = () => {
           {/* Social */}
           <motion.div variants={fadeUp} style={{ display: 'flex', gap: 12, marginBottom: 36 }}>
             {[
-              { label: 'Google', src: 'https://www.svgrepo.com/show/475656/google-color.svg' },
-              { label: 'Apple', src: 'https://www.svgrepo.com/show/511330/apple-173.svg' },
-            ].map(({ label, src }) => (
+              { label: 'Google', src: 'https://www.svgrepo.com/show/475656/google-color.svg', action: () => handleGoogleLogin() },
+              { label: 'Apple', src: 'https://www.svgrepo.com/show/511330/apple-173.svg', action: () => showToast('Apple authentication is not configured.') },
+            ].map(({ label, src, action }) => (
               <button
                 key={label}
                 type="button"
-                onClick={() => showToast(`${label} authentication is not configured.`)}
+                onClick={action}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   padding: '12px',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Loader, Compass, Camera, Upload } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useApp } from '../context/AppContext';
 
 const REGISTER_HERO_IMAGE = 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80';
@@ -16,8 +17,30 @@ const fadeUp = {
 };
 
 export const Screen2_Register = () => {
-  const { showToast, signupUser, prefilledEmail } = useApp();
+  const { showToast, signupUser, googleLoginUser, prefilledEmail } = useApp();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        showToast('Verifying Google credentials...');
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        const googleUser = await res.json();
+        await googleLoginUser({
+          email: googleUser.email,
+          name: googleUser.name,
+          avatarUrl: googleUser.picture
+        });
+      } catch (err) {
+        showToast('Failed to fetch Google user profile.');
+      }
+    },
+    onError: () => {
+      showToast('Google Sign-In was cancelled or failed.');
+    }
+  });
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -422,6 +445,36 @@ export const Screen2_Register = () => {
               }
             </button>
           </motion.form>
+
+          {/* Divider */}
+          <motion.div variants={fadeUp} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.1)' }} />
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#7a7065', letterSpacing: '0.08em', textTransform: 'uppercase' }}>or sign up with</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.1)' }} />
+          </motion.div>
+
+          {/* Social */}
+          <motion.div variants={fadeUp} style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
+            <button
+              type="button"
+              onClick={() => handleGoogleLogin()}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px',
+                background: 'transparent',
+                border: '1.5px solid rgba(26,23,20,0.12)',
+                borderRadius: 6,
+                fontSize: '0.85rem', fontWeight: 600, color: '#1a1714',
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'border-color 0.2s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#c8622a'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(26,23,20,0.12)'}
+            >
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: 16, height: 16 }} />
+              Continue with Google
+            </button>
+          </motion.div>
 
           {/* Login link */}
           <motion.p variants={fadeUp} style={{ textAlign: 'center', fontSize: '0.88rem', color: '#7a7065' }}>

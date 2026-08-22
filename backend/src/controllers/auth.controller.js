@@ -219,3 +219,60 @@ export const updateMe = async (req, res, next) => {
     next(error);
   }
 };
+
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { email, name, avatarUrl } = req.body;
+
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Email is required for Google authentication.'
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if user already exists
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    if (!user) {
+      // Create new user for Google Sign-In with auto-generated password hash
+      const randomPass = Math.random().toString(36).substring(2) + 'Wander123!';
+      const passwordHash = await bcrypt.hash(randomPass, 10);
+
+      user = await prisma.user.create({
+        data: {
+          name: name ? name.trim() : normalizedEmail.split('@')[0],
+          email: normalizedEmail,
+          passwordHash,
+          avatarUrl: avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+        }
+      });
+    }
+
+    const secret = process.env.JWT_SECRET || 'fallback-secret';
+    const token = jwt.sign({ userId: user.id }, secret, { expiresIn: '7d' });
+
+    return res.status(200).json({
+      message: 'Google login successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        phone: user.phone,
+        city: user.city,
+        country: user.country,
+        bio: user.bio,
+        currency: user.currency
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
