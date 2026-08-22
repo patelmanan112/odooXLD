@@ -98,9 +98,12 @@ export const AppProvider = ({ children }) => {
     if (!token) return;
     try {
       const tripsData = await apiFetch('/api/trips');
-      const formattedTrips = tripsData.data.map(t => ({
+      const rawTrips = Array.isArray(tripsData) ? tripsData : (tripsData?.data || []);
+
+      const formattedTrips = rawTrips.map(t => ({
         id: t.id,
         name: t.title,
+        title: t.title,
         destination: t.title,
         dates: t.startDate && t.endDate ? `${new Date(t.startDate).toLocaleDateString()} - ${new Date(t.endDate).toLocaleDateString()}` : 'TBD',
         durationDays: t.startDate && t.endDate ? Math.ceil((new Date(t.endDate) - new Date(t.startDate)) / (1000 * 60 * 60 * 24)) : 0,
@@ -109,29 +112,41 @@ export const AppProvider = ({ children }) => {
         estimatedBudget: parseFloat(t.estimatedBudget || 0),
         spentBudget: parseFloat(t.spentBudget || 0),
         coverPhoto: t.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
-        stops: t.stops ? t.stops.map(s => s.city.name) : [],
+        stops: t.stops ? t.stops.map(s => s.city?.name || s.cityName || 'Stop') : [],
         categoryBreakdown: { flights: 0, hotels: 0, food: 0, activities: 0, transport: 0 },
         days: t.stops ? t.stops.map(s => ({
           dayNum: s.stopOrder,
-          title: `Stop in ${s.city.name}`,
+          title: `Stop in ${s.city?.name || 'City'}`,
           date: new Date(s.startDate).toLocaleDateString(),
           activities: s.tripActivities ? s.tripActivities.map(ta => ({
             time: ta.time || 'TBD',
-            title: ta.activity.name,
-            category: ta.activity.category,
-            cost: parseFloat(ta.activity.estimatedCost),
+            title: ta.activity?.name || 'Activity',
+            category: ta.activity?.category || 'Sightseeing',
+            cost: parseFloat(ta.activity?.estimatedCost || 0),
             icon: 'MapPin',
-            level: ta.activity.effortLevel === 'HIGH' ? 'High' : ta.activity.effortLevel === 'LOW' ? 'Low' : 'Moderate'
+            level: ta.activity?.effortLevel === 'HIGH' ? 'High' : ta.activity?.effortLevel === 'LOW' ? 'Low' : 'Moderate'
           })) : []
         })) : []
       }));
-      setTrips(formattedTrips);
-      if (formattedTrips.length > 0 && (!selectedTripId || !formattedTrips.find(t => t.id === selectedTripId))) {
+
+      setTrips(prev => {
+        const merged = [...formattedTrips];
+        prev.forEach(p => {
+          if (!merged.some(m => m.id === p.id)) {
+            merged.unshift(p);
+          }
+        });
+        return merged;
+      });
+
+      if (formattedTrips.length > 0 && !selectedTripId) {
         setSelectedTripId(formattedTrips[0].id);
       }
 
       const citiesData = await apiFetch('/api/cities');
-      const formattedDestinations = citiesData.data.map((c, i) => ({
+      const rawCities = Array.isArray(citiesData) ? citiesData : (citiesData?.data || []);
+
+      const formattedDestinations = rawCities.map((c, i) => ({
         id: c.id,
         name: c.name,
         country: c.country,
