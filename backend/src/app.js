@@ -29,9 +29,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing — set 10mb limit for base64 avatar images
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
