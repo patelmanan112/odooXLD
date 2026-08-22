@@ -6,6 +6,7 @@ import tripRoutes from './routes/trip.routes.js';
 import cityRoutes from './routes/city.routes.js';
 import activityRoutes from './routes/activity.routes.js';
 import savedDestinationRoutes from './routes/savedDestination.routes.js';
+import userRoutes from './routes/user.routes.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/activities', activityRoutes);
