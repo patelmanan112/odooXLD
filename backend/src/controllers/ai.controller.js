@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 export const getLocationPhoto = async (req, res, next) => {
   try {
     const { place, city } = req.body;
