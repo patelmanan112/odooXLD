@@ -107,7 +107,7 @@ const AppContent = () => {
       {!isPublicPage && <GlobalNavbar />}
 
       <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
-        <main className="screen-wrapper" style={{ flex: 1, padding: isPublicPage ? '0' : '20px 24px 40px 24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+        <main className="screen-wrapper" style={{ flex: 1, padding: isPublicPage ? '0' : '20px 24px 40px 24px', maxWidth: '100%', margin: '0', width: '100%' }}>
           {/* Contextual Trip Navigation if viewing trip screens */}
           {!isPublicPage && isTripViewPage && <TripNavigation />}
 

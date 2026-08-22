@@ -73,8 +73,8 @@ export const GlobalNavbar = () => {
       top: '12px',
       zIndex: 100,
       padding: '0 24px',
-      margin: '0 auto',
-      maxWidth: '1440px',
+      margin: '0',
+      maxWidth: '100%',
       width: '100%',
       pointerEvents: 'none' // allow click through container
     }}>

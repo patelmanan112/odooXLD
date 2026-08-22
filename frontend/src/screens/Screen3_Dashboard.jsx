@@ -52,7 +52,7 @@ export const Screen3_Dashboard = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.35 }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%', maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%', maxWidth: '100%', margin: '0', paddingBottom: '40px' }}
     >
       {/* ─── Hero Banner Workspace ─────────────────────────────── */}
       <div style={{

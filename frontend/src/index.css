@@ -239,11 +239,11 @@ html, body {
 }
 
 .screen-wrapper {
-  padding: 24px 32px 40px 32px;
+  padding: 20px 24px 40px 24px;
   flex: 1;
-  max-width: 1600px;
+  max-width: 100%;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
   overflow-x: hidden;
 }
 
