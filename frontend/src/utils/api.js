@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000';
 
 export const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('wanderly_token');
@@ -17,10 +17,13 @@ export const apiFetch = async (endpoint, options = {}) => {
     headers
   };
 
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${normalizedEndpoint}`;
+
   try {
     let response;
     try {
-      response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      response = await fetch(url, config);
     } catch (networkError) {
       console.error('Network connection error:', networkError);
       throw new Error('Unable to connect to the backend server. Please make sure the backend is running on http://localhost:5000');
@@ -35,7 +38,14 @@ export const apiFetch = async (endpoint, options = {}) => {
       window.dispatchEvent(new CustomEvent('wanderly_auth_unauthorized'));
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || `HTTP ${response.status} ${response.statusText}` };
+    }
 
     if (!response.ok) {
       const error = new Error(data.message || 'An error occurred');

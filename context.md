@@ -54,6 +54,10 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 11:40 | Khush | Stashed local changes, pulled latest commits from remote `origin/main`, popped stashes without conflicts, configured `backend/.env` environment file with `DATABASE_URL` and `JWT_SECRET`, and verified clean frontend production build. |
+| 2026-08-22 11:36 | Khush | Cleared all local git stashes (`git stash clear`), ensuring working directory and stash list are clean. |
+| 2026-08-22 11:34 | Khush | Fixed `Unexpected token '<'` error by changing `API_BASE_URL` in `frontend/src/utils/api.js` from `http://localhost:5000/api` to `http://localhost:5000` (eliminating `/api/api` duplication) and added non-JSON response safety checks. |
+| 2026-08-22 11:32 | Khush | Installed backend `npm` dependencies (`express`, `cors`, `@prisma/client`, `jsonwebtoken`, `bcryptjs`), generated Prisma client, created seed script `prisma/seed.js` for 10 cities and 20+ activities, and verified backend server running cleanly on port 5000. |
 | 2026-08-22 11:28 | Khush | Added root `package.json` with `--prefix frontend` dev scripts to resolve ENOENT error when running `npm run dev` from root repository directory. |
 | 2026-08-22 11:25 | Khush | Installed `react-router-dom`, implemented explicit URL routes (`/login`, `/register`, `/`, `/trips/new`, `/itinerary/builder`, `/trips`, `/profile`, `/explore`, `/itinerary/view`, `/journal`, `/calendar`, `/admin`), updated `main.jsx` and `AppContext.jsx` to map URL locations, and implemented full backend TripStop, TripActivity, and Budget calculation APIs. |
 | 2026-08-22 11:20 | Khush | Implemented mobile & tablet responsive navigation drawer, hamburger menu toggle, mobile header layout, 0px horizontal scroll fixes, and Journal wireframe layout across all 12 screens. |
