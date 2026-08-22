@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 10:14 | Antigravity AI | Built Screen 6 (User Trip Listing / My Trips) with search bar, status filter tabs (Ongoing, Upcoming, Completed), sort dropdown, and action menus. |
 | 2026-08-22 10:12 | Antigravity AI | Implemented Screen 4 (Create Trip Wizard with section manager) and Screen 5 (Build Itinerary builder with drag/reorder activities and date ranges). |
 | 2026-08-22 10:10 | Antigravity AI | Built Screen 3 (Main Dashboard) featuring hero banner, multi-city step node graph, interactive route map preview, budget category bars, AI planner widget, and top destination filter tabs. |
 | 2026-08-22 10:08 | Antigravity AI | Implemented Screen 1 (Login) and Screen 2 (User Registration) with validation, avatar preview, and Framer Motion transitions. |
