@@ -57,23 +57,35 @@ export const ItineraryViewBudget = () => {
 
   const trip = selectedTrip;
 
+  const getActivityCost = (act) => {
+    if (!act) return 0;
+    const rawCost = act.cost ?? act.estimatedCost ?? act.price ?? act.amount ?? 0;
+    if (typeof rawCost === 'number') return isNaN(rawCost) ? 0 : rawCost;
+    const cleaned = String(rawCost).replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  };
+
   /* ── Derive financials from real trip fields ── */
-  const estimatedBudget = trip.estimatedBudget || 0;
-  const spentBudget     = trip.spentBudget || 0;
+  const days = trip.days || [];
+  const allActivities = days.flatMap(d => d.activities || []);
+
+  const calculatedSpent = days.reduce((sum, day) => {
+    return sum + (day.activities || []).reduce((s, act) => s + getActivityCost(act), 0);
+  }, 0);
+
+  const estimatedBudget = trip.estimatedBudget || 50000;
+  const spentBudget     = calculatedSpent > 0 ? calculatedSpent : (trip.spentBudget || 0);
   const spentPct        = estimatedBudget > 0
     ? Math.min(100, Math.round((spentBudget / estimatedBudget) * 100))
     : 0;
   const remaining       = estimatedBudget - spentBudget;
 
-  /* ── Build category breakdown from days.activities ── */
-  const days = trip.days || [];
-  const allActivities = days.flatMap(d => d.activities || []);
-
   // Group by category for the breakdown bars
   const catTotals = {};
   allActivities.forEach(act => {
     const cat = act.category || 'Other';
-    catTotals[cat] = (catTotals[cat] || 0) + (act.cost || 0);
+    catTotals[cat] = (catTotals[cat] || 0) + getActivityCost(act);
   });
 
   // Also use categoryBreakdown if available (richer data)

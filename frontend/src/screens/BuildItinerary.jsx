@@ -67,11 +67,12 @@ export const BuildItinerary = () => {
   const [formCost, setFormCost] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
-  /* ── Robust Cost Parser ── */
-  const parseCost = (val) => {
-    if (val === null || val === undefined || val === '') return 0;
-    if (typeof val === 'number') return isNaN(val) ? 0 : val;
-    const cleaned = String(val).replace(/[^0-9.]/g, '');
+  /* ── Robust Cost Parser for any activity shape ── */
+  const getActivityCost = (act) => {
+    if (!act) return 0;
+    const rawCost = act.cost ?? act.estimatedCost ?? act.price ?? act.amount ?? 0;
+    if (typeof rawCost === 'number') return isNaN(rawCost) ? 0 : rawCost;
+    const cleaned = String(rawCost).replace(/[^0-9.]/g, '');
     const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
   };
@@ -80,7 +81,7 @@ export const BuildItinerary = () => {
 
   /* ── Cost calculations ── */
   const totalCost = days.reduce((sum, day) => {
-    return sum + (day.activities || []).reduce((s, act) => s + parseCost(act.cost), 0);
+    return sum + (day.activities || []).reduce((s, act) => s + getActivityCost(act), 0);
   }, 0);
 
   const budgetRemaining = tripBudget - totalCost;
@@ -128,7 +129,7 @@ export const BuildItinerary = () => {
     setFormTime(activity.time || '10:00 AM');
     setFormTitle(activity.title || activity.name || '');
     setFormCategory(activity.category || 'Sightseeing');
-    setFormCost(activity.cost || '');
+    setFormCost(activity.cost || activity.estimatedCost || activity.price || '');
     setFormNotes(activity.notes || '');
     setIsModalOpen(true);
   };
@@ -140,12 +141,16 @@ export const BuildItinerary = () => {
       return;
     }
 
+    const parsedCostNum = getActivityCost({ cost: formCost });
+
     const activityData = {
       id: editingActivityId || `act-${Date.now()}`,
       time: formTime,
       title: formTitle,
       category: formCategory,
-      cost: parseCost(formCost),
+      cost: parsedCostNum,
+      estimatedCost: parsedCostNum,
+      price: parsedCostNum,
       notes: formNotes
     };
 
@@ -198,14 +203,19 @@ export const BuildItinerary = () => {
     days.forEach(day => {
       (day.activities || []).forEach(act => {
         const catKey = (act.category || 'activities').toLowerCase();
-        const cost = parseCost(act.cost);
+        const cost = getActivityCost(act);
         categoryBreakdown[catKey] = (categoryBreakdown[catKey] || 0) + cost;
       });
     });
 
+    const calculatedTotalCost = days.reduce((sum, day) => {
+      return sum + (day.activities || []).reduce((s, act) => s + getActivityCost(act), 0);
+    }, 0);
+
     const tripId = selectedTrip?.id || `trip-${Date.now()}`;
 
     const updatedTrip = {
+      ...(selectedTrip || {}),
       id: tripId,
       name: selectedTrip?.name || selectedTrip?.title || `Trip to ${destName}`,
       title: selectedTrip?.title || selectedTrip?.name || `Trip to ${destName}`,
@@ -215,7 +225,7 @@ export const BuildItinerary = () => {
       dates: selectedTrip?.dates || `${days[0]?.date || 'Day 1'} - ${days[days.length - 1]?.date || 'Day N'}`,
       durationDays: days.length,
       days: days,
-      spentBudget: totalCost,
+      spentBudget: calculatedTotalCost,
       estimatedBudget: tripBudget,
       coverPhoto: selectedTrip?.coverPhoto || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
       categoryBreakdown,
