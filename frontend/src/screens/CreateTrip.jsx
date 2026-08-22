@@ -2,47 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Image as ImageIcon, Check, Search, Compass, Loader, Plus, Sparkles, Map } from 'lucide-react';
+import { MapPin, Image as ImageIcon, Check, Search, Map, Plus } from 'lucide-react';
 
-/* ── Step 3 Map Locations Catalog ── */
-const MAP_LOCATIONS = [
-  {
-    id: 'loc-1',
-    name: 'Colosseum & Arena Floor',
-    city: 'Rome',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'loc-2',
-    name: 'Trevi Fountain',
-    city: 'Rome',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'loc-3',
-    name: 'Gateway of India',
-    city: 'Mumbai',
-    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'loc-4',
-    name: 'Marine Drive Promenade',
-    city: 'Mumbai',
-    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'loc-5',
-    name: 'Shibuya Crossing',
-    city: 'Tokyo',
-    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'loc-6',
-    name: 'Eiffel Tower Summit',
-    city: 'Paris',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
-  }
-];
+/* Curated iconic places per city */
+const CITY_SPOTS_CATALOG = {
+  Rome: [
+    { id: 'rome-1', name: 'Colosseum & Arena Floor', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-2', name: 'Trevi Fountain', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-3', name: 'Vatican Museums', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'rome-4', name: 'Pantheon & Piazza Navona', city: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Mumbai: [
+    { id: 'mum-1', name: 'Gateway of India', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-2', name: 'Marine Drive Promenade', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-3', name: 'Elephanta Caves', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' },
+    { id: 'mum-4', name: 'Colaba Causeway', city: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Tokyo: [
+    { id: 'tok-1', name: 'Shibuya Scramble Crossing', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80' },
+    { id: 'tok-2', name: 'Senso-ji Temple Asakusa', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
+    { id: 'tok-3', name: 'Meiji Shrine Harajuku', city: 'Tokyo', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Goa: [
+    { id: 'goa-1', name: 'Grande Island Scuba Diving', city: 'Goa', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80' },
+    { id: 'goa-2', name: 'Old Goa Heritage Basilica', city: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' },
+    { id: 'goa-3', name: 'Baga Beach Watersports', city: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=600&q=80' }
+  ],
+  Paris: [
+    { id: 'par-1', name: 'Eiffel Tower Summit', city: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
+    { id: 'par-2', name: 'Louvre Museum Tour', city: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' },
+    { id: 'par-3', name: 'Seine Dinner Cruise', city: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80' }
+  ]
+};
 
 export const CreateTrip = () => {
   const { addTrip, setSelectedTripId, showToast } = useApp();
@@ -63,13 +54,10 @@ export const CreateTrip = () => {
     coverPhoto: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1000&q=80'
   });
 
-  /* ── Step 3 Google Map & Search State ── */
   const [placeSearchQuery, setPlaceSearchQuery] = useState('');
   const [placesList, setPlacesList] = useState([]);
-  const [isFetchingAiPhoto, setIsFetchingAiPhoto] = useState(false);
-  const [aiModelUsed, setAiModelUsed] = useState('');
 
-  /* Fetch places for selected city */
+  /* Fetch backend city places or fallback to curated list */
   useEffect(() => {
     const fetchPlaces = async () => {
       if (!formData.destination) return;
@@ -81,10 +69,10 @@ export const CreateTrip = () => {
         if (resList.length > 0) {
           setPlacesList(resList);
         } else {
-          setPlacesList(MAP_LOCATIONS);
+          setPlacesList(CITY_SPOTS_CATALOG[cityName] || CITY_SPOTS_CATALOG.Rome);
         }
       } catch (err) {
-        setPlacesList(MAP_LOCATIONS);
+        setPlacesList(CITY_SPOTS_CATALOG[cityName] || CITY_SPOTS_CATALOG.Rome);
       }
     };
     fetchPlaces();
@@ -114,68 +102,29 @@ export const CreateTrip = () => {
     });
   };
 
-  /* ── OpenRouter AI Photo Fetcher (Free Model: google/gemini-2.0-flash-lite-preview-02-05:free) ── */
-  const fetchOpenRouterAiPhoto = async (placeName) => {
-    setIsFetchingAiPhoto(true);
-    showToast?.(`OpenRouter AI fetching photo for "${placeName}"... 🤖`);
-
-    try {
-      const { apiFetch } = await import('../utils/api.js');
-      const res = await apiFetch('/api/ai/location-photo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ place: placeName, city: formData.destination })
-      });
-
-      if (res && res.photoUrl) {
-        setFormData(prev => ({
-          ...prev,
-          coverPhoto: res.photoUrl
-        }));
-        setAiModelUsed(res.aiModel || 'OpenRouter Gemini Free');
-        showToast?.(`Fetched OpenRouter AI photo for "${placeName}"! 🎉`);
-      }
-    } catch (err) {
-      console.error('AI fetch error:', err);
-      // Fallback
-      const photoUrl = MAP_LOCATIONS.find(m => m.name.toLowerCase().includes(placeName.toLowerCase()))?.image || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80';
-      setFormData(prev => ({ ...prev, coverPhoto: photoUrl }));
-    } finally {
-      setIsFetchingAiPhoto(false);
-    }
-  };
-
-  /* ── Handle Place Selection on Map or List ── */
   const handleSelectPlace = (place) => {
-    const placeName = typeof place === 'string' ? place : place.name;
-    const placeId = typeof place === 'string' ? `place-${Date.now()}` : place.id;
-
     setFormData(prev => {
       const places = prev.selectedPlaces;
-      const isSelected = places.includes(placeId);
-      const updatedPlaces = isSelected ? places.filter(id => id !== placeId) : [...places, placeId];
+      const isSelected = places.includes(place.id);
+      const updatedPlaces = isSelected ? places.filter(id => id !== place.id) : [...places, place.id];
       return {
         ...prev,
-        selectedPlaces: updatedPlaces
+        selectedPlaces: updatedPlaces,
+        coverPhoto: place.image || prev.coverPhoto
       };
     });
-
-    fetchOpenRouterAiPhoto(placeName);
   };
 
-  /* ── Handle Search Bar Submit in Step 3 ── */
-  const handleSearchSubmit = (e) => {
+  const handleAddCustomPlace = (e) => {
     if (e) e.preventDefault();
     if (!placeSearchQuery.trim()) return;
-    const searchVal = placeSearchQuery.trim();
-
+    const name = placeSearchQuery.trim();
     const newPlace = {
-      id: `searched-${Date.now()}`,
-      name: searchVal,
+      id: `custom-${Date.now()}`,
+      name,
       city: formData.destination,
-      image: `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80`
+      image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80'
     };
-
     setPlacesList(prev => [newPlace, ...prev]);
     handleSelectPlace(newPlace);
     setPlaceSearchQuery('');
@@ -212,7 +161,6 @@ export const CreateTrip = () => {
     return progress;
   };
 
-  /* Encoded Map Embed URL */
   const mapSearchTerm = encodeURIComponent(formData.destination || 'Rome');
   const googleMapEmbedUrl = `https://maps.google.com/maps?q=${mapSearchTerm}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
 
@@ -241,10 +189,10 @@ export const CreateTrip = () => {
                 </div>
                 <div style={{ marginLeft: '16px', paddingTop: '6px' }}>
                   <div style={{ fontWeight: '600', color: step >= num ? '#1E293B' : '#94A3B8' }}>
-                    {num === 1 ? 'Trip Basics' : num === 2 ? 'Dates & Budget' : 'Pick Places & Google Map'}
+                    {num === 1 ? 'Trip Basics' : num === 2 ? 'Dates & Budget' : 'Pick Places & Map'}
                   </div>
                   <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    {num === 1 ? 'Trip name & destination' : num === 2 ? 'When and budget' : 'Google Map & OpenRouter AI'}
+                    {num === 1 ? 'Trip name & destination' : num === 2 ? 'When and budget' : 'Select top spots for ' + (formData.destination.split(',')[0] || 'City')}
                   </div>
                 </div>
               </div>
@@ -258,7 +206,7 @@ export const CreateTrip = () => {
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
             <AnimatePresence mode="wait">
 
-              {/* ── STEP 1: TRIP BASICS ONLY (NO MAP) ── */}
+              {/* ── STEP 1: TRIP BASICS ONLY ── */}
               {step === 1 && (
                 <motion.div
                   key="step1"
@@ -358,7 +306,7 @@ export const CreateTrip = () => {
                 </motion.div>
               )}
 
-              {/* ── STEP 3: GOOGLE MAP & OPENROUTER AI PHOTO FETCHER ── */}
+              {/* ── STEP 3: CLEAN PICK PLACES WITH GOOGLE MAP ── */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -367,29 +315,22 @@ export const CreateTrip = () => {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Map size={24} color="#E85D26" /> Google Map & OpenRouter AI Photos
-                    </h3>
-                    {isFetchingAiPhoto && (
-                      <span style={{ fontSize: '0.8rem', color: '#E85D26', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FEF0E7', padding: '4px 10px', borderRadius: '20px' }}>
-                        <Loader size={14} className="animate-spin" /> OpenRouter Gemini AI Fetching...
-                      </span>
-                    )}
-                  </div>
+                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                    Pick Places in {formData.destination.split(',')[0]}
+                  </h3>
                   <p style={{ color: '#64748B', marginBottom: '20px', fontSize: '0.92rem' }}>
-                    Search or click places on the Google Map below. Selected locations trigger OpenRouter API (Gemini Free model) to fetch authentic landmark imagery.
+                    Select top spots to add to your trip itinerary.
                   </p>
 
-                  {/* Google Map Search Bar */}
-                  <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  {/* Clean Search Bar */}
+                  <form onSubmit={handleAddCustomPlace} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
-                      <Search size={18} color="#E85D26" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                      <Search size={18} color="#9CA3AF" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
                       <input
                         type="text"
                         value={placeSearchQuery}
                         onChange={(e) => setPlaceSearchQuery(e.target.value)}
-                        placeholder={`Search any place or landmark in ${formData.destination} (e.g. Gateway of India, Colosseum, Trevi Fountain)...`}
+                        placeholder={`Search or add spot in ${formData.destination}...`}
                         style={{
                           width: '100%',
                           padding: '12px 16px 12px 46px',
@@ -401,43 +342,43 @@ export const CreateTrip = () => {
                         }}
                       />
                     </div>
-
-                    <button
-                      type="submit"
-                      style={{
-                        backgroundColor: '#E85D26',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '12px',
-                        padding: '0 20px',
-                        fontWeight: 700,
-                        fontSize: '0.88rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      <Sparkles size={16} /> Search Map & AI Fetch
-                    </button>
+                    {placeSearchQuery.trim() && (
+                      <button
+                        type="submit"
+                        style={{
+                          backgroundColor: '#E85D26',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '0 20px',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Plus size={16} /> Add Spot
+                      </button>
+                    )}
                   </form>
 
                   {/* Interactive Google Map Frame */}
                   <div style={{ marginBottom: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <MapPin size={16} color="#E85D26" /> Live Google Map View ({formData.destination})
+                        <MapPin size={16} color="#E85D26" /> Google Map View ({formData.destination})
                       </label>
                     </div>
 
                     <div style={{
                       position: 'relative',
-                      height: '260px',
+                      height: '240px',
                       borderRadius: '18px',
                       overflow: 'hidden',
-                      border: '2px solid #EDE9E2',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
+                      border: '1.5px solid #EDE9E2',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                     }}>
                       <iframe
                         title="Google Map Location View"
@@ -451,7 +392,7 @@ export const CreateTrip = () => {
                     </div>
                   </div>
 
-                  {/* Grid of Places / Map Spots */}
+                  {/* Grid of Places */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
                     {placesList.map(place => {
                       const isSelected = formData.selectedPlaces.includes(place.id);
@@ -529,12 +470,6 @@ export const CreateTrip = () => {
                 <div style={{ position: 'absolute', bottom: '12px', left: '16px', background: '#FFFFFF', color: '#1A1A2E', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '800' }}>
                   {formData.budget ? `₹${Number(formData.budget).toLocaleString('en-IN')}` : 'Budget'}
                 </div>
-
-                {isFetchingAiPhoto && (
-                  <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.8)', color: '#FCD34D', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Sparkles size={12} /> OpenRouter AI Fetching...
-                  </div>
-                )}
               </div>
 
               <div style={{ padding: '20px' }}>
