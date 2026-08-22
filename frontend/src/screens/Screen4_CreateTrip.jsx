@@ -1,228 +1,312 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { MapPin, Calendar, Image, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Image as ImageIcon } from 'lucide-react';
 
 export const Screen4_CreateTrip = () => {
-  const { addTrip, setCurrentScreen, showToast } = useApp();
-  const [tripName, setTripName] = useState('Euro Trip 2027 🇪🇺');
-  const [destination, setDestination] = useState('Paris, Rome, Barcelona');
-  const [startDate, setStartDate] = useState('2027-05-10');
-  const [endDate, setEndDate] = useState('2027-05-24');
-  const [budget, setBudget] = useState('120000');
-  const [description, setDescription] = useState('Exploring historical landmarks, museums, and food markets across Western Europe.');
-  const [sections, setSections] = useState([
-    { id: 1, name: 'Paris - Louvre & Eiffel Stop', duration: '4 Days', sectionBudget: '40000' },
-    { id: 2, name: 'Rome - Colosseum & Vatican Stop', duration: '5 Days', sectionBudget: '45000' },
-    { id: 3, name: 'Barcelona - Sagrada Familia Stop', duration: '5 Days', sectionBudget: '35000' }
-  ]);
+  const { addTrip, setSelectedTripId, destinations, showToast } = useApp();
+  const navigate = useNavigate();
 
-  const addSection = () => {
-    setSections([...sections, {
-      id: Date.now(),
-      name: `New Stop ${sections.length + 1}`,
-      duration: '3 Days',
-      sectionBudget: '20000'
-    }]);
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    title: '',
+    destination: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    budget: 1000,
+    isPublic: false,
+    selectedPlaces: []
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
-  const removeSection = (id) => {
-    setSections(sections.filter(s => s.id !== id));
+  const handlePlaceToggle = (placeId) => {
+    setFormData(prev => {
+      const places = prev.selectedPlaces;
+      if (places.includes(placeId)) {
+        return { ...prev, selectedPlaces: places.filter(id => id !== placeId) };
+      } else {
+        return { ...prev, selectedPlaces: [...places, placeId] };
+      }
+    });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     const newTrip = {
-      id: `trip-${Date.now()}`,
-      name: tripName,
-      destination: destination,
-      dates: `${startDate} - ${endDate}`,
-      durationDays: 14,
-      status: 'Upcoming',
-      progressPct: 15,
-      estimatedBudget: parseInt(budget) || 100000,
-      spentBudget: 0,
-      coverPhoto: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
-      stops: sections.map(s => s.name.split('-')[0].trim()),
-      categoryBreakdown: { flights: 40000, hotels: 45000, food: 20000, activities: 10000, transport: 5000 },
-      days: []
+      id: Date.now().toString(),
+      ...formData,
+      status: 'planning',
+      sections: []
     };
-    addTrip(newTrip);
-    setCurrentScreen(5); // Go to Build Itinerary Screen
+    if (addTrip) addTrip(newTrip);
+    if (setSelectedTripId) setSelectedTripId(newTrip.id);
+    if (showToast) showToast('Trip created successfully!');
+    navigate('/itinerary/builder');
   };
+
+  const calculateProgress = () => {
+    let progress = 0;
+    if (formData.title) progress += 20;
+    if (formData.destination) progress += 20;
+    if (formData.startDate && formData.endDate) progress += 30;
+    if (formData.selectedPlaces.length > 0) progress += 30;
+    return progress;
+  };
+
+  // Mock destinations if not provided from context
+  const places = destinations || [
+    { id: '1', name: 'Eiffel Tower', image: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=300&q=80' },
+    { id: '2', name: 'Louvre Museum', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=300&q=80' },
+    { id: '3', name: 'Seine River', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&q=80' },
+  ];
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.35 }}
-      style={{ maxWidth: '860px', margin: '0 auto' }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <button onClick={() => setCurrentScreen(3)} className="btn btn-outline" style={{ padding: '8px 12px' }}>
-          <ArrowLeft size={16} /> Back to Dashboard
-        </button>
-        <span className="badge badge-emerald">Screen 4: Create Trip</span>
-      </div>
-
-      <div className="glass-card" style={{ padding: '36px', backgroundColor: '#ffffff', borderRadius: '24px' }}>
-        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.9rem', fontWeight: 800, color: '#064e3b', marginBottom: '6px' }}>
-          Plan a New Trip 🗺️
-        </h2>
-        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '28px' }}>
-          Specify your destination, dates, cover photo, and itinerary sections to start planning.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          {/* Main Trip Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', marginBottom: '20px' }}>
-            <div className="input-group">
-              <label className="input-label">Trip Name</label>
-              <input 
-                type="text" 
-                className="input-field" 
-                value={tripName} 
-                onChange={e => setTripName(e.target.value)} 
-                required 
-              />
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">Destination Cities / Places</label>
-              <div style={{ position: 'relative' }}>
-                <MapPin size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  style={{ paddingLeft: '42px' }}
-                  value={destination} 
-                  onChange={e => setDestination(e.target.value)} 
-                  required 
-                />
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">Start Date</label>
-              <input 
-                type="date" 
-                className="input-field" 
-                value={startDate} 
-                onChange={e => setStartDate(e.target.value)} 
-                required 
-              />
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">End Date</label>
-              <input 
-                type="date" 
-                className="input-field" 
-                value={endDate} 
-                onChange={e => setEndDate(e.target.value)} 
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Target Budget (₹ INR)</label>
-            <input 
-              type="number" 
-              className="input-field" 
-              value={budget} 
-              onChange={e => setBudget(e.target.value)} 
-              required 
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Trip Description & Highlights</label>
-            <textarea 
-              className="input-field" 
-              rows={3} 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-            />
-          </div>
-
-          {/* Section Manager (As per Excalidraw Screen 4) */}
-          <div style={{ margin: '28px 0', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Itinerary Sections & Stops</h4>
-                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Organize your trip into multi-day city stops</div>
-              </div>
-              <button 
-                type="button" 
-                onClick={addSection} 
-                className="btn btn-secondary"
-                style={{ padding: '8px 14px', fontSize: '0.82rem' }}
-              >
-                <Plus size={16} /> Add another Section
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {sections.map((sec, idx) => (
-                <div 
-                  key={sec.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #cbd5e1'
-                  }}
-                >
-                  <span style={{ fontWeight: 800, color: '#064e3b', fontSize: '0.85rem' }}>#{idx + 1}</span>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    value={sec.name} 
-                    onChange={e => {
-                      const updated = [...sections];
-                      updated[idx].name = e.target.value;
-                      setSections(updated);
-                    }}
-                    style={{ flex: 2 }}
-                  />
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    value={sec.duration} 
-                    onChange={e => {
-                      const updated = [...sections];
-                      updated[idx].duration = e.target.value;
-                      setSections(updated);
-                    }}
-                    style={{ flex: 1 }}
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => removeSection(sec.id)}
-                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                  >
-                    <Trash2 size={18} />
-                  </button>
+    <div style={{ background: '#F5F3EF', minHeight: '100vh', padding: '32px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '32px' }}>
+        
+        {/* Left Sidebar */}
+        <div style={{ width: '280px', background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', height: 'fit-content' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '24px', color: '#1E293B' }}>Create a Trip</h2>
+          
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', left: '15px', top: '16px', bottom: '16px', width: '2px', background: '#E2E8F0', zIndex: 0 }}></div>
+            
+            {[1, 2, 3].map((num) => (
+              <div key={num} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
+                <div style={{ 
+                  width: '32px', height: '32px', borderRadius: '50%', 
+                  background: step >= num ? '#E85D26' : '#E2E8F0',
+                  color: step >= num ? 'white' : '#64748B',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 'bold', fontSize: '14px', flexShrink: 0,
+                  transition: 'background 0.3s'
+                }}>
+                  {num}
                 </div>
-              ))}
+                <div style={{ marginLeft: '16px', paddingTop: '6px' }}>
+                  <div style={{ fontWeight: '600', color: step >= num ? '#1E293B' : '#94A3B8' }}>
+                    {num === 1 ? 'Trip Basics' : num === 2 ? 'Dates & Budget' : 'Pick Places'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+                    {num === 1 ? 'Name and destination' : num === 2 ? 'When and how much' : 'Add some spots'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Content */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
+          <div style={{ background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Trip Basics</h3>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Trip Name</label>
+                    <input 
+                      type="text" name="title" value={formData.title} onChange={handleChange}
+                      placeholder="e.g. Summer in Paris"
+                      style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Destination</label>
+                    <div style={{ position: 'relative' }}>
+                      <MapPin style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={20} />
+                      <input 
+                        type="text" name="destination" value={formData.destination} onChange={handleChange}
+                        placeholder="Where are you going?"
+                        style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Description</label>
+                    <textarea 
+                      name="description" value={formData.description} onChange={handleChange}
+                      placeholder="What's the vibe?"
+                      rows="4"
+                      style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px', resize: 'vertical' }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Dates & Budget</h3>
+                  
+                  <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Start Date</label>
+                      <input 
+                        type="date" name="startDate" value={formData.startDate} onChange={handleChange}
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>End Date</label>
+                      <input 
+                        type="date" name="endDate" value={formData.endDate} onChange={handleChange}
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Budget (USD)</label>
+                    <input 
+                      type="range" name="budget" min="100" max="10000" step="100"
+                      value={formData.budget} onChange={handleChange}
+                      style={{ width: '100%', accentColor: '#E85D26' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '14px', color: '#64748B' }}>
+                      <span>$100</span>
+                      <span style={{ fontWeight: 'bold', color: '#1E293B', fontSize: '16px' }}>${formData.budget}</span>
+                      <span>$10,000+</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input 
+                      type="checkbox" name="isPublic" id="isPublic" 
+                      checked={formData.isPublic} onChange={handleChange}
+                      style={{ width: '18px', height: '18px', accentColor: '#E85D26' }}
+                    />
+                    <label htmlFor="isPublic" style={{ fontSize: '15px', color: '#1E293B' }}>Make this trip public for others to see</label>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div
+                  key="step3"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Pick Places</h3>
+                  <p style={{ color: '#64748B', marginBottom: '24px' }}>Select some top spots to get started.</p>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
+                    {places.map(place => (
+                      <div 
+                        key={place.id} 
+                        onClick={() => handlePlaceToggle(place.id)}
+                        style={{ 
+                          height: '140px', borderRadius: '12px', overflow: 'hidden', position: 'relative', cursor: 'pointer',
+                          border: formData.selectedPlaces.includes(place.id) ? '3px solid #E85D26' : '3px solid transparent'
+                        }}
+                      >
+                        <img src={place.image} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '12px' }}>
+                          <span style={{ color: 'white', fontWeight: '500', fontSize: '14px' }}>{place.name}</span>
+                        </div>
+                        {formData.selectedPlaces.includes(place.id) && (
+                          <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#E85D26', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #E2E8F0' }}>
+              <button 
+                onClick={() => setStep(prev => Math.max(1, prev - 1))}
+                disabled={step === 1}
+                style={{ padding: '10px 24px', borderRadius: '8px', border: '1px solid #E2E8F0', background: 'white', color: step === 1 ? '#CBD5E1' : '#1E293B', cursor: step === 1 ? 'not-allowed' : 'pointer', fontWeight: '500' }}
+              >
+                Back
+              </button>
+              
+              {step < 3 ? (
+                <button 
+                  onClick={() => setStep(prev => Math.min(3, prev + 1))}
+                  style={{ padding: '10px 32px', borderRadius: '8px', background: '#E85D26', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Next Step
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSubmit}
+                  style={{ padding: '10px 32px', borderRadius: '8px', background: '#E85D26', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Create Trip
+                </button>
+              )}
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button type="button" onClick={() => setCurrentScreen(3)} className="btn btn-outline">
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary" style={{ padding: '12px 28px' }}>
-              <Save size={18} /> Save & Build Itinerary
-            </button>
+          {/* Live Preview Card */}
+          <div style={{ width: '360px', alignSelf: 'center', marginTop: '16px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#64748B', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Preview</h4>
+            <div style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}>
+              <div style={{ height: '160px', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                {formData.destination ? (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(45deg, #E85D26, #FF9B71)' }}></div>
+                ) : (
+                  <ImageIcon color="#94A3B8" size={32} />
+                )}
+                <div style={{ position: 'absolute', bottom: '12px', left: '16px', background: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>
+                  {formData.budget ? `$${formData.budget}` : 'Budget'}
+                </div>
+              </div>
+              <div style={{ padding: '20px' }}>
+                <h3 style={{ fontSize: '22px', fontWeight: 'bold', color: '#1E293B', marginBottom: '8px' }}>
+                  {formData.title || 'Untitled Trip'}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', color: '#64748B', fontSize: '14px', marginBottom: '16px' }}>
+                  <MapPin size={16} style={{ marginRight: '6px' }} />
+                  {formData.destination || 'Nowhere yet'}
+                </div>
+                
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginBottom: '6px', fontWeight: '500' }}>
+                    <span>Completion</span>
+                    <span>{calculateProgress()}%</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#F1F5F9', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${calculateProgress()}%`, background: '#E85D26', transition: 'width 0.3s' }}></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
-        </form>
+          
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

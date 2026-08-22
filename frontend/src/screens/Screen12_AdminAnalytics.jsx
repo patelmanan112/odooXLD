@@ -1,176 +1,197 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ShieldAlert, Users, TrendingUp, MapPin, Compass, MoreVertical, Eye, Ban, CheckCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { Shield, LayoutDashboard, Users, Map, Activity, BarChart2, Download, TrendingUp, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Screen12_AdminAnalytics = () => {
   const { showToast } = useApp();
-  const [activeTab, setActiveTab] = useState('Overview');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const usersList = [
-    { id: 'u1', name: 'Khush Patel', email: 'khush.patel@wanderly.com', tripsCount: 14, status: 'Active', joined: 'Jan 2024' },
-    { id: 'u2', name: 'Aarav Sharma', email: 'aarav@gmail.com', tripsCount: 8, status: 'Active', joined: 'Mar 2024' },
-    { id: 'u3', name: 'Riya Malhotra', email: 'riya.m@outlook.com', tripsCount: 5, status: 'Active', joined: 'Jun 2024' },
-    { id: 'u4', name: 'Vikramaditya S.', email: 'vikram@traveler.io', tripsCount: 12, status: 'Active', joined: 'Feb 2024' },
-    { id: 'u5', name: 'Neha Gupta', email: 'neha.g@domain.com', tripsCount: 2, status: 'Suspended', joined: 'Jul 2024' }
+  const stats = [
+    { label: 'Total Users', value: '12,480', growth: '+14%', icon: Users },
+    { label: 'Active Trips', value: '4,890', growth: '+22%', icon: Map },
+    { label: 'Top City', value: 'Tokyo', growth: '+5%', icon: Activity },
+    { label: 'Revenue', value: '₹4.2M', growth: '+18%', icon: TrendingUp }
   ];
 
-  const popularCities = [
-    { city: 'Tokyo, Japan', trips: 1420, growth: '+28%' },
-    { city: 'Goa, India', trips: 1150, growth: '+15%' },
-    { city: 'Kyoto, Japan', trips: 980, growth: '+32%' },
-    { city: 'Manali, India', trips: 840, growth: '+10%' },
-    { city: 'Bali, Indonesia', trips: 790, growth: '+22%' }
+  const chartData = [
+    { month: 'Jan', val: 30 }, { month: 'Feb', val: 45 }, { month: 'Mar', val: 40 },
+    { month: 'Apr', val: 65 }, { month: 'May', val: 55 }, { month: 'Jun', val: 80 }, { month: 'Jul', val: 95 }
   ];
 
-  const popularActivities = [
-    { name: 'Shibuya Ramen Food Tour', category: 'Food', bookings: 640 },
-    { name: 'Paragliding in Solang Valley', category: 'Adventure', bookings: 520 },
-    { name: 'Fushimi Inari Shrine Hike', category: 'Sightseeing', bookings: 490 },
-    { name: 'Scuba Diving at Grand Island', category: 'Water Sports', bookings: 410 }
+  const cities = [
+    { rank: 1, name: 'Tokyo', trips: 1240, growth: '+12%' },
+    { rank: 2, name: 'Paris', trips: 980, growth: '+8%' },
+    { rank: 3, name: 'New York', trips: 850, growth: '+4%' },
+    { rank: 4, name: 'London', trips: 720, growth: '+6%' },
+    { rank: 5, name: 'Bali', trips: 690, growth: '+15%' }
   ];
+
+  const users = [
+    { id: 1, name: 'Alex Johnson', email: 'alex@example.com', joined: '2023-11-12', trips: 4, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=1' },
+    { id: 2, name: 'Sarah Smith', email: 'sarah.s@example.com', joined: '2024-01-05', trips: 2, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=2' },
+    { id: 3, name: 'Mike Brown', email: 'mikeb@example.com', joined: '2024-02-18', trips: 0, status: 'Suspended', avatar: 'https://i.pravatar.cc/150?u=3' },
+    { id: 4, name: 'Emma Davis', email: 'emma@example.com', joined: '2024-03-22', trips: 7, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=4' }
+  ];
+
+  const handleExport = () => showToast("Exporting data to CSV...");
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.35 }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}
-    >
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-        <div>
-          <span className="badge badge-emerald">Screen 12: Admin & Analytics Panel</span>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 800, color: '#064e3b', marginTop: '4px' }}>
-            Admin Dashboard & Analytics 📊
-          </h2>
-          <p style={{ color: '#64748b', fontSize: '0.86rem' }}>
-            Platform metrics, user management, and popular city trends
-          </p>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      
+      {/* Left Sidebar */}
+      <div style={{ width: '220px', backgroundColor: '#1A1A2E', color: '#CBD5E1', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <Shield color="#E85D26" size={24} />
+          <span style={{ color: '#FFF', fontWeight: 'bold', fontSize: '1.2rem' }}>Admin Panel</span>
+        </div>
+
+        <div style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {[
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+            { id: 'users', label: 'Users', icon: Users },
+            { id: 'cities', label: 'Cities', icon: Map },
+            { id: 'activities', label: 'Activities', icon: Activity },
+            { id: 'analytics', label: 'Analytics', icon: BarChart2 }
+          ].map(item => {
+            const isActive = activeTab === item.id;
+            return (
+              <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+                background: 'transparent', border: 'none', width: '100%', textAlign: 'left',
+                padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px',
+                cursor: 'pointer', transition: 'all 0.2s',
+                color: isActive ? '#E85D26' : '#CBD5E1',
+                borderLeft: isActive ? '3px solid #E85D26' : '3px solid transparent',
+                backgroundColor: isActive ? 'rgba(232,93,38,0.1)' : 'transparent'
+              }}>
+                <item.icon size={18} color={isActive ? '#E85D26' : '#94A3B8'} />
+                <span style={{ fontWeight: isActive ? '600' : '400' }}>{item.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ChevronLeft size={16} /> Back to App
+          </button>
         </div>
       </div>
 
-      {/* Metric Cards Top Row */}
-      <div className="grid-responsive-4">
-        {[
-          { label: 'Total Registered Users', val: '12,480', sub: '+18% this month', icon: Users, color: '#064e3b' },
-          { label: 'Active Trips Planned', val: '4,890', sub: '+24% this month', icon: TrendingUp, color: '#047857' },
-          { label: 'Top Destination City', val: 'Tokyo', sub: '1,420 bookings', icon: MapPin, color: '#3b82f6' },
-          { label: 'Top Trending Activity', val: 'Paragliding', sub: '520 bookings', icon: Compass, color: '#f59e0b' },
-        ].map((m, i) => {
-          const Icon = m.icon;
-          return (
-            <div key={i} className="glass-card" style={{ padding: '16px', backgroundColor: '#ffffff' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b' }}>{m.label}</span>
-                <Icon size={18} color={m.color} />
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{m.val}</div>
-              <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700, marginTop: '2px' }}>{m.sub}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {['Overview', 'Manage Users', 'Popular Cities', 'Popular Activities'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '0.82rem',
-              fontWeight: activeTab === tab ? 700 : 500,
-              backgroundColor: activeTab === tab ? '#064e3b' : 'transparent',
-              color: activeTab === tab ? '#ffffff' : '#64748b',
-              border: 'none',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {tab}
+      {/* Right Content */}
+      <div style={{ flex: 1, backgroundColor: '#F5F3EF', padding: '32px 40px', overflowY: 'auto' }}>
+        
+        {/* Top bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div>
+            <h1 style={{ margin: 0, color: '#1A1A2E', fontSize: '1.75rem', fontWeight: 'bold' }}>
+              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Dashboard
+            </h1>
+            <div style={{ color: '#64748B', marginTop: '4px' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          </div>
+          <button onClick={handleExport} style={{ background: '#FFF', border: '1px solid #E2E8F0', padding: '10px 20px', borderRadius: '12px', color: '#334155', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+            <Download size={18} /> Export CSV
           </button>
-        ))}
-      </div>
+        </div>
 
-      {/* Manage Users Table */}
-      {(activeTab === 'Overview' || activeTab === 'Manage Users') && (
-        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Manage Registered Users</h3>
-          <div className="table-responsive-container">
-            <table style={{ width: '100%', minWidth: '580px', borderCollapse: 'collapse', fontSize: '0.84rem', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '10px' }}>User</th>
-                  <th style={{ padding: '10px' }}>Email</th>
-                  <th style={{ padding: '10px' }}>Joined Date</th>
-                  <th style={{ padding: '10px' }}>Trips Count</th>
-                  <th style={{ padding: '10px' }}>Status</th>
-                  <th style={{ padding: '10px', textAlign: 'right' }}>Actions</th>
+        {activeTab === 'overview' && (
+          <>
+            {/* Stat Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+              {stats.map((stat, i) => (
+                <div key={i} style={{ backgroundColor: '#FFF', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <div style={{ background: '#F1F5F9', padding: '10px', borderRadius: '10px' }}><stat.icon size={20} color="#475569" /></div>
+                    <div style={{ color: '#059669', background: '#D1FAE5', padding: '4px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>{stat.growth}</div>
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1A1A2E', marginBottom: '4px' }}>{stat.value}</div>
+                  <div style={{ color: '#64748B', fontSize: '0.9rem' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2 Column Grid */}
+            <div style={{ display: 'flex', gap: '24px' }}>
+              
+              {/* Chart */}
+              <div style={{ flex: 3, backgroundColor: '#FFF', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+                <h3 style={{ margin: '0 0 24px 0', color: '#1A1A2E', fontSize: '1.1rem' }}>User Growth (Past 7 Months)</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {chartData.map((d, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '40px', fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>{d.month}</div>
+                      <div style={{ flex: 1, height: '24px', backgroundColor: '#F1F5F9', borderRadius: '12px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${d.val}%`, backgroundColor: '#E85D26', borderRadius: '12px' }} />
+                      </div>
+                      <div style={{ width: '30px', textAlign: 'right', fontSize: '0.85rem', color: '#334155', fontWeight: 'bold' }}>{d.val}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{ flex: 2, backgroundColor: '#FFF', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+                <h3 style={{ margin: '0 0 24px 0', color: '#1A1A2E', fontSize: '1.1rem' }}>Top Destinations</h3>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {cities.map((city, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: i !== cities.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '24px', height: '24px', background: '#F8FAFC', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', color: '#64748B' }}>{city.rank}</div>
+                        <div style={{ fontWeight: '600', color: '#1A1A2E' }}>{city.name}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ color: '#64748B', fontSize: '0.9rem' }}>{city.trips} trips</div>
+                        <div style={{ color: '#059669', fontSize: '0.85rem', fontWeight: 'bold' }}>{city.growth}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {activeTab === 'users' && (
+          <div style={{ backgroundColor: '#FFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                <tr>
+                  {['User', 'Email', 'Joined', 'Trips', 'Status', 'Actions'].map((h, i) => (
+                    <th key={i} style={{ padding: '16px 24px', color: '#64748B', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {usersList.map(u => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px', fontWeight: 700, color: '#0f172a' }}>{u.name}</td>
-                    <td style={{ padding: '10px', color: '#64748b' }}>{u.email}</td>
-                    <td style={{ padding: '10px', color: '#64748b' }}>{u.joined}</td>
-                    <td style={{ padding: '10px', fontWeight: 700, color: '#064e3b' }}>{u.tripsCount} Trips</td>
-                    <td style={{ padding: '10px' }}>
-                      <span className={`badge ${u.status === 'Active' ? 'badge-emerald' : 'badge-gold'}`} style={{ fontSize: '0.7rem' }}>
+                {users.map((u, i) => (
+                  <tr key={u.id} style={{ backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#FAFAFA', borderBottom: i !== users.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <img src={u.avatar} alt="avatar" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <span style={{ fontWeight: '600', color: '#1A1A2E' }}>{u.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 24px', color: '#64748B', fontSize: '0.9rem' }}>{u.email}</td>
+                    <td style={{ padding: '16px 24px', color: '#64748B', fontSize: '0.9rem' }}>{u.joined}</td>
+                    <td style={{ padding: '16px 24px', color: '#334155', fontWeight: '500' }}>{u.trips}</td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: u.status === 'Active' ? '#D1FAE5' : '#FEE2E2', color: u.status === 'Active' ? '#059669' : '#DC2626' }}>
                         {u.status}
                       </span>
                     </td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>
-                      <button onClick={() => showToast(`Inspecting trips for ${u.name}`)} className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>
-                        View Trips
-                      </button>
+                    <td style={{ padding: '16px 24px' }}>
+                      <button style={{ background: 'transparent', border: 'none', color: '#4F46E5', fontWeight: '500', cursor: 'pointer' }}>Edit</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Popular Cities & Activities Grid */}
-      <div className="admin-grid-two">
-        
-        {/* Popular Cities */}
-        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Popular Destinations & Cities</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {popularCities.map((c, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.86rem' }}>#{i+1} {c.city}</span>
-                <div style={{ display: 'flex', gap: '10px', fontSize: '0.8rem' }}>
-                  <span style={{ color: '#047857', fontWeight: 700 }}>{c.trips} Trips</span>
-                  <span style={{ color: '#10b981', fontWeight: 800 }}>{c.growth}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Popular Activities */}
-        <div className="glass-card" style={{ padding: '20px', backgroundColor: '#ffffff' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#064e3b', marginBottom: '14px' }}>Popular Activities & Trends</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {popularActivities.map((a, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.86rem' }}>{a.name}</div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{a.category}</div>
-                </div>
-                <span style={{ fontWeight: 800, color: '#064e3b', fontSize: '0.82rem' }}>{a.bookings} Bookings</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    </motion.div>
+
+    </div>
   );
 };
