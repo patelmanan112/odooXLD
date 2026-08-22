@@ -19,6 +19,7 @@ import {
   reorderTripActivities,
   getTripBudget
 } from '../controllers/trip.controller.js';
+import expenseRoutes from './expense.routes.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -30,6 +31,9 @@ router.get('/', getTrips);
 router.get('/:id', getTripById);
 router.put('/:id', updateTrip);
 router.delete('/:id', deleteTrip);
+
+/* Trip Expenses */
+router.use('/:tripId/expenses', expenseRoutes);
 
 /* Trip Stops Management */
 router.post('/:id/stops', createTripStop);

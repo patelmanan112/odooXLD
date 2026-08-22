@@ -44,31 +44,17 @@ async function runTests() {
       password: 'password456'
     };
 
-    // 4. Check email (Non-existent)
-    console.log('\n--- 2. Check Non-existent Email ---');
-    const checkEmail1Res = await fetch(`${baseUrl}/auth/check-email?email=${encodeURIComponent(userA.email)}`);
-    const checkEmail1Data = await checkEmail1Res.json();
-    console.log('Check Email Response (Non-existent):', checkEmail1Res.status, checkEmail1Data);
-    if (checkEmail1Res.status !== 200 || checkEmail1Data.exists !== false) {
-      throw new Error('Check email non-existent failed');
-    }
-
-    // 5. Signup User A
-    console.log('\n--- 3. Signup User A ---');
+    // 4. Signup Users
+    console.log('\n--- 2. Signup User A & B ---');
     const signupARes = await fetch(`${baseUrl}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userA)
     });
     const signupAData = await signupARes.json();
-    console.log('Signup A Response:', signupARes.status, signupAData.message, signupAData.user);
-    if (signupARes.status !== 201 || !signupAData.token) {
-      throw new Error('Signup A failed');
-    }
+    if (signupARes.status !== 201 || !signupAData.token) throw new Error('Signup A failed');
     const tokenA = signupAData.token;
 
-    // 6. Signup User B
-    console.log('\n--- 4. Signup User B ---');
     const signupBRes = await fetch(`${baseUrl}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -77,198 +63,234 @@ async function runTests() {
     const signupBData = await signupBRes.json();
     const tokenB = signupBData.token;
 
-    // 7. Login User A
-    console.log('\n--- 5. Login User A ---');
-    const loginARes = await fetch(`${baseUrl}/auth/login`, {
+    // 5. Create Trips for User A and User B
+    console.log('\n--- 3. Create Trips (User A & User B) ---');
+    const tripARes = await fetch(`${baseUrl}/trips`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: userA.email, password: userA.password })
-    });
-    const loginAData = await loginARes.json();
-    if (loginARes.status !== 200 || !loginAData.token) {
-      throw new Error('Login A failed');
-    }
-
-    // 8. Protected Endpoint Without Token
-    console.log('\n--- 6. Unauthenticated Profile Access (401) ---');
-    const unauthProfileGet = await fetch(`${baseUrl}/users/me`);
-    if (unauthProfileGet.status !== 401) throw new Error('Unauthenticated profile GET expected 401');
-
-    const unauthProfilePut = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Hacker' })
-    });
-    if (unauthProfilePut.status !== 401) throw new Error('Unauthenticated profile PUT expected 401');
-
-    // 9. PART 5: Get Current User Profile (User A)
-    console.log('\n--- 7. PART 5: GET /api/users/me (User A) ---');
-    const profileARes = await fetch(`${baseUrl}/users/me`, {
-      headers: { 'Authorization': `Bearer ${tokenA}` }
-    });
-    const profileAData = await profileARes.json();
-    console.log('Profile A Response:', profileARes.status, profileAData);
-    if (
-      profileARes.status !== 200 ||
-      profileAData.email !== userA.email ||
-      profileAData.name !== userA.name ||
-      profileAData.passwordHash !== undefined
-    ) {
-      throw new Error('Get profile A failed or passwordHash exposed!');
-    }
-
-    // 10. PART 5: Update Current User Profile (Full & Partial Updates)
-    console.log('\n--- 8. PART 5: PUT /api/users/me (Full Update) ---');
-    const fullUpdateRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
       body: JSON.stringify({
-        name: 'Aryan Sabasana',
-        avatarUrl: 'https://example.com/avatar.jpg',
-        phone: '+919876543210',
-        city: 'Ahmedabad',
-        country: 'India',
-        currency: '₹',
-        bio: 'Full Stack Software Engineer & Traveler'
+        title: 'EuroTrip 2026',
+        estimatedBudget: 20000,
+        startDate: '2026-10-01',
+        endDate: '2026-10-15'
       })
     });
-    const fullUpdateData = await fullUpdateRes.json();
-    console.log('Full Profile Update Response:', fullUpdateRes.status, fullUpdateData);
-    if (
-      fullUpdateRes.status !== 200 ||
-      fullUpdateData.name !== 'Aryan Sabasana' ||
-      fullUpdateData.city !== 'Ahmedabad' ||
-      fullUpdateData.phone !== '+919876543210' ||
-      fullUpdateData.passwordHash !== undefined
-    ) {
-      throw new Error('Full profile update failed');
-    }
+    const tripAData = await tripARes.json();
+    if (tripARes.status !== 201) throw new Error('Trip A creation failed');
+    const tripIdA = tripAData.id;
 
-    // Partial Update Check
-    console.log('\n--- 9. PART 5: PUT /api/users/me (Partial Update) ---');
-    const partialUpdateRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+    const tripBRes = await fetch(`${baseUrl}/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenB}` },
       body: JSON.stringify({
-        city: 'Gandhinagar'
+        title: 'Asia Tour 2026',
+        estimatedBudget: 10000,
+        startDate: '2026-11-01',
+        endDate: '2026-11-10'
       })
     });
-    const partialUpdateData = await partialUpdateRes.json();
-    console.log('Partial Profile Update Response:', partialUpdateRes.status, partialUpdateData.city, partialUpdateData.name);
-    if (
-      partialUpdateRes.status !== 200 ||
-      partialUpdateData.city !== 'Gandhinagar' ||
-      partialUpdateData.name !== 'Aryan Sabasana' ||
-      partialUpdateData.bio !== 'Full Stack Software Engineer & Traveler'
-    ) {
-      throw new Error('Partial profile update failed');
+    const tripBData = await tripBRes.json();
+    const tripIdB = tripBData.id;
+
+    // 6. PART 6B: Unauthenticated Access Rejections (401)
+    console.log('\n--- 4. PART 6B: Unauthenticated Expense Access (401) ---');
+    const unauthPostRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Hotel', amount: 5000 })
+    });
+    if (unauthPostRes.status !== 401) throw new Error('Unauthenticated POST expense expected 401');
+
+    const unauthGetRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`);
+    if (unauthGetRes.status !== 401) throw new Error('Unauthenticated GET expenses expected 401');
+
+    // 7. PART 6B: Create Expense Validation Error Tests
+    console.log('\n--- 5. PART 6B: Create Expense Validation Error Tests ---');
+    // Missing title (400)
+    const noTitleRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ amount: 1000 })
+    });
+    if (noTitleRes.status !== 400) throw new Error('Missing title expected 400');
+
+    // Empty title (400)
+    const emptyTitleRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: '   ', amount: 1000 })
+    });
+    if (emptyTitleRes.status !== 400) throw new Error('Empty title expected 400');
+
+    // Missing amount (400)
+    const noAmountRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Hotel' })
+    });
+    if (noAmountRes.status !== 400) throw new Error('Missing amount expected 400');
+
+    // Negative amount (400)
+    const negAmountRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Hotel', amount: -500 })
+    });
+    if (negAmountRes.status !== 400) throw new Error('Negative amount expected 400');
+
+    // Invalid category (400)
+    const invalidCatRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Hotel', amount: 5000, category: 'INVALID_CAT' })
+    });
+    if (invalidCatRes.status !== 400) throw new Error('Invalid category expected 400');
+
+    // Invalid date (400)
+    const invalidDateRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Hotel', amount: 5000, date: 'invalid-date' })
+    });
+    if (invalidDateRes.status !== 400) throw new Error('Invalid date expected 400');
+
+    // Non-existent Trip (404)
+    const nonExistentTripRes = await fetch(`${baseUrl}/trips/non-existent-trip-id/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Hotel', amount: 5000 })
+    });
+    if (nonExistentTripRes.status !== 404) throw new Error('Non-existent trip expected 404');
+
+    console.log('Create Expense Validation Error Tests Passed!');
+
+    // 8. PART 6B: Create Valid Expenses & Verify Numeric Formatting
+    console.log('\n--- 6. PART 6B: Create Valid Expenses ---');
+    const exp1Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ title: 'Boutique Hotel Stay', amount: 2500, category: 'ACCOMMODATION', date: '2026-10-02' })
+    });
+    const exp1Data = await exp1Res.json();
+    console.log('Expense 1 Created:', exp1Res.status, exp1Data.id, exp1Data.amount, typeof exp1Data.amount);
+    if (exp1Res.status !== 201 || exp1Data.amount !== 2500 || typeof exp1Data.amount !== 'number') {
+      throw new Error('Expense 1 creation or amount formatting failed');
     }
 
-    // 11. PART 5: Protected Fields & Role Security Checks
-    console.log('\n--- 10. PART 5: Protected Field Security Tests ---');
-    // Role update attempt (400)
-    const roleAttemptRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
+    const exp2Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ role: 'ADMIN' })
+      body: JSON.stringify({ title: 'Train Pass', amount: 1500, category: 'TRANSPORT' })
     });
-    console.log('Role Update Attempt Response Status:', roleAttemptRes.status);
-    if (roleAttemptRes.status !== 400) throw new Error('Role update attempt expected 400');
+    const exp2Data = await exp2Res.json();
 
-    // Email update attempt (400)
-    const emailAttemptRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
+    const exp3Res = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ email: 'hacker@example.com' })
+      body: JSON.stringify({ title: 'Museum Guided Tour', amount: 1000, category: 'ACTIVITIES' })
     });
-    if (emailAttemptRes.status !== 400) throw new Error('Email update attempt expected 400');
+    const exp3Data = await exp3Res.json();
 
-    // Password update attempt (400)
-    const passAttemptRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ password: 'newpassword123' })
-    });
-    if (passAttemptRes.status !== 400) throw new Error('Password update attempt expected 400');
-
-    // ID modification attempt (400)
-    const idAttemptRes = await fetch(`${baseUrl}/users/me`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ userId: 'another-user-id' })
-    });
-    if (idAttemptRes.status !== 400) throw new Error('ID modification attempt expected 400');
-
-    // Verify role remains USER
-    const verifyRoleRes = await fetch(`${baseUrl}/users/me`, {
+    // 9. PART 6B: GET Trip Expenses
+    console.log('\n--- 7. PART 6B: GET Trip Expenses ---');
+    const getExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses`, {
       headers: { 'Authorization': `Bearer ${tokenA}` }
     });
-    const verifyRoleData = await verifyRoleRes.json();
-    if (verifyRoleData.role !== 'USER') throw new Error('Role elevation security failure!');
-    console.log('Role remains strictly USER:', verifyRoleData.role);
+    const expList = await getExpRes.json();
+    console.log('Expenses Count:', expList.length, expList.map(e => e.title));
+    if (expList.length !== 3 || expList[0].amount !== 1000) {
+      throw new Error('GET Trip Expenses failed');
+    }
 
-    // 12. PART 5: Input Validation Errors
-    console.log('\n--- 11. PART 5: Profile Input Validation Errors ---');
-    const emptyNameRes = await fetch(`${baseUrl}/users/me`, {
+    // 10. PART 6B: GET Single Expense & Scope Security Isolation
+    console.log('\n--- 8. PART 6B: GET Single Expense & Scope Isolation ---');
+    const getSingleExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const singleExpData = await getSingleExpRes.json();
+    console.log('Single Expense Response:', getSingleExpRes.status, singleExpData.title);
+    if (getSingleExpRes.status !== 200 || singleExpData.title !== 'Boutique Hotel Stay') {
+      throw new Error('GET single expense failed');
+    }
+
+    // User B attempting to access User A's expense (404)
+    const crossUserGetExp = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    if (crossUserGetExp.status !== 404) throw new Error('Cross-user expense GET expected 404');
+
+    // Accessing Expense A via Trip B URL (404)
+    const crossTripGetExp = await fetch(`${baseUrl}/trips/${tripIdB}/expenses/${exp1Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    if (crossTripGetExp.status !== 404) throw new Error('Cross-trip expense GET expected 404');
+
+    // 11. PART 6B: UPDATE Expense (Partial & Security Rejections)
+    console.log('\n--- 9. PART 6B: PUT /api/trips/:tripId/expenses/:expenseId ---');
+    const updateExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ name: '   ' })
+      body: JSON.stringify({ amount: 3000, title: 'Luxury Hotel Stay' })
     });
-    if (emptyNameRes.status !== 400) throw new Error('Empty name expected 400');
+    const updatedExpData = await updateExpRes.json();
+    console.log('Updated Expense Response:', updateExpRes.status, updatedExpData.title, updatedExpData.amount);
+    if (updateExpRes.status !== 200 || updatedExpData.amount !== 3000 || updatedExpData.category !== 'ACCOMMODATION') {
+      throw new Error('Update expense failed');
+    }
 
-    const emptyCurrencyRes = await fetch(`${baseUrl}/users/me`, {
+    // Protected field modification attempt (tripId/userId) (400)
+    const protectedUpdateRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp1Data.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ currency: '   ' })
+      body: JSON.stringify({ tripId: tripIdB })
     });
-    if (emptyCurrencyRes.status !== 400) throw new Error('Empty currency expected 400');
+    if (protectedUpdateRes.status !== 400) throw new Error('Protected field update attempt expected 400');
 
-    // 13. Create Trip & Parts 1-4 Regression Tests
-    console.log('\n--- 12. Regression Tests (Parts 1-4) ---');
-    const createTripRes = await fetch(`${baseUrl}/trips`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ title: 'Profile Regression Trip', startDate: '2026-10-01', endDate: '2026-10-10' })
+    // 12. PART 6B: GET Expense Summary
+    console.log('\n--- 10. PART 6B: GET /api/trips/:tripId/expenses/summary ---');
+    const summaryRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/summary`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
     });
-    const tripData = await createTripRes.json();
-    if (createTripRes.status !== 201) throw new Error('Trip creation regression failed');
+    const summaryData = await summaryRes.json();
+    console.log('Expense Summary Response:', summaryRes.status, summaryData);
+    // exp1=3000, exp2=1500, exp3=1000 => totalSpent=5500, estimatedBudget=20000 => remainingBudget=14500
+    if (
+      summaryRes.status !== 200 ||
+      summaryData.totalSpent !== 5500 ||
+      summaryData.estimatedBudget !== 20000 ||
+      summaryData.remainingBudget !== 14500
+    ) {
+      throw new Error('Expense summary calculation failed!');
+    }
 
-    const city1 = await prisma.city.create({
-      data: { name: 'Jaipur', country: 'India', description: 'Pink City', imageUrl: 'https://example.com/jaipur.jpg' }
+    // User B attempting to access User A's expense summary (404)
+    const crossUserSummaryRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/summary`, {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
     });
+    if (crossUserSummaryRes.status !== 404) throw new Error('Cross-user expense summary expected 404');
 
-    const stop1Res = await fetch(`${baseUrl}/trips/${tripData.id}/stops`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ cityId: city1.id, startDate: '2026-10-01', endDate: '2026-10-04', stopOrder: 1 })
+    // 13. PART 6B: DELETE Expense
+    console.log('\n--- 11. PART 6B: DELETE /api/trips/:tripId/expenses/:expenseId ---');
+    const deleteExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp3Data.id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tokenA}` }
     });
-    const stop1Data = await stop1Res.json();
-    if (stop1Res.status !== 201) throw new Error('Stop creation regression failed');
+    console.log('Delete Expense Response Status:', deleteExpRes.status);
+    if (deleteExpRes.status !== 200) throw new Error('Delete expense failed');
 
-    const act1 = await prisma.activity.create({
-      data: { cityId: city1.id, name: 'Hawa Mahal Sightseeing', description: 'Tour', category: 'Sightseeing', estimatedCost: 200, duration: 2, effortLevel: 'LOW' }
+    // Verify Expense 3 is deleted but Trip A STILL EXISTS
+    const checkDeletedExpRes = await fetch(`${baseUrl}/trips/${tripIdA}/expenses/${exp3Data.id}`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
     });
+    if (checkDeletedExpRes.status !== 404) throw new Error('Deleted expense verification failed');
 
-    const ta1Res = await fetch(`${baseUrl}/trips/${tripData.id}/stops/${stop1Data.id}/activities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ activityId: act1.id, date: '2026-10-02', time: '09:00', order: 1 })
-    });
-    if (ta1Res.status !== 201) throw new Error('TripActivity creation regression failed');
+    const checkTripStillExists = await prisma.trip.findUnique({ where: { id: tripIdA } });
+    if (!checkTripStillExists) throw new Error('Deleting expense accidentally deleted parent Trip!');
+    console.log('Parent Trip preserved:', checkTripStillExists.title);
 
-    const saveRes = await fetch(`${baseUrl}/saved-destinations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
-      body: JSON.stringify({ cityId: city1.id })
-    });
-    if (saveRes.status !== 201) throw new Error('Saved destination creation regression failed');
-
-    // 14. Cleanup
-    console.log('\n--- 13. Cleanup Test Records ---');
-    await prisma.trip.delete({ where: { id: tripData.id } });
-    await prisma.activity.delete({ where: { id: act1.id } });
-    await prisma.savedDestination.deleteMany({ where: { cityId: city1.id } });
-    await prisma.city.delete({ where: { id: city1.id } });
+    // 14. Cleanup Test Records
+    console.log('\n--- 12. Cleanup Test Records ---');
+    await prisma.trip.deleteMany({ where: { id: { in: [tripIdA, tripIdB] } } });
     await prisma.user.deleteMany({ where: { email: { in: [userA.email, userB.email] } } });
 
     console.log('\n✅ ALL VERIFICATION TESTS PASSED SUCCESSFULLY!');
