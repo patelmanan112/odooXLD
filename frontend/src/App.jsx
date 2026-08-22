@@ -8,19 +8,19 @@ import { DemoSwitcher } from './components/DemoSwitcher';
 import { Loader, Plane } from 'lucide-react';
 
 import { LandingPage } from './pages/LandingPage';
-import { Screen1_Login } from './screens/Screen1_Login';
-import { Screen2_Register } from './screens/Screen2_Register';
-import { Screen3_Dashboard } from './screens/Screen3_Dashboard';
-import { Screen4_CreateTrip } from './screens/Screen4_CreateTrip';
-import { Screen5_BuildItinerary } from './screens/Screen5_BuildItinerary';
-import { Screen6_TripListing } from './screens/Screen6_TripListing';
-import { Screen7_ProfileSettings } from './screens/Screen7_ProfileSettings';
-import { Screen8_SearchExplorer } from './screens/Screen8_SearchExplorer';
-import { Screen9_ItineraryViewBudget } from './screens/Screen9_ItineraryViewBudget';
-import { Screen10_Community } from './screens/Screen10_Community';
-import { Screen11_CalendarView } from './screens/Screen11_CalendarView';
-import { Screen12_AdminAnalytics } from './screens/Screen12_AdminAnalytics';
-import { Screen13_JourneyView } from './screens/Screen13_JourneyView';
+import { Screen1_Login as LoginScreen } from './screens/Screen1_Login';
+import { Screen2_Register as RegisterScreen } from './screens/Screen2_Register';
+import { Screen3_Dashboard as DashboardScreen } from './screens/Screen3_Dashboard';
+import { Screen4_CreateTrip as CreateTripScreen } from './screens/Screen4_CreateTrip';
+import { Screen5_BuildItinerary as BuildItineraryScreen } from './screens/Screen5_BuildItinerary';
+import { Screen6_TripListing as TripListingScreen } from './screens/Screen6_TripListing';
+import { Screen7_ProfileSettings as ProfileSettingsScreen } from './screens/Screen7_ProfileSettings';
+import { Screen8_SearchExplorer as SearchExplorerScreen } from './screens/Screen8_SearchExplorer';
+import { Screen9_ItineraryViewBudget as ItineraryViewBudgetScreen } from './screens/Screen9_ItineraryViewBudget';
+import { Screen10_Community as CommunityScreen } from './screens/Screen10_Community';
+import { Screen11_CalendarView as CalendarViewScreen } from './screens/Screen11_CalendarView';
+import { Screen12_AdminAnalytics as AdminAnalyticsScreen } from './screens/Screen12_AdminAnalytics';
+import { Screen13_JourneyView as JourneyViewScreen } from './screens/Screen13_JourneyView';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading } = useApp();
@@ -121,23 +121,23 @@ const AppContent = () => {
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-              <Route path="/login" element={<PublicRoute><Screen1_Login /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><Screen2_Register /></PublicRoute>} />
+              <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><RegisterScreen /></PublicRoute>} />
               
               <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
-              <Route path="/trips/new" element={<ProtectedRoute><Screen4_CreateTrip /></ProtectedRoute>} />
-              <Route path="/itinerary/builder" element={<ProtectedRoute><Screen5_BuildItinerary /></ProtectedRoute>} />
-              <Route path="/trips" element={<ProtectedRoute><Screen6_TripListing /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Screen7_ProfileSettings /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Screen7_ProfileSettings /></ProtectedRoute>} />
-              <Route path="/explore" element={<ProtectedRoute><Screen8_SearchExplorer /></ProtectedRoute>} />
-              <Route path="/itinerary/view" element={<ProtectedRoute><Screen9_ItineraryViewBudget /></ProtectedRoute>} />
-              <Route path="/journal" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
-              <Route path="/community" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
-              <Route path="/calendar" element={<ProtectedRoute><Screen11_CalendarView /></ProtectedRoute>} />
-              <Route path="/journey" element={<ProtectedRoute><Screen13_JourneyView /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Screen12_AdminAnalytics /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
+              <Route path="/trips/new" element={<ProtectedRoute><CreateTripScreen /></ProtectedRoute>} />
+              <Route path="/itinerary/builder" element={<ProtectedRoute><BuildItineraryScreen /></ProtectedRoute>} />
+              <Route path="/trips" element={<ProtectedRoute><TripListingScreen /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfileSettingsScreen /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><ProfileSettingsScreen /></ProtectedRoute>} />
+              <Route path="/explore" element={<ProtectedRoute><SearchExplorerScreen /></ProtectedRoute>} />
+              <Route path="/itinerary/view" element={<ProtectedRoute><ItineraryViewBudgetScreen /></ProtectedRoute>} />
+              <Route path="/journal" element={<ProtectedRoute><CommunityScreen /></ProtectedRoute>} />
+              <Route path="/community" element={<ProtectedRoute><CommunityScreen /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarViewScreen /></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute><JourneyViewScreen /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AdminAnalyticsScreen /></ProtectedRoute>} />
               
               {/* Fallback route */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
