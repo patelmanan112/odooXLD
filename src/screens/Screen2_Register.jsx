@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Phone, MapPin, Globe, Camera, ArrowRight, Check } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Globe, Camera, ArrowRight, Check, Loader } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Screen2_Register = () => {
-  const { setCurrentScreen, showToast, setUser } = useApp();
+  const { setCurrentScreen, showToast, signupUser, prefilledEmail } = useApp();
   const [formData, setFormData] = useState({
-    username: 'khush_patel',
-    firstName: 'Khush',
+    username: 'manan_patel',
+    firstName: 'Manan',
     lastName: 'Patel',
-    email: 'khush.patel@wanderly.com',
+    email: prefilledEmail || 'manan@example.com',
     phone: '+91 98765 43210',
     city: 'Mumbai',
     country: 'India',
@@ -17,7 +17,14 @@ export const Screen2_Register = () => {
     confirmPassword: 'password123'
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedStyles, setSelectedStyles] = useState(['Adventure', 'Culture']);
+
+  useEffect(() => {
+    if (prefilledEmail) {
+      setFormData(prev => ({ ...prev, email: prefilledEmail }));
+    }
+  }, [prefilledEmail]);
 
   const travelStyles = ['Backpacker', 'Luxury', 'Adventure', 'Culture', 'Family', 'Solo', 'Budget'];
 
@@ -27,18 +34,22 @@ export const Screen2_Register = () => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setUser(prev => ({
-      ...prev,
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      phone: formData.phone,
-      city: formData.city,
-      country: formData.country
-    }));
-    showToast('Account created successfully! Welcome to Wanderly.');
-    setCurrentScreen(3);
+    if (formData.password !== formData.confirmPassword) {
+      showToast('Passwords do not match. Please re-enter.');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      showToast('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+    const result = await signupUser(fullName, formData.email, formData.password);
+    setIsSubmitting(false);
   };
 
   return (
@@ -223,6 +234,21 @@ export const Screen2_Register = () => {
                 />
               </div>
             </div>
+
+            <div className="input-group">
+              <label className="input-label">Confirm Password</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type="password" 
+                  className="input-field" 
+                  style={{ paddingLeft: '42px' }}
+                  value={formData.confirmPassword}
+                  onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required 
+                />
+              </div>
+            </div>
           </div>
 
           {/* Travel Preferences */}
@@ -270,9 +296,9 @@ export const Screen2_Register = () => {
             >
               Back to Login
             </button>
-            <button type="submit" className="btn btn-primary" style={{ padding: '12px 28px' }}>
-              <span>Complete Registration</span>
-              <ArrowRight size={18} />
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '12px 28px' }}>
+              <span>{isSubmitting ? 'Registering...' : 'Complete Registration'}</span>
+              {isSubmitting ? <Loader className="spin" size={18} /> : <ArrowRight size={18} />}
             </button>
           </div>
         </form>

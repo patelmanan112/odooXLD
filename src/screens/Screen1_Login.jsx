@@ -1,18 +1,55 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Lock, Mail, Plane, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Plane, ArrowRight, Loader } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Screen1_Login = () => {
-  const { setCurrentScreen, showToast } = useApp();
-  const [email, setEmail] = useState('khush.patel@wanderly.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const { setCurrentScreen, showToast, loginUser, checkEmailExist, setPrefilledEmail } = useApp();
+  const [email, setEmail] = useState('manan@example.com');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleCheckEmail = async () => {
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid email address.');
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    const exists = await checkEmailExist(email);
+    setIsCheckingEmail(false);
+
+    if (!exists) {
+      setPrefilledEmail(email);
+      showToast('Account not found. Redirecting to registration...');
+      setCurrentScreen(2); // Go to Register
+    } else {
+      showToast('Account found! Please enter your password to sign in.');
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    showToast('Logged in successfully! Welcome back.');
-    setCurrentScreen(3); // Go to Dashboard
+    if (!email || !password) {
+      showToast('Please provide both email and password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await loginUser(email, password);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      // Check if user doesn't exist to navigate to register
+      const exists = await checkEmailExist(email);
+      if (!exists) {
+        setPrefilledEmail(email);
+        showToast('Account not found. Redirecting to registration...');
+        setCurrentScreen(2);
+      }
+    }
   };
 
   return (
@@ -63,7 +100,17 @@ export const Screen1_Login = () => {
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label className="input-label">Email Address</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="input-label">Email Address</label>
+              <button 
+                type="button" 
+                onClick={handleCheckEmail}
+                disabled={isCheckingEmail}
+                style={{ fontSize: '0.8rem', color: '#047857', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                {isCheckingEmail ? 'Checking...' : 'Check Account'}
+              </button>
+            </div>
             <div style={{ position: 'relative' }}>
               <Mail size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
               <input 
@@ -109,9 +156,14 @@ export const Screen1_Login = () => {
             <label htmlFor="remember" style={{ fontSize: '0.85rem', color: '#475569' }}>Remember me on this device</label>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', fontSize: '1rem', borderRadius: '14px' }}>
-            <span>Sign In</span>
-            <ArrowRight size={18} />
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={isSubmitting}
+            style={{ width: '100%', padding: '14px', fontSize: '1rem', borderRadius: '14px' }}
+          >
+            <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
+            {isSubmitting ? <Loader className="spin" size={18} /> : <ArrowRight size={18} />}
           </button>
         </form>
 
@@ -124,11 +176,11 @@ export const Screen1_Login = () => {
 
         {/* Social Logins */}
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-outline" style={{ flex: 1, borderRadius: '12px', padding: '10px' }} onClick={() => setCurrentScreen(3)}>
+          <button className="btn btn-outline" style={{ flex: 1, borderRadius: '12px', padding: '10px' }} onClick={() => showToast('Google authentication is not configured.')}>
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '18px', height: '18px' }} />
             Google
           </button>
-          <button className="btn btn-outline" style={{ flex: 1, borderRadius: '12px', padding: '10px' }} onClick={() => setCurrentScreen(3)}>
+          <button className="btn btn-outline" style={{ flex: 1, borderRadius: '12px', padding: '10px' }} onClick={() => showToast('Apple authentication is not configured.')}>
             <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" style={{ width: '18px', height: '18px' }} />
             Apple
           </button>

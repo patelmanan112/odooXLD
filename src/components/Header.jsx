@@ -3,7 +3,7 @@ import { Search, Plus, Bell, ChevronDown, User, LogOut, Settings as SettingsIcon
 import { useApp } from '../context/AppContext';
 
 export const Header = () => {
-  const { user, setCurrentScreen } = useApp();
+  const { user, setCurrentScreen, logout } = useApp();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -184,7 +184,7 @@ export const Header = () => {
               </button>
               <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
               <button 
-                onClick={() => { setCurrentScreen(1); setShowUserMenu(false); }}
+                onClick={() => { logout(); setShowUserMenu(false); }}
                 style={{
                   width: '100%',
                   padding: '10px 12px',
