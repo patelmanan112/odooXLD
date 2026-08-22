@@ -1,14 +1,9 @@
 const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://wanderly-backend-m65m.onrender.com';
-  }
-  return 'http://localhost:5000';
+  return import.meta.env.VITE_API_BASE_URL || 'https://wanderly-backend-m65m.onrender.com';
 };
 
 const API_BASE_URL = getApiBaseUrl().replace(/\/+$/, '');
+
 
 
 
