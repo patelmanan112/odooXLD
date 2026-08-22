@@ -11,6 +11,7 @@ import savedDestinationRoutes from './routes/savedDestination.routes.js';
 import userRoutes from './routes/user.routes.js';
 import communityRoutes from './routes/community.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 import { errorMiddleware } from './middleware/error.middleware.js';
 
@@ -64,6 +65,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/saved-destinations', savedDestinationRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error middleware
 app.use(errorMiddleware);
