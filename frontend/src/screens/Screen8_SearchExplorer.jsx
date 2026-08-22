@@ -162,10 +162,13 @@ export const Screen8_SearchExplorer = () => {
             borderRadius: '20px',
             padding: '24px',
             position: 'sticky',
-            top: '80px',
+            top: '84px',
+            zIndex: 10,
             flexShrink: 0,
             border: '1px solid #EDE9E2',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.04)'
+            boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+            maxHeight: 'calc(100vh - 104px)',
+            overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontFamily: 'Outfit, sans-serif', margin: 0, fontSize: '1.15rem', color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: '8px' }}>

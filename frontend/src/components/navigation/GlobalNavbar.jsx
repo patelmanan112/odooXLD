@@ -43,12 +43,16 @@ export const GlobalNavbar = () => {
 
   return (
     <header style={{
-      position: 'sticky',
+      position: 'fixed',
       top: 0,
-      zIndex: 100,
+      left: 0,
+      right: 0,
+      width: '100%',
+      height: '60px',
+      zIndex: 1000,
       backgroundColor: '#FFFFFF',
       borderBottom: '1px solid #EDE9E2',
-      boxShadow: '0 1px 0 #EDE9E2',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
     }}>
       <div style={{
         width: '100%',
