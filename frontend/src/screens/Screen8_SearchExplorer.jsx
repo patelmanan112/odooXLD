@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Star, Plus, RotateCcw, Filter, Check } from 'lucide-react';
+import { Search, MapPin, Star, Plus, RotateCcw, Filter } from 'lucide-react';
 
 const INITIAL_ACTIVITIES = [
   { id: 1, title: 'Scuba Diving at Grande Island', location: 'Goa, India', rating: 4.8, category: 'Water Sports', desc: 'Explore vibrant underwater marine life and historic shipwrecks with certified PADI divers.', price: 2500, priceDisplay: '₹2,500', duration: 'Half Day', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
@@ -35,14 +35,12 @@ export const Screen8_SearchExplorer = () => {
   const [selectedDuration, setSelectedDuration] = useState('All');
   const [minRating, setMinRating] = useState(0);
 
-  // Toggle category check
   const handleCategoryToggle = (cat) => {
     setSelectedCategories(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
 
-  // Reset all filters
   const handleClearFilters = () => {
     setSearchQuery('');
     setSelectedCategories([]);
@@ -53,10 +51,8 @@ export const Screen8_SearchExplorer = () => {
     showToast('Filters cleared!');
   };
 
-  // Filtered dataset computed cleanly
   const filteredResults = useMemo(() => {
     return INITIAL_ACTIVITIES.filter(item => {
-      // 1. Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesQuery =
@@ -67,27 +63,22 @@ export const Screen8_SearchExplorer = () => {
         if (!matchesQuery) return false;
       }
 
-      // 2. Categories
       if (selectedCategories.length > 0) {
         if (!selectedCategories.includes(item.category)) return false;
       }
 
-      // 3. Min Price
       if (minPrice !== '' && !isNaN(Number(minPrice))) {
         if (item.price < Number(minPrice)) return false;
       }
 
-      // 4. Max Price
       if (maxPrice !== '' && !isNaN(Number(maxPrice))) {
         if (item.price > Number(maxPrice)) return false;
       }
 
-      // 5. Duration
       if (selectedDuration !== 'All') {
         if (item.duration !== selectedDuration) return false;
       }
 
-      // 6. Rating
       if (minRating > 0) {
         if (item.rating < minRating) return false;
       }
@@ -102,244 +93,244 @@ export const Screen8_SearchExplorer = () => {
 
   return (
     <div style={{ backgroundColor: '#F5F3EF', minHeight: '100vh', padding: '32px 24px 60px', boxSizing: 'border-box' }}>
-      <div style={{ maxWidth: '1320px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <div style={{ maxWidth: '1320px', margin: '0 auto', position: 'relative' }}>
 
-        {/* ══ TOP HEADER & SEARCH ════════════════════════════ */}
-        <div>
-          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#E85D26', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
-            Catalog Explorer
-          </p>
-          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '16px' }}>
-            Find Experiences & Activities
-          </h1>
-
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
-              <Search size={18} color="#9CA3AF" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="text"
-                placeholder="Search experiences, destinations, or categories (e.g. Scuba, Tokyo, Food)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px 14px 48px',
-                  borderRadius: '14px',
-                  border: '1.5px solid #EDE9E2',
-                  fontSize: '0.98rem',
-                  fontFamily: 'inherit',
-                  backgroundColor: '#FFFFFF',
-                  outline: 'none',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-            {searchQuery && (
+        {/* ── LEFT SIDEBAR FILTERS (PERMANENTLY FIXED AT TOP 84px) ── */}
+        <div style={{
+          position: 'fixed',
+          top: '84px',
+          width: '260px',
+          maxHeight: 'calc(100vh - 104px)',
+          overflowY: 'auto',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '20px',
+          padding: '24px',
+          zIndex: 50,
+          border: '1px solid #EDE9E2',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', margin: 0, fontSize: '1.15rem', color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Filter size={16} color="#E85D26" /> Filters
+            </h3>
+            {(selectedCategories.length > 0 || minPrice !== '' || maxPrice !== '' || selectedDuration !== 'All' || minRating > 0 || searchQuery !== '') && (
               <button
-                onClick={() => setSearchQuery('')}
-                className="btn btn-outline"
-                style={{ borderRadius: '14px', padding: '0 20px' }}
+                onClick={handleClearFilters}
+                style={{ background: 'none', border: 'none', color: '#E85D26', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
-                Clear Search
+                <RotateCcw size={12} /> Reset
               </button>
             )}
           </div>
 
-          <div style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '12px' }}>
-            Showing <strong>{filteredResults.length}</strong> result{filteredResults.length !== 1 ? 's' : ''}
-            {searchQuery ? ` matching "${searchQuery}"` : ''}
+          {/* Category Filter */}
+          <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
+            <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Category</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {CATEGORIES.map(cat => {
+                const isChecked = selectedCategories.includes(cat);
+                return (
+                  <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', color: isChecked ? '#1A1A2E' : '#4B5563', fontWeight: isChecked ? 700 : 500 }}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleCategoryToggle(cat)}
+                      style={{ accentColor: '#E85D26', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    {cat}
+                  </label>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Price Range Filter */}
+          <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
+            <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Price Range (₹)</h4>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="number"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2DDD5', fontSize: '0.85rem', outline: 'none', backgroundColor: '#FAFAF8' }}
+              />
+              <span style={{ color: '#9CA3AF' }}>-</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2DDD5', fontSize: '0.85rem', outline: 'none', backgroundColor: '#FAFAF8' }}
+              />
+            </div>
+          </div>
+
+          {/* Duration Filter */}
+          <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
+            <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Duration</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {DURATIONS.map(dur => (
+                <label key={dur} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', color: selectedDuration === dur ? '#1A1A2E' : '#4B5563', fontWeight: selectedDuration === dur ? 700 : 500 }}>
+                  <input
+                    type="radio"
+                    name="duration"
+                    checked={selectedDuration === dur}
+                    onChange={() => setSelectedDuration(dur)}
+                    style={{ accentColor: '#E85D26', width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  {dur}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Rating Filter */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Minimum Rating</h4>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {RATINGS.map(r => (
+                <button
+                  key={r.label}
+                  onClick={() => setMinRating(r.val)}
+                  style={{
+                    flex: 1,
+                    minWidth: '50px',
+                    padding: '7px 4px',
+                    border: '1px solid',
+                    borderColor: minRating === r.val ? '#E85D26' : '#EDE9E2',
+                    borderRadius: '8px',
+                    backgroundColor: minRating === r.val ? '#FEF0E7' : '#FAFAF8',
+                    color: minRating === r.val ? '#E85D26' : '#4B5563',
+                    fontWeight: minRating === r.val ? 800 : 600,
+                    cursor: 'pointer',
+                    fontSize: '0.78rem',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Clear button */}
+          <button
+            onClick={handleClearFilters}
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #E2DDD5',
+              backgroundColor: '#FAFAF8',
+              color: '#374151',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Clear All Filters
+          </button>
         </div>
 
-        {/* ══ MAIN LAYOUT: SIDEBAR + RESULTS ════════════════════ */}
-        <div style={{ position: 'relative', width: '100%' }}>
+        {/* ── RIGHT MAIN CONTENT (INDENTED 288px SO SEARCH BAR & CARDS NEVER OVERLAP FILTER CARD) ── */}
+        <div style={{ marginLeft: '288px', width: 'calc(100% - 288px)', display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
-          {/* ── LEFT SIDEBAR FILTERS (FIXED) ────────────────────────── */}
-          <div style={{
-            position: 'fixed',
-            top: '84px',
-            width: '260px',
-            maxHeight: 'calc(100vh - 104px)',
-            overflowY: 'auto',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '20px',
-            padding: '24px',
-            zIndex: 50,
-            border: '1px solid #EDE9E2',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
-            boxSizing: 'border-box'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', margin: 0, fontSize: '1.15rem', color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Filter size={16} color="#E85D26" /> Filters
-              </h3>
-              {(selectedCategories.length > 0 || minPrice !== '' || maxPrice !== '' || selectedDuration !== 'All' || minRating > 0 || searchQuery !== '') && (
+          {/* Page Header & Search Bar */}
+          <div>
+            <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#E85D26', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              Catalog Explorer
+            </p>
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.2rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '16px' }}>
+              Find Experiences & Activities
+            </h1>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                <Search size={18} color="#9CA3AF" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="text"
+                  placeholder="Search experiences, destinations, or categories (e.g. Scuba, Tokyo, Food)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 20px 14px 48px',
+                    borderRadius: '14px',
+                    border: '1.5px solid #EDE9E2',
+                    fontSize: '0.98rem',
+                    fontFamily: 'inherit',
+                    backgroundColor: '#FFFFFF',
+                    outline: 'none',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              {searchQuery && (
                 <button
-                  onClick={handleClearFilters}
-                  style={{ background: 'none', border: 'none', color: '#E85D26', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  onClick={() => setSearchQuery('')}
+                  className="btn btn-outline"
+                  style={{ borderRadius: '14px', padding: '0 20px' }}
                 >
-                  <RotateCcw size={12} /> Reset
+                  Clear Search
                 </button>
               )}
             </div>
 
-            {/* Category Filter */}
-            <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Category</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {CATEGORIES.map(cat => {
-                  const isChecked = selectedCategories.includes(cat);
-                  return (
-                    <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', color: isChecked ? '#1A1A2E' : '#4B5563', fontWeight: isChecked ? 700 : 500 }}>
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => handleCategoryToggle(cat)}
-                        style={{ accentColor: '#E85D26', width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      {cat}
-                    </label>
-                  );
-                })}
-              </div>
+            <div style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '12px' }}>
+              Showing <strong>{filteredResults.length}</strong> result{filteredResults.length !== 1 ? 's' : ''}
+              {searchQuery ? ` matching "${searchQuery}"` : ''}
             </div>
+          </div>
 
-            {/* Price Range Filter */}
-            <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Price Range (₹)</h4>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2DDD5', fontSize: '0.85rem', outline: 'none', backgroundColor: '#FAFAF8' }}
-                />
-                <span style={{ color: '#9CA3AF' }}>-</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2DDD5', fontSize: '0.85rem', outline: 'none', backgroundColor: '#FAFAF8' }}
-                />
-              </div>
-            </div>
-
-            {/* Duration Filter */}
-            <div style={{ marginBottom: '22px', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Duration</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {DURATIONS.map(dur => (
-                  <label key={dur} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', color: selectedDuration === dur ? '#1A1A2E' : '#4B5563', fontWeight: selectedDuration === dur ? 700 : 500 }}>
-                    <input
-                      type="radio"
-                      name="duration"
-                      checked={selectedDuration === dur}
-                      onChange={() => setSelectedDuration(dur)}
-                      style={{ accentColor: '#E85D26', width: '16px', height: '16px', cursor: 'pointer' }}
-                    />
-                    {dur}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Rating Filter */}
-            <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '0.86rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Minimum Rating</h4>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {RATINGS.map(r => (
-                  <button
-                    key={r.label}
-                    onClick={() => setMinRating(r.val)}
-                    style={{
-                      flex: 1,
-                      minWidth: '50px',
-                      padding: '7px 4px',
-                      border: '1px solid',
-                      borderColor: minRating === r.val ? '#E85D26' : '#EDE9E2',
-                      borderRadius: '8px',
-                      backgroundColor: minRating === r.val ? '#FEF0E7' : '#FAFAF8',
-                      color: minRating === r.val ? '#E85D26' : '#4B5563',
-                      fontWeight: minRating === r.val ? 800 : 600,
-                      cursor: 'pointer',
-                      fontSize: '0.78rem',
-                      transition: 'all 0.15s ease'
-                    }}
+          {/* Experience Grid */}
+          <AnimatePresence mode="popLayout">
+            {filteredResults.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
+                {filteredResults.map(item => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    {r.label}
-                  </button>
+                    <ResultCard item={item} handleAdd={handleAdd} />
+                  </motion.div>
                 ))}
               </div>
-            </div>
-
-            {/* Clear button */}
-            <button
-              onClick={handleClearFilters}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #E2DDD5',
-                backgroundColor: '#FAFAF8',
-                color: '#374151',
-                borderRadius: '10px',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              Clear All Filters
-            </button>
-          </div>
-
-          {/* ── RIGHT RESULTS MASONRY / GRID ──────────────────────── */}
-          <div style={{ marginLeft: '288px', width: 'calc(100% - 288px)' }}>
-            <AnimatePresence mode="popLayout">
-              {filteredResults.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
-                  {filteredResults.map(item => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <ResultCard item={item} handleAdd={handleAdd} />
-                    </motion.div>
-                  ))}
+            ) : (
+              /* Empty state when filters return 0 results */
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{
+                  padding: '60px 24px',
+                  textAlign: 'center',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '20px',
+                  border: '2px dashed #EDE9E2'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                  <Search size={40} color="#9CA3AF" />
                 </div>
-              ) : (
-                /* Empty state when filters return 0 results */
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{
-                    padding: '60px 24px',
-                    textAlign: 'center',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: '20px',
-                    border: '2px dashed #EDE9E2'
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Search size={40} color="#9CA3AF" /></div>
-                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '8px' }}>
-                    No matching experiences found
-                  </h3>
-                  <p style={{ color: '#9CA3AF', fontSize: '0.9rem', marginBottom: '20px' }}>
-                    Try adjusting your filters, expanding your price range, or searching for a different destination.
-                  </p>
-                  <button onClick={handleClearFilters} className="btn btn-primary">
-                    Reset All Filters
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '8px' }}>
+                  No matching experiences found
+                </h3>
+                <p style={{ color: '#9CA3AF', fontSize: '0.9rem', marginBottom: '20px' }}>
+                  Try adjusting your filters, expanding your price range, or searching for a different destination.
+                </p>
+                <button onClick={handleClearFilters} className="btn btn-primary">
+                  Reset All Filters
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
       </div>

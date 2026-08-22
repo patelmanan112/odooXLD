@@ -92,17 +92,20 @@ const AppContent = () => {
       {toastMessage && (
         <div style={{
           position: 'fixed',
-          top: '20px',
+          top: '76px',
           right: '24px',
-          backgroundColor: '#064e3b',
+          backgroundColor: '#1A1A2E',
           color: '#ffffff',
           padding: '12px 20px',
-          borderRadius: '14px',
-          boxShadow: '0 8px 24px rgba(6, 78, 59, 0.3)',
-          fontWeight: 600,
+          borderRadius: '12px',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.25)',
+          fontWeight: 700,
           fontSize: '0.88rem',
-          zIndex: 1000,
-          border: '1px solid #10b981'
+          zIndex: 9999,
+          border: '1px solid #E85D26',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
         }}>
           {toastMessage}
         </div>
