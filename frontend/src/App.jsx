@@ -20,6 +20,7 @@ import { Screen9_ItineraryViewBudget } from './screens/Screen9_ItineraryViewBudg
 import { Screen10_Community } from './screens/Screen10_Community';
 import { Screen11_CalendarView } from './screens/Screen11_CalendarView';
 import { Screen12_AdminAnalytics } from './screens/Screen12_AdminAnalytics';
+import { Screen13_JourneyView } from './screens/Screen13_JourneyView';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading } = useApp();
@@ -47,8 +48,8 @@ const AppContent = () => {
 
   const isPublicPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
   const isTripViewPage = 
-    location.pathname.startsWith('/trips') || 
     location.pathname.startsWith('/itinerary') || 
+    location.pathname === '/journey' || 
     location.pathname === '/calendar' || 
     location.pathname === '/journal';
 
@@ -132,6 +133,7 @@ const AppContent = () => {
               <Route path="/journal" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
               <Route path="/community" element={<ProtectedRoute><Screen10_Community /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Screen11_CalendarView /></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute><Screen13_JourneyView /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Screen12_AdminAnalytics /></ProtectedRoute>} />
               
               {/* Fallback route */}

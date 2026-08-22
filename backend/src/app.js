@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import tripRoutes from './routes/trip.routes.js';
 import cityRoutes from './routes/city.routes.js';
 import activityRoutes from './routes/activity.routes.js';
+import calendarRoutes from './routes/calendar.routes.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 
 dotenv.config();
@@ -42,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Error middleware
 app.use(errorMiddleware);
