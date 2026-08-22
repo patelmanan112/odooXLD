@@ -54,6 +54,7 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 10:08 | Antigravity AI | Implemented Screen 1 (Login) and Screen 2 (User Registration) with validation, avatar preview, and Framer Motion transitions. |
 | 2026-08-22 10:06 | Antigravity AI | Built navigation Sidebar, Header bar with search and CTA, and floating Hackathon 12-Screen Demo Switcher drawer. |
 | 2026-08-22 10:04 | Antigravity AI | Implemented AppContext global state container for trips data, user profiles, destination catalogs, and toast notification alerts. |
 | 2026-08-22 10:02 | Antigravity AI | Configured Vite + React 19 framework, installed Framer Motion & Lucide icons, created global CSS design system with emerald tokens and typography. |
