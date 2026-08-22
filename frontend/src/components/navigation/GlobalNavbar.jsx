@@ -51,9 +51,8 @@ export const GlobalNavbar = () => {
       boxShadow: '0 1px 0 #EDE9E2',
     }}>
       <div style={{
-        maxWidth: '1280px',
-        margin: '0 auto',
-        padding: '0 24px',
+        width: '100%',
+        padding: '0 32px',
         height: '60px',
         display: 'flex',
         alignItems: 'center',
@@ -75,7 +74,7 @@ export const GlobalNavbar = () => {
         </Link>
 
         {/* Center Nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '2px', flex: 1, justifyContent: 'center' }} className="desktop-nav-links">
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }} className="desktop-nav-links">
           {navLinks.map(link => {
             const Icon = link.icon;
             const active = isActive(link.path);
