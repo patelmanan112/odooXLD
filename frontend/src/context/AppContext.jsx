@@ -7,7 +7,7 @@ const AppContext = createContext();
 export const ROUTE_MAP = {
   1: '/login',
   2: '/register',
-  3: '/',
+  3: '/dashboard',
   4: '/trips/new',
   5: '/itinerary/builder',
   6: '/trips',
@@ -176,7 +176,7 @@ export const AppProvider = ({ children }) => {
 
   const setCurrentScreen = (screenIdOrPath) => {
     if (typeof screenIdOrPath === 'number') {
-      const targetPath = ROUTE_MAP[screenIdOrPath] || '/';
+      const targetPath = ROUTE_MAP[screenIdOrPath] || '/dashboard';
       navigate(targetPath);
     } else if (typeof screenIdOrPath === 'string') {
       navigate(screenIdOrPath);
@@ -249,7 +249,7 @@ export const AppProvider = ({ children }) => {
       setToken(data.token);
       setUser(formattedUser);
       showToast('Logged in successfully! Welcome back.');
-      navigate('/');
+      navigate('/dashboard');
       return { success: true };
     } catch (err) {
       showToast(err.message || 'Login failed. Please check your credentials.');
@@ -276,7 +276,7 @@ export const AppProvider = ({ children }) => {
       setToken(data.token);
       setUser(formattedUser);
       showToast('Account created successfully! Welcome to Wanderly.');
-      navigate('/');
+      navigate('/dashboard');
       return { success: true };
     } catch (err) {
       showToast(err.message || 'Registration failed. Please try again.');

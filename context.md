@@ -54,6 +54,9 @@ This document provides a comprehensive technical overview of the **Wanderly** co
 
 | Date & Time | Contributor | Summary of Changes |
 | :--- | :--- | :--- |
+| 2026-08-22 11:54 | Khush | Replaced Home root route to explicitly target `/dashboard`, added auto-redirection from `/` to `/dashboard`, and updated `AppContext.jsx` route mappings. |
+| 2026-08-22 11:52 | Khush | Connected backend to live Aiven Cloud PostgreSQL database (`wanderly-db-wanderly.k.aivencloud.com:20017`), pushed Prisma schema, executed seed script for 10 cities and 20+ activities, and restarted development servers. |
+| 2026-08-22 11:48 | Khush | Freed port 5000 and restarted fresh backend (`http://localhost:5000`) and frontend (`http://localhost:3000`) development servers. |
 | 2026-08-22 11:40 | Khush | Stashed local changes, pulled latest commits from remote `origin/main`, popped stashes without conflicts, configured `backend/.env` environment file with `DATABASE_URL` and `JWT_SECRET`, and verified clean frontend production build. |
 | 2026-08-22 11:36 | Khush | Cleared all local git stashes (`git stash clear`), ensuring working directory and stash list are clean. |
 | 2026-08-22 11:34 | Khush | Fixed `Unexpected token '<'` error by changing `API_BASE_URL` in `frontend/src/utils/api.js` from `http://localhost:5000/api` to `http://localhost:5000` (eliminating `/api/api` duplication) and added non-JSON response safety checks. |

@@ -35,7 +35,7 @@ const PublicRoute = ({ children }) => {
 
   if (authLoading) return null;
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 };
@@ -122,7 +122,7 @@ const AppContent = () => {
               <Route path="/login" element={<PublicRoute><Screen1_Login /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><Screen2_Register /></PublicRoute>} />
               
-              <Route path="/" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<ProtectedRoute><Screen3_Dashboard /></ProtectedRoute>} />
               <Route path="/trips/new" element={<ProtectedRoute><Screen4_CreateTrip /></ProtectedRoute>} />
               <Route path="/itinerary/builder" element={<ProtectedRoute><Screen5_BuildItinerary /></ProtectedRoute>} />
@@ -137,7 +137,7 @@ const AppContent = () => {
               <Route path="/admin" element={<ProtectedRoute><Screen12_AdminAnalytics /></ProtectedRoute>} />
               
               {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AnimatePresence>
         </main>
